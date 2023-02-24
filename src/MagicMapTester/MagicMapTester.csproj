@@ -1,0 +1,42 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<TargetFramework>net6.0</TargetFramework>
+		<SignAssembly>False</SignAssembly>
+	</PropertyGroup>
+	<ItemGroup>
+	  <Compile Remove="NewFolder\**" />
+	  <EmbeddedResource Remove="NewFolder\**" />
+	  <None Remove="NewFolder\**" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Compile Remove="People.cs" />
+	  <Compile Remove="Setup.cs" />
+	  <Compile Remove="ToolSetup.cs" />
+	</ItemGroup>
+	<ItemGroup>
+	  <AdditionalFiles Include="TextFile1.txt" />
+	</ItemGroup>
+	<ItemGroup>
+	  <EmbeddedResource Include="People.cs" />
+	  <EmbeddedResource Include="Setup.cs" />
+	  <EmbeddedResource Include="ToolSetup.cs" />
+	</ItemGroup>
+
+
+	<ItemGroup>
+
+		<PackageReference Include="ConsoLovers.ConsoleToolkit.Core" />
+
+		<PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.4.0" />
+	</ItemGroup>
+
+
+	<ItemGroup>
+	  <ProjectReference Include="..\MagicMap\MagicMap.csproj" />
+	</ItemGroup>
+</Project>

@@ -1,0 +1,15 @@
+<Project>
+	<PropertyGroup>
+		<MagicMapPackageVersion>0.0.1</MagicMapPackageVersion>
+		<SignAssembly>True</SignAssembly>
+		<AssemblyOriginatorKeyFile>..\MagicMap.snk</AssemblyOriginatorKeyFile>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<Authors>Daniel Bramer</Authors>
+		<PackageProjectUrl>https://github.com/bramerdaniel/MagicMap</PackageProjectUrl>
+		<Company>ConsoLovers</Company>
+		<Copyright>Copyright 2022</Copyright>
+		<Description>Helper utility for generating type mapper classes and more</Description>
+	</PropertyGroup>
+</Project>

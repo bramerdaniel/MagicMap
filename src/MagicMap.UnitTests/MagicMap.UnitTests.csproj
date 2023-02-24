@@ -1,0 +1,37 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>net6.0;net48</TargetFrameworks>
+		<OutputPath>$(SolutionDir)$(Configuration)</OutputPath>
+		<IsPackable>false</IsPackable>
+		<LangVersion>10</LangVersion>
+		<ImplicitUsings>enable</ImplicitUsings>
+	</PropertyGroup>
+
+	<!--<PropertyGroup >
+	  <NoWarn>1701;1702;CS8032;NU1701</NoWarn>
+	</PropertyGroup>-->
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.3.0-1.final" />
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.3.0-1.final" />
+
+		<PackageReference Include="FluentAssertions" Version="6.7.0" />
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing.MSTest" Version="1.1.1" />
+		<PackageReference Include="Microsoft.CodeAnalysis.Testing.Verifiers.MSTest" Version="1.1.1" />
+		<PackageReference Include="MSTest.TestAdapter" Version="2.2.10" />
+		<PackageReference Include="MSTest.TestFramework" Version="2.2.10" />
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.3.0-preview-20220426-02" />
+		<PackageReference Include="Verify.MSTest" Version="17.1.1" />
+		<!--<PackageReference Include="coverlet.collector" Version="3.1.0" />-->
+	</ItemGroup>
+
+	<ItemGroup>
+		<Folder Include="Setups\" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\MagicMap\MagicMap.csproj" />
+	</ItemGroup>
+
+</Project>

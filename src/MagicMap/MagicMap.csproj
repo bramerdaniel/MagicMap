@@ -1,0 +1,60 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>netstandard2.0</TargetFramework>
+		<OutputPath>$(SolutionDir)$(Configuration)</OutputPath>
+		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+		<LangVersion>11</LangVersion>
+
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<!-- Generates a package at build -->
+		<IncludeBuildOutput>false</IncludeBuildOutput>
+		<!-- Do not include the generator as a lib dependency -->
+		<Version>$(MagicMapPackageVersion)</Version>
+		<PackageIcon>packageIcon.png</PackageIcon>
+		<PackageTags>SourceGenerator Map Mapper</PackageTags>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageReleaseNotes>
+			0.0.0 to 0.0.1
+			- First version
+		</PackageReleaseNotes>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<None Include="..\..\doc\packageIcon.png">
+			<Pack>True</Pack>
+			<PackagePath>\</PackagePath>
+		</None>
+		<None Include="..\..\README.md">
+			<Pack>True</Pack>
+			<PackagePath>\</PackagePath>
+		</None>
+
+	</ItemGroup>
+
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.4.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Folder Include="Analyzers\" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<!-- Package the generator in the analyzer directory of the nuget package -->
+		<None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+			<_Parameter1>MagicMap.UnitTests, PublicKey=002400000480000094000000060200000024000052534131000400000100010061d6754866b50a6852b725361852296b2770f2fd8092e4cbc249dab02b9f65c10e8a1ac0d426c5bd89a6c2d413e10cae37a6f68846a9ab9c68614f8646be1f128af5bf3a2e3852a67d33b3cda265faa0b61b4b2083536e15ae1fe2ca83af959566e1cdba2ce6c0b4885fa4ea353d530eefb090f9286f20bc7aefa6817993b5b8</_Parameter1>
+		</AssemblyAttribute>
+	</ItemGroup>
+
+</Project>
