@@ -9,7 +9,18 @@ namespace MagicMapReferenceTester;
 using MagicMap;
 
 [TypeMapper(typeof(Person), typeof(PersonModel))]
-internal partial class PersonMapper
+internal partial class PersonMapper 
 {
-   
+    void MapAge(PersonModel target, string age)
+    {
+        
+    }
+}
+
+class MapperUsage
+{
+    public MapperUsage()
+    {
+        new PersonMapper().Map(new Person(), new PersonModel());
+    }
 }

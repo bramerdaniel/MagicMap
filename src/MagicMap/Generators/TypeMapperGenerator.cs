@@ -7,6 +7,7 @@
 namespace MagicMap.Generators;
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
@@ -51,18 +52,25 @@ internal class TypeMapperGenerator : IMagicGenerator
    {
       builder.AppendLine($"partial class {context.MapperType.Name}");
       builder.AppendLine("{");
-      GenerateMappingMethod(builder);
+      var unmapped = GenerateMappingMethod(builder).ToArray();
+      GeneratePartialMappers(builder, unmapped);
       builder.AppendLine("}");
    }
 
-   private void GenerateMappingMethod(StringBuilder builder)
+   private void GeneratePartialMappers(StringBuilder builder, (IPropertySymbol source, IPropertySymbol target)[] unmapped)
+   {
+      foreach (var tuple in unmapped)
+      {
+         builder.Append($"partial void Map{tuple.target.Name}({context.TargetType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} target, {tuple.source.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} value);");
+      }
+   }
+
+   private IEnumerable<(IPropertySymbol source, IPropertySymbol target)>GenerateMappingMethod(StringBuilder builder)
    {
       var targetProperties = context.TargetType.GetMembers()
          .OfType<IPropertySymbol>()
          .ToDictionary(p => p.Name, StringComparer.InvariantCultureIgnoreCase);
-
-
-
+      
       AppendMapperSignature(builder);
       builder.AppendLine("{");
 
@@ -79,13 +87,13 @@ internal class TypeMapperGenerator : IMagicGenerator
             {
                if (!target.Type.Equals(source.Type, SymbolEqualityComparer.Default))
                {
-
                   builder.AppendLine("// types do not match");
                   builder.Append($"Map{source.Name}(target, source.{source.Name});");
+                  yield return (source, target);
                }
                else
                {
-                  builder.AppendLine($"target.{source.Name} = source.{target.Name}");
+                  builder.AppendLine($"target.{source.Name} = source.{target.Name};");
                }
             }
          }
