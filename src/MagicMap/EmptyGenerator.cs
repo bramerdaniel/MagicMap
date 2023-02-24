@@ -8,7 +8,7 @@ namespace MagicMap
 {
    using System;
 
-   internal class EmptyGenerator : IMagicGenerator
+   internal class EmptyGenerator : IGenerator
    {
       #region Constructors and Destructors
 
@@ -29,7 +29,7 @@ namespace MagicMap
 
       #region Public Properties
 
-      public static IMagicGenerator Instance { get; } = new EmptyGenerator();
+      public static IGenerator Instance { get; } = new EmptyGenerator();
 
       #endregion
    }

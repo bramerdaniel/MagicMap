@@ -11,10 +11,10 @@ using MagicMap;
 [TypeMapper(typeof(Person), typeof(PersonModel))]
 internal partial class PersonMapper 
 {
-    void MapAge(PersonModel target, string age)
-    {
-        
-    }
+   partial void MapAge(PersonModel target, double value)
+   {
+      target.Age = (int)value;
+   }
 }
 
 class MapperUsage

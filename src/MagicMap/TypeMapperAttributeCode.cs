@@ -6,13 +6,13 @@
 
 namespace MagicMap
 {
-   using System;
-   using System.Linq;
+    using System;
+    using System.Linq;
+    using MagicMap.Generators.TypeMapper;
+    using Microsoft.CodeAnalysis;
+    using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-   using Microsoft.CodeAnalysis;
-   using Microsoft.CodeAnalysis.CSharp.Syntax;
-
-   internal class TypeMapperAttributeCode
+    internal class TypeMapperAttributeCode
    {
       private readonly INamedTypeSymbol attributeSymbol;
 

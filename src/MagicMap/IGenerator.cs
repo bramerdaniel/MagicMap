@@ -6,7 +6,7 @@
 
 namespace MagicMap;
 
-internal interface IMagicGenerator
+internal interface IGenerator
 {
    #region Public Methods and Operators
 

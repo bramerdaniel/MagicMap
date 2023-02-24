@@ -6,16 +6,14 @@
 
 namespace MagicMap
 {
-   using System;
-   using System.Collections.Generic;
-   using System.Linq;
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using MagicMap.Generators.TypeMapper;
+    using Microsoft.CodeAnalysis;
+    using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-   using MagicMap.Generators;
-
-   using Microsoft.CodeAnalysis;
-   using Microsoft.CodeAnalysis.CSharp.Syntax;
-
-   internal class MagicGeneratorManager
+    internal class MagicGeneratorManager
    {
       #region Public Properties
 
@@ -110,7 +108,7 @@ namespace MagicMap
 
       #endregion
 
-      public bool TryFindGenerator(IGeneratorContext generatorContext, out IMagicGenerator generator)
+      public bool TryFindGenerator(IGeneratorContext generatorContext, out IGenerator generator)
       {
          if (generatorContext is ITypeMapperContext typeMapperContext)
          {

@@ -9,10 +9,10 @@ namespace MagicMapReferenceTester;
 using System.Diagnostics.CodeAnalysis;
 
 [SuppressMessage("ReSharper", "UnusedMember.Global")]
-public class PersonModel
+public record PersonModel
 {
    public string Name { get; set; } = null!;
 
-   public double Age { get; set; }
+   public int Age { get; set; }
    
 }

@@ -4,15 +4,15 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace MagicMap;
+namespace MagicMap.Generators.TypeMapper;
 
 using Microsoft.CodeAnalysis;
 
 interface ITypeMapperContext : IGeneratorContext
 {
-   INamedTypeSymbol MapperType { get; }
+    INamedTypeSymbol MapperType { get; }
 
-   INamedTypeSymbol SourceType { get; }
+    INamedTypeSymbol SourceType { get; }
 
-   INamedTypeSymbol TargetType { get; }
+    INamedTypeSymbol TargetType { get; }
 }

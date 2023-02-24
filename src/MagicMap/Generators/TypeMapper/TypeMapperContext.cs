@@ -4,13 +4,13 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace MagicMap;
+namespace MagicMap.Generators.TypeMapper;
 
 using Microsoft.CodeAnalysis;
 
 internal struct TypeMapperContext : ITypeMapperContext
 {
-   public bool IsEnabled => true;
+   #region ITypeMapperContext Members
 
    public INamedTypeSymbol MapperType { get; set; }
 
@@ -18,8 +18,10 @@ internal struct TypeMapperContext : ITypeMapperContext
 
    public INamedTypeSymbol TargetType { get; set; }
 
-   bool IGeneratorContext.IsEnabled()
+   public bool IsEnabled()
    {
       return MapperType != null;
    }
+
+   #endregion
 }

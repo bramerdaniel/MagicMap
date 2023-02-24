@@ -6,8 +6,9 @@
 
 namespace MagicMap
 {
+   using System;
    using System.Collections.Immutable;
-   using System.Linq;
+   using System.Diagnostics;
    using System.Text;
    using System.Threading;
 
@@ -41,11 +42,27 @@ namespace MagicMap
          var generatorManager = MagicGeneratorManager.FromCompilation(data.Compilation);
          foreach (var generatorContext in data.GeneratorContext)
          {
-            if (generatorManager.TryFindGenerator(generatorContext, out var generator))
+            try
             {
-               var source = generator.Generate();
-               AddSourceOrReportError(productionContext, source);
+               RunGenerator(productionContext, generatorManager, generatorContext);
             }
+            catch (Exception e)
+            {
+               Trace.WriteLine(e.Message);
+               // TODO report a diagnostic here and do not rethrow ?
+               // This could be more pleasant for the user I assume
+               throw;
+            }
+         }
+      }
+
+      private static void RunGenerator(SourceProductionContext productionContext, MagicGeneratorManager generatorManager,
+         IGeneratorContext generatorContext)
+      {
+         if (generatorManager.TryFindGenerator(generatorContext, out var generator))
+         {
+            var source = generator.Generate();
+            AddSourceOrReportError(productionContext, source);
          }
       }
 
