@@ -14,9 +14,9 @@ internal struct TypeMapperContext : ITypeMapperContext
 
    public INamedTypeSymbol MapperType { get; set; }
 
-   public INamedTypeSymbol LeftType { get; set; }
+   public INamedTypeSymbol SourceType { get; set; }
 
-   public INamedTypeSymbol RightType { get; set; }
+   public INamedTypeSymbol TargetType { get; set; }
 
    bool IGeneratorContext.IsEnabled()
    {

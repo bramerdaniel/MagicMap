@@ -7,6 +7,7 @@
 namespace MagicMap.Generators;
 
 using System;
+using System.Linq;
 using System.Text;
 
 using Microsoft.CodeAnalysis;
@@ -32,14 +33,7 @@ internal class TypeMapperGenerator : IMagicGenerator
          builder.AppendLine("{");
       }
 
-      builder.AppendLine($"   partial class {context.MapperType.Name}");
-      builder.AppendLine("   {");
-      builder.AppendLine("      // Here we generate the mapping logic");
-      AppendMapperSignature(builder);
-      builder.AppendLine("      {");
-      builder.AppendLine("      }");
-      builder.AppendLine("");
-      builder.AppendLine("   }");
+      GenerateMapperClass(builder);
 
       if (!context.MapperType.ContainingNamespace.IsGlobalNamespace)
          builder.AppendLine("}");
@@ -53,14 +47,61 @@ internal class TypeMapperGenerator : IMagicGenerator
       return generatedSource;
    }
 
+   private void GenerateMapperClass(StringBuilder builder)
+   {
+      builder.AppendLine($"partial class {context.MapperType.Name}");
+      builder.AppendLine("{");
+      GenerateMappingMethod(builder);
+      builder.AppendLine("}");
+   }
+
+   private void GenerateMappingMethod(StringBuilder builder)
+   {
+      var targetProperties = context.TargetType.GetMembers()
+         .OfType<IPropertySymbol>()
+         .ToDictionary(p => p.Name, StringComparer.InvariantCultureIgnoreCase);
+
+
+
+      AppendMapperSignature(builder);
+      builder.AppendLine("{");
+
+      if (targetProperties.Count == 0)
+      {
+         builder.AppendLine("// target type does not contain any properties.");
+         builder.AppendLine("// No mappings were generated");
+      }
+      else
+      {
+         foreach (var source in context.SourceType.GetMembers().OfType<IPropertySymbol>())
+         {
+            if (targetProperties.TryGetValue(source.Name, out var target))
+            {
+               if (!target.Type.Equals(source.Type, SymbolEqualityComparer.Default))
+               {
+
+                  builder.AppendLine("// types do not match");
+                  builder.Append($"Map{source.Name}(target, source.{source.Name});");
+               }
+               else
+               {
+                  builder.AppendLine($"target.{source.Name} = source.{target.Name}");
+               }
+            }
+         }
+      }
+
+      builder.AppendLine("}");
+   }
+
    private void AppendMapperSignature(StringBuilder builder)
    {
       builder.Append("public void Map(");
-      builder.Append(context.LeftType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
-      builder.Append( " left");
-      builder.Append( ", ");
-      builder.Append(context.RightType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
-      builder.Append(" right");
+      builder.Append(context.SourceType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
+      builder.Append(" source");
+      builder.Append(", ");
+      builder.Append(context.TargetType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
+      builder.Append(" target");
       builder.AppendLine(")");
    }
 }

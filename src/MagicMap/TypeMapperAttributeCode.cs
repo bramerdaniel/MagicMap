@@ -74,7 +74,7 @@ namespace MagicMap
          value = typeMapperAttribute.ConstructorArguments[1].Value;
          var right = value as INamedTypeSymbol;
 
-         typeMapperContext = new TypeMapperContext { MapperType = classSymbol, LeftType = left, RightType = right };
+         typeMapperContext = new TypeMapperContext { MapperType = classSymbol, SourceType = left, TargetType = right };
          return true;
       }
    }

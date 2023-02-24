@@ -12,7 +12,7 @@ interface ITypeMapperContext : IGeneratorContext
 {
    INamedTypeSymbol MapperType { get; }
 
-   INamedTypeSymbol LeftType { get; }
+   INamedTypeSymbol SourceType { get; }
 
-   INamedTypeSymbol RightType { get; }
+   INamedTypeSymbol TargetType { get; }
 }
