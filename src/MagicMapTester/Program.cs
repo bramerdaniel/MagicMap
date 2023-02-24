@@ -23,7 +23,7 @@ namespace MagicMapTester
    using Microsoft.CodeAnalysis.CSharp;
    using Microsoft.CodeAnalysis.Text;
 
-   class Program
+   static class Program
    {
       #region Constants and Fields
 

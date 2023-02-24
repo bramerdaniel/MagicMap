@@ -20,18 +20,19 @@ namespace MagicMap
    {
       // https://github.com/dotnet/roslyn/blob/main/docs/features/source-generators.cookbook.md
       // https://notanaverageman.github.io/2020/12/07/cs-source-generators-cheatsheet.html
+      // https://github.com/dotnet/roslyn/blob/main/docs/features/incremental-generators.md
       public void Initialize(IncrementalGeneratorInitializationContext context)
       {
          // Here we generate the required attributes
          context.RegisterPostInitializationOutput(GeneratePostInitializationOutput);
-
+         
          var provider = context.SyntaxProvider
-            .CreateSyntaxProvider(IsTypeDeclarationWithAttributes, GetSemanticTargetForGeneration)
+            .CreateSyntaxProvider(IsClassDeclarationWithAttributes, GetSemanticTargetForGeneration)
             .Where(x => x != null)
             .Collect()
             .Combine(context.CompilationProvider);
 
-         context.RegisterImplementationSourceOutput(provider, GenerateMappers);
+         context.RegisterSourceOutput(provider, GenerateMappers);
       }
 
       private static void AddSourceOrReportError(SourceProductionContext context, GeneratedSource generatedSource)
@@ -77,7 +78,7 @@ namespace MagicMap
       }
 
 
-      private static bool IsTypeDeclarationWithAttributes(SyntaxNode node, CancellationToken cancellationToken)
+      private static bool IsClassDeclarationWithAttributes(SyntaxNode node, CancellationToken cancellationToken)
       {
          return node is ClassDeclarationSyntax { AttributeLists.Count: > 0 };
       }

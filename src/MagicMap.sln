@@ -17,6 +17,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MagicMap.UnitTests", "Magic
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MagicMapTester", "MagicMapTester\MagicMapTester.csproj", "{0D3947CA-B6C0-476F-A613-0AA02EEE7153}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MagicMapReferenceTester", "MagicMapReferenceTester\MagicMapReferenceTester.csproj", "{7464A7C5-9FC4-4366-879A-B818BE01FE95}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -35,6 +37,10 @@ Global
 		{0D3947CA-B6C0-476F-A613-0AA02EEE7153}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0D3947CA-B6C0-476F-A613-0AA02EEE7153}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0D3947CA-B6C0-476F-A613-0AA02EEE7153}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7464A7C5-9FC4-4366-879A-B818BE01FE95}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7464A7C5-9FC4-4366-879A-B818BE01FE95}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7464A7C5-9FC4-4366-879A-B818BE01FE95}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7464A7C5-9FC4-4366-879A-B818BE01FE95}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

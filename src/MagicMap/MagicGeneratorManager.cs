@@ -148,7 +148,7 @@ namespace MagicMap
 
               if (IsTypeMapperAttribute(attribute))
               {
-                 generator = new TypeMapperGenerator();
+                 generator = new TypeMapperGenerator(classSymbol, attribute);
                  return true;
               }
 

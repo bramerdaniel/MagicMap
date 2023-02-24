@@ -6,14 +6,28 @@
 
 namespace MagicMap;
 
+using System.Text;
+
 using Microsoft.CodeAnalysis;
 
 class TypeMapperGenerator : IMagicGenerator
 {
+   private readonly ISymbol classSymbol;
+
+   public TypeMapperGenerator(ISymbol classSymbol, AttributeData attribute)
+   {
+      this.classSymbol = classSymbol;
+   }
+
    public GeneratedSource Generate()
    {
-      var generatedSource = new GeneratedSource();
-      generatedSource.AddDiagnostic(Diagnostic.Create(MagicMapDiagnostics.NotSupported, null));
+      var builder = new StringBuilder();
+      builder.Append("public partial class ");
+      builder.Append(classSymbol.Name);
+      builder.Append("{ }");
+
+      var generatedSource = new GeneratedSource{ Code = builder.ToString() };
+      // generatedSource.AddDiagnostic(Diagnostic.Create(MagicMapDiagnostics.NotSupported, null));
       return generatedSource;
    }
 }
