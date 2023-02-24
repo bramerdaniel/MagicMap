@@ -2,13 +2,11 @@
 
 	<PropertyGroup>
 		<TargetFramework>netstandard2.0</TargetFramework>
-		<OutputPath>$(SolutionDir)$(Configuration)</OutputPath>
-		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
 		<LangVersion>11</LangVersion>
 
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<!-- Generates a package at build -->
-		<IncludeBuildOutput>false</IncludeBuildOutput>
+		<!--<IncludeBuildOutput>false</IncludeBuildOutput>-->
 		<!-- Do not include the generator as a lib dependency -->
 		<Version>$(MagicMapPackageVersion)</Version>
 		<PackageIcon>packageIcon.png</PackageIcon>
@@ -47,7 +45,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<!-- Package the generator in the analyzer directory of the nuget package -->
+		 <!--Package the generator in the analyzer directory of the nuget package--> 
 		<None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
 	</ItemGroup>
 

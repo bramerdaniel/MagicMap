@@ -38,8 +38,6 @@ public class PostInitializationOutputTests
     {
         var code = @"namespace RonnyTheRobber
                    {   
-                      using FluentSetups;
-
                       internal class A {  }
                       internal class B {  }
 

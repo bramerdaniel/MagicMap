@@ -71,20 +71,6 @@ internal class SetupBase
          new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
    }
 
-   protected ClassDeclarationSyntax FirstClassDeclarationSyntax()
-   {
-      return GetAllClasses().FirstOrDefault();
-   }
-
-   protected IEnumerable<ClassDeclarationSyntax> GetAllClasses()
-   {
-      foreach (var syntaxTree in SyntaxTrees)
-      {
-         foreach (var setupClass in SyntaxHelper.FindSetupClasses(syntaxTree))
-            yield return setupClass;
-      }
-   }
-
    private void ThrowOnErrors(IEnumerable<Diagnostic> diagnostics)
    {
       var errorDiagnostic = diagnostics.FirstOrDefault(x => x.Severity == DiagnosticSeverity.Error);

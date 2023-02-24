@@ -6,12 +6,16 @@
 
 namespace MagicMap;
 
+using System.Threading;
+
 using Microsoft.CodeAnalysis;
 
 public static class SemanticModelExtensions
 {
-   public static INamedTypeSymbol GetNameType(this SemanticModel model, SyntaxNode node)
+
+   
+   public static INamedTypeSymbol GetNamedType(this GeneratorSyntaxContext context, CancellationToken cancellationToken)
    {
-      return model.GetDeclaredSymbol(node) as INamedTypeSymbol;
+      return context.SemanticModel.GetDeclaredSymbol(context.Node, cancellationToken) as INamedTypeSymbol;
    }
 }

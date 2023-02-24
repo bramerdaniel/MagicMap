@@ -10,11 +10,6 @@ internal static class Setup
 {
    #region Public Methods and Operators
 
-   public static SetupClassInfoSetup SetupClassInfo()
-   {
-      return new SetupClassInfoSetup();
-   }
-
    public static SourceGeneratorTestSetup SourceGeneratorTest()
    {
       return new SourceGeneratorTestSetup();

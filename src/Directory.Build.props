@@ -1,6 +1,6 @@
 <Project>
 	<PropertyGroup>
-		<MagicMapPackageVersion>0.0.1</MagicMapPackageVersion>
+		<MagicMapPackageVersion>0.0.2</MagicMapPackageVersion>
 		<SignAssembly>True</SignAssembly>
 		<AssemblyOriginatorKeyFile>..\MagicMap.snk</AssemblyOriginatorKeyFile>
 	</PropertyGroup>

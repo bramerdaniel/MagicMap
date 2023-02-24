@@ -7,6 +7,7 @@
 namespace MagicMap
 {
    using System.Collections.Immutable;
+   using System.Linq;
    using System.Text;
    using System.Threading;
 
@@ -25,56 +26,61 @@ namespace MagicMap
       {
          // Here we generate the required attributes
          context.RegisterPostInitializationOutput(GeneratePostInitializationOutput);
-         
+
          var provider = context.SyntaxProvider
-            .CreateSyntaxProvider(IsClassDeclarationWithAttributes, GetSemanticTargetForGeneration)
-            .Where(x => x != null)
+            .CreateSyntaxProvider(IsClassDeclarationWithAttributes, CreateSemanticGenerationContext)
+            .Where(c => c.IsEnabled())
             .Collect()
             .Combine(context.CompilationProvider);
 
-         context.RegisterSourceOutput(provider, GenerateMappers);
+         context.RegisterSourceOutput(provider, GenerateSourceFromContext);
+      }
+
+      private void GenerateSourceFromContext(SourceProductionContext productionContext, (ImmutableArray<IGeneratorContext> GeneratorContext, Compilation Compilation) data)
+      {
+         var generatorManager = MagicGeneratorManager.FromCompilation(data.Compilation);
+         foreach (var generatorContext in data.GeneratorContext)
+         {
+            if (generatorManager.TryFindGenerator(generatorContext, out var generator))
+            {
+               var source = generator.Generate();
+               AddSourceOrReportError(productionContext, source);
+            }
+         }
       }
 
       private static void AddSourceOrReportError(SourceProductionContext context, GeneratedSource generatedSource)
       {
          if (generatedSource.Enabled)
-            context.AddSource(generatedSource.Name, SourceText.From(generatedSource.Code, Encoding.UTF8));
+         {
+            var formattedCode = FormatCode(generatedSource);
+            context.AddSource(generatedSource.Name, SourceText.From(formattedCode, Encoding.UTF8));
+         }
 
          foreach (var diagnostic in generatedSource.Diagnostics)
             context.ReportDiagnostic(diagnostic);
       }
 
-      private void GenerateMappers(SourceProductionContext context, (ImmutableArray<ClassDeclarationSyntax> ClassDeclarations, Compilation Compilation) data)
+      private static string FormatCode(GeneratedSource generatedSource)
       {
-         var generatorManager = MagicGeneratorManager.FromCompilation(data.Compilation);
+         var syntaxTree = CSharpSyntaxTree.ParseText(generatedSource.Code)
+            .GetRoot()
+            .NormalizeWhitespace();
 
-         foreach (var classDeclaration in data.ClassDeclarations)
-         {
-            if (generatorManager.TryCreateMagicGenerator(classDeclaration, out var generator))
-            {
-               var source = generator.Generate();
-               AddSourceOrReportError(context, source);
-            }
-         }
+         return syntaxTree.ToString();
       }
 
-      private static ClassDeclarationSyntax GetSemanticTargetForGeneration(GeneratorSyntaxContext context, CancellationToken cancellationToken)
+      private static IGeneratorContext CreateSemanticGenerationContext(GeneratorSyntaxContext context, CancellationToken cancellationToken)
       {
-         var classSymbol  = context.SemanticModel.GetNameType(context.Node);
-         var calssType = classSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-         var displayString = classSymbol.ContainingNamespace.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-         
+         var classDeclarationNode = context.GetNamedType(cancellationToken);
+         if (classDeclarationNode == null)
+            return GeneratorContext.Empty;
 
-         // TODO return all and report diagnostics later
-         var syntax = (ClassDeclarationSyntax)context.Node;
-         
-         if (syntax.Modifiers.Any(SyntaxKind.PartialKeyword) is false ||
-             syntax.Modifiers.Any(SyntaxKind.InterfaceDeclaration))
-         {
-            return null;
-         }
+         var typeMapperAttribute = TypeMapperAttributeCode.FromCompilation(context.SemanticModel.Compilation);
+         if (typeMapperAttribute.TryExtractData(classDeclarationNode, out var typeMapperData))
+            return typeMapperData;
 
-         return syntax;
+         return GeneratorContext.Empty;
       }
 
 
@@ -85,7 +91,7 @@ namespace MagicMap
 
       private void GeneratePostInitializationOutput(IncrementalGeneratorPostInitializationContext context)
       {
-         context.AddSource("TypeMapperAttribute.generated.cs", TypeMapperAttribute.Code);
+         context.AddSource("TypeMapperAttribute.generated.cs", TypeMapperAttributeCode.Code);
 
       }
    }

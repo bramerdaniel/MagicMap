@@ -1,15 +1,18 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="PersonMapper.cs" company="consolovers">
+// <copyright file="ITypeMapperData.cs" company="consolovers">
 //   Copyright (c) daniel bramer 2022 - 2023
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace MagicMapReferenceTester;
+namespace MagicMap;
 
-using MagicMap;
+using Microsoft.CodeAnalysis;
 
-[TypeMapper(typeof(Person), typeof(PersonModel))]
-internal partial class PersonMapper
+interface ITypeMapperContext : IGeneratorContext
 {
-   
+   INamedTypeSymbol MapperType { get; }
+
+   INamedTypeSymbol LeftType { get; }
+
+   INamedTypeSymbol RightType { get; }
 }

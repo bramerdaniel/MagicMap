@@ -20,7 +20,7 @@ public class NestedSetupClassAnalyzerTests : FluentSetupAnalyzerTest<NestedSetup
    #region Public Methods and Operators
 
    [TestMethod]
-   public async Task EnsureCorrectResultForIgnoredFluentSetupClasses()
+   public async Task EnsureCorrectResultForStaticMapperClass()
    {
       string code = @"using FluentSetups;
 
