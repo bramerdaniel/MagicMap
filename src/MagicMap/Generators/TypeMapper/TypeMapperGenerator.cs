@@ -134,7 +134,6 @@ internal class TypeMapperGenerator : IGenerator
 
    private void GenerateMappingMethod(StringBuilder builder, PropertyMappingContext propertyContext)
    {
-      
       var targetProperties = propertyContext.TargetType.GetMembers()
          .OfType<IPropertySymbol>()
          .ToDictionary(p => p.Name, StringComparer.InvariantCultureIgnoreCase);
@@ -172,26 +171,14 @@ internal class TypeMapperGenerator : IGenerator
          }
       }
 
+      builder.AppendLine($"MapOverride(source, target);");
       builder.AppendLine("}");
+
+      propertyContext.AddPartialDeclaration("/// <summary>Implement this method to map properties the mapper could not handle for any reason</summary>");
+      builder.AppendLine($"partial void MapOverride({propertyContext.SourceType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} source, {propertyContext.TargetType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} target);");
 
       foreach (var declaration in propertyContext.PartialDeclarations)
          builder.AppendLine(declaration);
-   }
-
-   /// <summary>Generates the partial mappers.</summary>
-   /// <param name="builder">The builder.</param>
-   /// <param name="unmapped">The unmapped.</param>
-   private void GeneratePartialMappers(StringBuilder builder, (IPropertySymbol source, IPropertySymbol target)[] unmapped)
-   {
-      foreach (var tuple in unmapped)
-      {
-         var targetType = tuple.target.ContainingType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-         var sourceValueType = tuple.source.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-
-         builder.AppendLine($"/// <summary>Can be implemented to support the mapping of the {tuple.target.Name} property</summary>");
-         builder.AppendLine($"partial void Map{tuple.target.Name}({targetType} target, {sourceValueType} value);");
-         builder.AppendLine();
-      }
    }
 
    private void GenerateExtensionMethod(StringBuilder builder, INamedTypeSymbol sourceType,  INamedTypeSymbol targetType)

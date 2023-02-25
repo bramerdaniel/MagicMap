@@ -302,13 +302,11 @@ public class TypeMapperGenerationTests
                    [TypeMapper(typeof(A), typeof(B))]
                    internal partial class TestMapper 
                    { 
-                       partial void MapValues(B source, A target)
-                       {
-                       }
-                       
-                       partial void MapValues(A source, B target)
-                       {
-                       }
+                       partial void MapOverride(A source, B target)
+                          => target.Values.AddRange(source.Values);
+
+                       partial void MapOverride(B source, A target)
+                          => target.Values.AddRange(source.Values);
                    }
                        
                    internal class A 
@@ -329,8 +327,10 @@ public class TypeMapperGenerationTests
       result.Should().NotHaveErrors();
 
       result.Should().HaveClass("TestMapper")
-         .WhereMethod("Map", "A source, B target")
-         .Contains("MapValues(source, target)");
+         .WhereMethod("MapOverride", "A source, B target").IsPartialDefinition();
+
+      result.Should().HaveClass("TestMapper")
+         .WhereMethod("MapOverride", "B source, A target").IsPartialDefinition();
 
       result.Print();
    }
