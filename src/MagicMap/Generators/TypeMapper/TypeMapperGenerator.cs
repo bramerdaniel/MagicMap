@@ -195,11 +195,15 @@ internal class TypeMapperGenerator : IGenerator
    {
       var targetName = targetType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
       var sourceName = sourceType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+      var valueName = sourceType.Name.ToFirstLower();
 
-      builder.AppendLine($"{ComputeModifier()} static {targetName} To{targetType.Name}(this {sourceName} value)");
+      builder.AppendLine($"{ComputeModifier()} static {targetName} To{targetType.Name}(this {sourceName} {valueName})");
       builder.AppendLine("{");
+
+      builder.AppendLine($"if ({valueName} == null)");
+      builder.AppendLine($"throw new global::System.ArgumentNullException(nameof({valueName}));");
       builder.AppendLine($"var result = new {targetName}();");
-      builder.AppendLine("mapper.Map(value, result);");
+      builder.AppendLine($"mapper.Map({valueName}, result);");
       builder.AppendLine("return result;");
       builder.AppendLine("}");
    }

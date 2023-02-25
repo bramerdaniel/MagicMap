@@ -7,6 +7,7 @@
 namespace MagicMap.UnitTests.SourceGeneratorTests;
 
 using MagicMap.UnitTests.Setups;
+using Newtonsoft.Json.Linq;
 
 [TestClass]
 public class TypeMapperExtensionsTests
@@ -99,7 +100,7 @@ public class TypeMapperExtensionsTests
       result.Should().HaveClass("PersonMapperExtensions")
          .WhereMethod("ToEmployee", "Person")
          .IsInternal()
-         .Contains("mapper.Map(value, result)");
+         .Contains("mapper.Map(person, result)");
 
       result.Print();
    }
@@ -132,7 +133,43 @@ public class TypeMapperExtensionsTests
       result.Should().HaveClass("PersonMapperExtensions")
          .WhereMethod("ToPerson", "Employee")
          .IsInternal()
-         .Contains("mapper.Map(value, result)");
+         .Contains("mapper.Map(employee, result)");
+
+      result.Print();
+   }
+
+   [TestMethod]
+   public void EnsureExtensionObjectIsCheckedForNull()
+   {
+      var code = @"[MagicMap.TypeMapper(typeof(Person), typeof(Employee))]
+                   internal partial class PersonMapper { }
+                       
+                   internal class Person 
+                   {
+                       internal string Name { get; set; }
+                   }
+
+                   internal class Employee 
+                   {
+                       internal string Name { get; set; }
+                   }            
+";
+
+      var result = Setup.SourceGeneratorTest()
+         .WithSource(code)
+         .Done();
+
+      result.Should().NotHaveErrors();
+
+      result.Should().HaveClass("PersonMapperExtensions")
+         .WhereMethod("ToPerson", "Employee")
+         .Contains("if (employee == null)")
+         .Contains("throw new global::System.ArgumentNullException(nameof(employee));");
+
+      result.Should().HaveClass("PersonMapperExtensions")
+         .WhereMethod("ToEmployee", "Person")
+         .Contains("if (person == null)")
+         .Contains("throw new global::System.ArgumentNullException(nameof(person));");
 
       result.Print();
    }
