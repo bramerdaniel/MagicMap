@@ -6,18 +6,18 @@
 
 namespace MagicMap
 {
-   using System;
-   using System.Collections.Immutable;
-   using System.Diagnostics;
-   using System.Text;
-   using System.Threading;
+    using System;
+    using System.Collections.Immutable;
+    using System.Diagnostics;
+    using System.Text;
+    using System.Threading;
+    using MagicMap.Generators;
+    using Microsoft.CodeAnalysis;
+    using Microsoft.CodeAnalysis.CSharp;
+    using Microsoft.CodeAnalysis.CSharp.Syntax;
+    using Microsoft.CodeAnalysis.Text;
 
-   using Microsoft.CodeAnalysis;
-   using Microsoft.CodeAnalysis.CSharp;
-   using Microsoft.CodeAnalysis.CSharp.Syntax;
-   using Microsoft.CodeAnalysis.Text;
-
-   [Generator]
+    [Generator]
    public class MagicMapSourceGenerator : IIncrementalGenerator
    {
       // https://github.com/dotnet/roslyn/blob/main/docs/features/source-generators.cookbook.md

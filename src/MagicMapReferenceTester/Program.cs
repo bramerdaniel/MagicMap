@@ -12,7 +12,7 @@ namespace MagicMapReferenceTester
 
       static void Main()
       {
-         var source = new Person { Name = "Peter", Age = 45 };
+         var source = new Person { Name = "Peter", Size = 45.3, AgeInYears = 2 };
          var model = source.ToPersonModel();
          Console.WriteLine(model);
 
@@ -21,11 +21,13 @@ namespace MagicMapReferenceTester
 
          var personModel = new PersonModel();
 
+         var person = personModel.ToPerson();
+         var person2 = person.ToPerson();
+         
 
-         new PersonMapper().Map(source, personModel);
+         new PersonToModelMapper().Map(source, personModel);
 
          Console.WriteLine(personModel);
-         var person = personModel.ToPerson();
          Console.ReadLine();
       }
 
