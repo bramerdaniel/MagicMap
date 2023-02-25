@@ -13,5 +13,7 @@ public class Person
 {
    public string Name { get; set; } = null!;
 
-   public double Age { get; set; } 
+   public double Size { get; set; } 
+   
+   public int AgeInYears{ get; set; } 
 }

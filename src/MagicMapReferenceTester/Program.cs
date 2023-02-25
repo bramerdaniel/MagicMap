@@ -16,6 +16,9 @@ namespace MagicMapReferenceTester
          var model = source.ToPersonModel();
          Console.WriteLine(model);
 
+         model = model.ToPerson().ToPersonModel();
+         Console.WriteLine(model);
+
          var personModel = new PersonModel();
 
 

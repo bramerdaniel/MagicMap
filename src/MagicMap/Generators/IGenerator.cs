@@ -4,13 +4,13 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace MagicMap;
+namespace MagicMap.Generators;
 
 internal interface IGenerator
 {
-   #region Public Methods and Operators
+    #region Public Methods and Operators
 
-   GeneratedSource Generate();
+    GeneratedSource Generate();
 
-   #endregion
+    #endregion
 }

@@ -13,6 +13,8 @@ public record PersonModel
 {
    public string Name { get; set; } = null!;
 
-   public int Age { get; set; }
+   public int Size { get; set; }
    
+   public int AgeInMonths{ get; set; }
+
 }

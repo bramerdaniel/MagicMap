@@ -10,9 +10,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-
+using MagicMap.Generators;
 using Microsoft.CodeAnalysis;
 
+/// <summary>Generator for type mapping</summary>
+/// <seealso cref="MagicMap.Generators.IGenerator" />
 internal class TypeMapperGenerator : IGenerator
 {
    #region Constants and Fields
@@ -57,11 +59,7 @@ internal class TypeMapperGenerator : IGenerator
    #region Properties
 
    private string MapperTypeName => context.MapperType.Name;
-
-   private string SourceTypeName => context.SourceType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-
-   private string TargetTypeName => context.TargetType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-
+   
    #endregion
 
    #region Methods
@@ -109,10 +107,10 @@ internal class TypeMapperGenerator : IGenerator
       builder.AppendLine("{");
       builder.AppendLine($"private static {MapperTypeName} mapper = new {MapperTypeName}();");
 
-      GenerateToTargetMethod(builder);
+      GenerateExtensionMethod(builder, context.TargetType, context.SourceType);
 
       if (!context.SourceEqualsTargetType)
-         GenerateToSourceMethod(builder);
+         GenerateExtensionMethod(builder, context.SourceType, context.TargetType);
 
       builder.AppendLine("}");
    }
@@ -193,19 +191,14 @@ internal class TypeMapperGenerator : IGenerator
       }
    }
 
-   private void GenerateToSourceMethod(StringBuilder builder)
+   private void GenerateExtensionMethod(StringBuilder builder, INamedTypeSymbol sourceType,  INamedTypeSymbol targetType)
    {
-      builder.AppendLine($"{ComputeModifier()} static {SourceTypeName} To{context.SourceType.Name}(this {TargetTypeName} value)");
-      builder.AppendLine("{");
-      builder.AppendLine("throw new global::System.NotImplementedException();");
-      builder.AppendLine("}");
-   }
+      var targetName = targetType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+      var sourceName = sourceType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
 
-   private void GenerateToTargetMethod(StringBuilder builder)
-   {
-      builder.AppendLine($"{ComputeModifier()} static {TargetTypeName} To{context.TargetType.Name}(this {SourceTypeName} value)");
+      builder.AppendLine($"{ComputeModifier()} static {targetName} To{targetType.Name}(this {sourceName} value)");
       builder.AppendLine("{");
-      builder.AppendLine($"var result = new {TargetTypeName}();");
+      builder.AppendLine($"var result = new {targetName}();");
       builder.AppendLine("mapper.Map(value, result);");
       builder.AppendLine("return result;");
       builder.AppendLine("}");
