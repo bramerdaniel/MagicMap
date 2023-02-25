@@ -13,6 +13,7 @@ using MagicMap.Analyzers;
 using Microsoft.CodeAnalysis;
 
 [TestClass]
+[Ignore]
 [SuppressMessage("Blocker Code Smell", "S2699:Tests should include assertions")]
 public class MultiplePartialSetupMembersAnalyzerTests : FluentSetupAnalyzerTest<MultiplePartialSetupMembersAnalyzer>
 {

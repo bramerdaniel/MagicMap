@@ -7,6 +7,7 @@
 namespace MagicMap.UnitTests;
 
 using System.Linq;
+using System.Reflection;
 using System.Text;
 
 using FluentAssertions;
@@ -45,7 +46,7 @@ internal class ClassAssertion : ReferenceTypeAssertions<INamedTypeSymbol, ClassA
 
    public MethodAssertion WhereMethod(string methodName, string signature = null)
    {
-      IMethodSymbol methodSymbol  = null;
+      IMethodSymbol methodSymbol;
       var methodSymbols = Subject.GetMembers(methodName).OfType<IMethodSymbol>().ToArray();
       if (methodSymbols.Length == 1)
       {
@@ -53,11 +54,41 @@ internal class ClassAssertion : ReferenceTypeAssertions<INamedTypeSymbol, ClassA
       }
       else
       {
-         methodSymbol = methodSymbols.FirstOrDefault(m => m.Parameters.FirstOrDefault()?.ToString() == signature);
+         methodSymbol = MatchMethodBySignature(methodSymbols, signature);
+         Assert.IsNotNull(methodSymbol, $"A method {methodName} with the specified signature could not be found.{GetGeneratedCode()}");
       }
 
       Assert.IsNotNull(methodSymbol, $"The method {methodName} could not be found.{GetGeneratedCode()}");
       return new MethodAssertion(generationResult, methodSymbol);
+   }
+
+   private IMethodSymbol MatchMethodBySignature(IMethodSymbol[] methodSymbols, string signature)
+   {
+      IMethodSymbol candidate = null;
+      foreach (var methodSymbol in methodSymbols)
+      {
+         var methodSignature = ToSignatureString(methodSymbol);
+         if (methodSignature.StartsWith(signature))
+         {
+            if (candidate == null)
+            {
+               candidate = methodSymbol;
+            }
+            else
+            {
+               candidate = null;
+               break;
+            }
+         }
+      }
+
+      return candidate ?? methodSymbols.FirstOrDefault(ms => ToSignatureString(ms) == signature);
+   }
+
+   private string ToSignatureString(IMethodSymbol methodSymbol)
+   {
+      var signatureString = string.Join(", ", methodSymbol.Parameters.Select(x => $"{x.Type.ToDisplayString()} {x.Name}"));
+      return signatureString;
    }
 
    public ClassAssertion WithField(string expectedFieldName)
@@ -110,7 +141,7 @@ internal class ClassAssertion : ReferenceTypeAssertions<INamedTypeSymbol, ClassA
       return this;
    }
 
-   public ClassAssertion WithoutMethod(string methodName , string signature)
+   public ClassAssertion WithoutMethod(string methodName, string signature)
    {
       IMethodSymbol methodSymbol;
       var methodSymbols = Subject.GetMembers(methodName).OfType<IMethodSymbol>().ToArray();

@@ -6,6 +6,8 @@
 
 namespace MagicMap.Generators.TypeMapper;
 
+using System.Collections.Generic;
+
 using Microsoft.CodeAnalysis;
 
 internal struct TypeMapperContext : ITypeMapperContext
@@ -17,6 +19,10 @@ internal struct TypeMapperContext : ITypeMapperContext
    public INamedTypeSymbol SourceType { get; set; }
 
    public INamedTypeSymbol TargetType { get; set; }
+
+   public bool SourceEqualsTargetType => SourceType.Equals(TargetType, SymbolEqualityComparer.Default);
+
+   public IDictionary<string, string> MappingSpecifications { get; set; } 
 
    public bool IsEnabled()
    {

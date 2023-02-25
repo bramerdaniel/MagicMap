@@ -6,6 +6,9 @@
 
 namespace MagicMap.Generators.TypeMapper;
 
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+
 using Microsoft.CodeAnalysis;
 
 interface ITypeMapperContext : IGeneratorContext
@@ -15,4 +18,8 @@ interface ITypeMapperContext : IGeneratorContext
     INamedTypeSymbol SourceType { get; }
 
     INamedTypeSymbol TargetType { get; }
+
+    bool SourceEqualsTargetType { get; }
+
+   IDictionary<string, string> MappingSpecifications { get; }
 }

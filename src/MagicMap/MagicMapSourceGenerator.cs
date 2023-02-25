@@ -101,8 +101,8 @@ namespace MagicMap
          if (classDeclarationNode == null)
             return GeneratorContext.Empty;
 
-         var typeMapperAttribute = TypeMapperAttributeCode.FromCompilation(context.SemanticModel.Compilation);
-         if (typeMapperAttribute.TryExtractData(classDeclarationNode, out var typeMapperData))
+         var typeMapperGenerator = TypeMapperAttributeGenerator.FromCompilation(context.SemanticModel.Compilation);
+         if (typeMapperGenerator.TryExtractData(classDeclarationNode, out var typeMapperData))
             return typeMapperData;
 
          return GeneratorContext.Empty;
@@ -116,8 +116,8 @@ namespace MagicMap
 
       private void GeneratePostInitializationOutput(IncrementalGeneratorPostInitializationContext context)
       {
-         context.AddSource("TypeMapperAttribute.generated.cs", TypeMapperAttributeCode.Code);
-
+         context.AddSource("TypeMapperAttribute.generated.cs", TypeMapperAttributeGenerator.Code);
+         context.AddSource("PropertyMappingAttribute.generated.cs", PropertyMappingAttributeGenerator.Code);
       }
    }
 }

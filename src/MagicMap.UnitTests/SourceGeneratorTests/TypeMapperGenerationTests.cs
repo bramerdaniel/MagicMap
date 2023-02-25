@@ -31,6 +31,33 @@ public class TypeMapperGenerationTests
          .HaveClass("RootNameSpace.MapIt")
          .WithMethod("Map", "RootNameSpace.A", "RootNameSpace.B")
          .WithInternalModifier();
+      result.Should()
+         .HaveClass("RootNameSpace.MapIt")
+         .WithMethod("Map", "RootNameSpace.B", "RootNameSpace.A")
+         .WithInternalModifier();
+
+      result.Print();
+   }
+
+   [TestMethod]
+   public void EnsureOnlyOneMethodWithSameMappingTypes()
+   {
+      var code = @"namespace SameTypes
+                   {   
+                      internal class A { }
+                      
+                      [MagicMap.TypeMapperAttribute(typeof(A), typeof(A))]
+                      internal partial class SameTypeMapper { }
+                   }";
+
+      var result = Setup.SourceGeneratorTest()
+         .WithSource(code)
+         .Done();
+
+      result.Should().NotHaveErrors().And
+         .HaveClass("SameTypes.SameTypeMapper")
+         .WithMethod("Map", "SameTypes.A", "SameTypes.A")
+         .WithInternalModifier();
 
       result.Print();
    }
@@ -88,6 +115,144 @@ public class TypeMapperGenerationTests
          .HaveClass("RootNameSpace.MapIt")
          .WithMethod("Map", "First.A", "Second.B")
          .WithInternalModifier();
+
+      result.Print();
+   }
+
+   [TestMethod]
+   public void EnsureMappingCodeIsGeneratedCorrectly()
+   {
+      var code = @"using MagicMap;
+
+                   [TypeMapper(typeof(A), typeof(B))]
+                   internal partial class TestMapper { }
+                       
+                   internal class A 
+                   {
+                       public string Name { get; set; }
+                   }
+
+                   internal class B 
+                   {
+                       public string Name { get; set; }
+                   }            
+";
+
+      var result = Setup.SourceGeneratorTest()
+         .WithSource(code)
+         .Done();
+
+      result.Should().NotHaveErrors().And
+         .HaveClass("TestMapper")
+         .WithMethod("Map", "A", "B")
+         .WhereMethod("Map", "A source, B target")
+         .Contains("target.Name = source.Name");
+
+      result.Print();
+   }
+
+   [TestMethod]
+   public void EnsureNotAccessiblePropertiesIsIgnored()
+   {
+      var code = @"
+                   [MagicMap.TypeMapperAttribute(typeof(A), typeof(B))]
+                   internal partial class TestMapper { }
+                       
+                   internal class A 
+                   {
+                       string Name { get; set; }
+                       int Age { get; set; }
+                   }
+
+                   internal class B 
+                   {
+                       string Name { get; set; }
+                       private int Age { get; set; }
+                   }            
+";
+
+      var result = Setup.SourceGeneratorTest()
+         .WithSource(code)
+         .Done();
+
+      result.Should().NotHaveErrors().And
+         .HaveClass("TestMapper")
+         .WhereMethod("Map", "A")
+         .NotContains("B.Name = A.Name")
+         .NotContains("B.Age = A.Age");
+
+      result.Print();
+   }
+
+   [TestMethod]
+   public void EnsureReadonlyPropertiesAreIgnored()
+   {
+      var code = @"using MagicMap;
+
+                   [TypeMapper(typeof(A), typeof(B))]
+                   internal partial class TestMapper { }
+                       
+                   internal class A 
+                   {
+                       public string Name { get; set; }
+                   }
+
+                   internal class B 
+                   {
+                       public string Name { get; }
+                   }            
+";
+
+      var result = Setup.SourceGeneratorTest()
+         .WithSource(code)
+         .Done();
+
+      result.Should().NotHaveErrors();
+      result.Should().HaveClass("TestMapper")
+         .WhereMethod("Map", "A source, B target")
+         .NotContains("target.Name = source.Name");
+
+      result.Should().HaveClass("TestMapper")
+         .WhereMethod("Map", "B source, A target")
+         .Contains("target.Name = source.Name");
+
+      result.Print();
+
+   }
+
+   [TestMethod]
+   public void EnsureMappingCanMeCustomized()
+   {
+      var code = @"using MagicMap;
+
+                   [TypeMapper(typeof(A), typeof(B))]
+                   [PropertyMapping(nameof(A.Name), nameof(B.Value))]
+                   internal partial class TestMapper { }
+                       
+                   internal class A 
+                   {
+                       public string Name { get; set; }
+                   }
+
+                   internal class B 
+                   {
+                       public string Value { get; set; }
+                   }            
+";
+
+      var result = Setup.SourceGeneratorTest()
+         .WithSource(code)
+         .Done();
+
+      result.Should().NotHaveErrors();
+
+      result.Should().HaveClass("TestMapper")
+         .WhereMethod("Map", "A source, B target")
+         .Contains("target.Value = source.Name");
+
+      result.Should().HaveClass("TestMapper")
+         .WhereMethod("Map", "B source, A target")
+         .Contains("target.Name = source.Value");
 
       result.Print();
    }
