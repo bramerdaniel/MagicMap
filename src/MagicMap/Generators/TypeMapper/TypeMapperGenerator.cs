@@ -121,24 +121,20 @@ internal class TypeMapperGenerator : IGenerator
       builder.AppendLine("{");
 
       var propertyContext = new PropertyMappingContext(context.SourceType, context.TargetType, InvertMappings(context.MappingSpecifications));
-      var unmappedToRight = GenerateMappingMethod(builder, propertyContext).ToArray();
-
-      (IPropertySymbol source, IPropertySymbol target)[] unmappedToLeft = null;
+      GenerateMappingMethod(builder, propertyContext);
+      
       if (!context.SourceEqualsTargetType)
       {
          propertyContext = new PropertyMappingContext(context.TargetType, context.SourceType, context.MappingSpecifications);
-         unmappedToLeft = GenerateMappingMethod(builder, propertyContext).ToArray();
+         GenerateMappingMethod(builder, propertyContext);
       }
-
-      GeneratePartialMappers(builder, unmappedToRight);
-      if (unmappedToLeft != null)
-         GeneratePartialMappers(builder, unmappedToLeft);
 
       builder.AppendLine("}");
    }
 
-   private IEnumerable<(IPropertySymbol source, IPropertySymbol target)> GenerateMappingMethod(StringBuilder builder, PropertyMappingContext propertyContext)
+   private void GenerateMappingMethod(StringBuilder builder, PropertyMappingContext propertyContext)
    {
+      
       var targetProperties = propertyContext.TargetType.GetMembers()
          .OfType<IPropertySymbol>()
          .ToDictionary(p => p.Name, StringComparer.InvariantCultureIgnoreCase);
@@ -157,67 +153,29 @@ internal class TypeMapperGenerator : IGenerator
       }
       else
       {
-         foreach (var target in targetProperties.Values.Where(MappingPossible))
+         foreach (var targetProperty in targetProperties.Values.Where(MappingPossible))
          {
-            var sourcePropertyName = GetSourcePropertyName(propertyContext.PropertyMappings, target.Name);
-            if (TryFindSourceProperty(sourceProperties, sourcePropertyName, out var source))
+            var sourcePropertyName = GetSourcePropertyName(propertyContext.PropertyMappings, targetProperty.Name);
+            if (TryFindSourceProperty(sourceProperties, sourcePropertyName, out var sourceProperty))
             {
-               if (!target.Type.Equals(source.Type, SymbolEqualityComparer.Default))
+               if (!targetProperty.Type.Equals(sourceProperty.Type, SymbolEqualityComparer.Default))
                {
-                  builder.Append($"Map{source.Name}(target, source.{source.Name});");
-                  yield return (source, target);
+                  builder.Append($"Map{targetProperty.Name}(target, source.{sourceProperty.Name});");
+                  propertyContext.AddPartialDeclaration($"/// <summary>Can be implemented to support the mapping of the {targetProperty.Name} property</summary>");
+                  propertyContext.AddPartialDeclaration($"partial void Map{targetProperty.Name}({targetProperty.ContainingType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} target, {sourceProperty.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} value);");
                }
                else
                {
-                  builder.AppendLine($"target.{target.Name} = source.{source.Name};");
+                  builder.AppendLine($"target.{targetProperty.Name} = source.{sourceProperty.Name};");
                }
             }
          }
       }
 
       builder.AppendLine("}");
-   }
 
-   private IEnumerable<(IPropertySymbol source, IPropertySymbol target)> GenerateMappingMethod(StringBuilder builder, INamedTypeSymbol fromType,
-      INamedTypeSymbol toType, IDictionary<string, string> nameMappings)
-   {
-      var targetProperties = toType.GetMembers()
-         .OfType<IPropertySymbol>()
-         .ToDictionary(p => p.Name, StringComparer.InvariantCultureIgnoreCase);
-
-      var sourceProperties = fromType.GetMembers()
-         .OfType<IPropertySymbol>()
-         .ToDictionary(p => p.Name, StringComparer.InvariantCultureIgnoreCase);
-
-      AppendMapperSignature(builder, fromType, toType);
-      builder.AppendLine("{");
-
-      if (targetProperties.Count == 0)
-      {
-         builder.AppendLine("// target type does not contain any properties.");
-         builder.AppendLine("// No mappings were generated");
-      }
-      else
-      {
-         foreach (var target in targetProperties.Values.Where(MappingPossible))
-         {
-            var sourcePropertyName = GetSourcePropertyName(nameMappings, target.Name);
-            if (TryFindSourceProperty(sourceProperties, sourcePropertyName, out var source))
-            {
-               if (!target.Type.Equals(source.Type, SymbolEqualityComparer.Default))
-               {
-                  builder.Append($"Map{source.Name}(target, source.{source.Name});");
-                  yield return (source, target);
-               }
-               else
-               {
-                  builder.AppendLine($"target.{target.Name} = source.{source.Name};");
-               }
-            }
-         }
-      }
-
-      builder.AppendLine("}");
+      foreach (var declaration in propertyContext.PartialDeclarations)
+         builder.AppendLine(declaration);
    }
 
    /// <summary>Generates the partial mappers.</summary>

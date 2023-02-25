@@ -12,6 +12,8 @@ using Microsoft.CodeAnalysis;
 
 internal class PropertyMappingContext
 {
+   public List<string> PartialDeclarations { get; }
+
    public INamedTypeSymbol SourceType { get; }
 
    public INamedTypeSymbol TargetType { get; }
@@ -23,5 +25,13 @@ internal class PropertyMappingContext
       SourceType = sourceType;
       TargetType = targetType;
       PropertyMappings = propertyMappings;
+      PartialDeclarations = new List<string>();
+   }
+
+
+
+   public void AddPartialDeclaration(string partialDeclaration)
+   {
+      PartialDeclarations.Add(partialDeclaration);
    }
 }
