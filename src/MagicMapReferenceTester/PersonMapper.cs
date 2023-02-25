@@ -9,6 +9,6 @@ namespace MagicMapReferenceTester;
 using MagicMap;
 
 [TypeMapper(typeof(Person), typeof(Person))]
-internal partial class PersonToPersonMapper
+internal partial class PersonMapper
 {
 }

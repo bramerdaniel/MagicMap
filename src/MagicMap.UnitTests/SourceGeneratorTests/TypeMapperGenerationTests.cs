@@ -292,4 +292,46 @@ public class TypeMapperGenerationTests
 
       result.Print();
    }
+
+   [TestMethod]
+   public void EnsureCustomHandlingOfPropertiesIsPossible()
+   {
+      var code = @"using MagicMap;
+                   using System.Collections.Generic;   
+
+                   [TypeMapper(typeof(A), typeof(B))]
+                   internal partial class TestMapper 
+                   { 
+                       partial void MapValues(B source, A target)
+                       {
+                       }
+                       
+                       partial void MapValues(A source, B target)
+                       {
+                       }
+                   }
+                       
+                   internal class A 
+                   {
+                       public List<string> Values { get; }
+                   }
+
+                   internal class B 
+                   {
+                       public List<string> Values { get; }
+                   }            
+";
+
+      var result = Setup.SourceGeneratorTest()
+         .WithSource(code)
+         .Done();
+
+      result.Should().NotHaveErrors();
+
+      result.Should().HaveClass("TestMapper")
+         .WhereMethod("Map", "A source, B target")
+         .Contains("MapValues(source, target)");
+
+      result.Print();
+   }
 }

@@ -22,9 +22,3 @@ internal partial class PersonToModelMapper
       target.Size= value;
    }
 }
-
-[TypeMapper(typeof(Person), typeof(Person))]
-internal partial class PersonToPersonMapper
-{
-}
-
