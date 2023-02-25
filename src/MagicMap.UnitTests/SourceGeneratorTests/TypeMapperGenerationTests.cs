@@ -62,6 +62,42 @@ public class TypeMapperGenerationTests
       result.Print();
    }
 
+
+   [TestMethod]
+   public void EnsureMatchingPropertiesWithDifferentTypesCreateMapperPartials()
+   {
+      var code = @"using MagicMap;
+
+                   [TypeMapper(typeof(Person), typeof(Material))]
+                   internal partial class TestMapper { }
+                       
+                   internal class Person 
+                   {
+                       public int Age { get; set; }
+                   }
+
+                   internal class Material 
+                   {
+                       public double Age { get; set; }
+                   }            
+";
+
+      var result = Setup.SourceGeneratorTest()
+         .WithSource(code)
+         .Done();
+
+      result.Should().NotHaveErrors();
+      result.Should().HaveClass("TestMapper")
+         .WhereMethod("MapAge", "Person target, double value")
+         .IsPartialDefinition();
+
+      result.Should().HaveClass("TestMapper")
+         .WhereMethod("MapAge", "Material target, int value")
+         .IsPartialDefinition();
+
+      result.Print();
+   }
+
    [TestMethod]
    public void EnsureTypeMapperInRootNamespaceIsGeneratedCorrectly()
    {

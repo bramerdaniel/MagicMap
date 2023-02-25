@@ -189,7 +189,7 @@ internal class ClassAssertion : ReferenceTypeAssertions<INamedTypeSymbol, ClassA
       var builder = new StringBuilder();
       builder.AppendLine();
       builder.AppendLine("### INPUT ###");
-      builder.AppendLine(generationResult.OutputSyntaxTrees.First().ToString());
+      builder.AppendLine(generationResult.OutputSyntaxTrees.First().GetRoot().NormalizeWhitespace().ToString());
       builder.AppendLine();
       builder.AppendLine("### OUTPUT ###");
 
@@ -197,7 +197,7 @@ internal class ClassAssertion : ReferenceTypeAssertions<INamedTypeSymbol, ClassA
       {
          builder.AppendLine(resultSyntaxTree.ToString());
          builder.AppendLine();
-         builder.AppendLine("".PadRight(50, '-'));
+         builder.AppendLine("".PadRight(70, '-'));
       }
 
       return builder.ToString();

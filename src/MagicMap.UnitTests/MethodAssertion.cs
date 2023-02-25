@@ -128,6 +128,12 @@ internal class MethodAssertion : ReferenceTypeAssertions<IMethodSymbol, MethodAs
       return this;
    }
 
+   public MethodAssertion IsPartialDefinition()
+   {
+      Subject.IsPartialDefinition.Should().BeTrue();
+      return this;
+   }
+
    public async Task<string> GetCodeAsync()
    {
       var syntaxReference = Subject.DeclaringSyntaxReferences.First();

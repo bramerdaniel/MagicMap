@@ -122,14 +122,15 @@ internal class TypeMapperGenerator : IGenerator
       builder.AppendLine($"partial class {MapperTypeName}");
       builder.AppendLine("{");
 
-      var unmapped = GenerateMappingMethod(builder, context.SourceType, context.TargetType, InvertMappings(context.MappingSpecifications)).ToArray();
-      GeneratePartialMappers(builder, unmapped);
+      var unmappedToRight = GenerateMappingMethod(builder, context.SourceType, context.TargetType, InvertMappings(context.MappingSpecifications)).ToArray();
 
+      (IPropertySymbol source, IPropertySymbol target)[] unmappedToLeft = null;
       if (!context.SourceEqualsTargetType)
-      {
-         unmapped = GenerateMappingMethod(builder, context.TargetType, context.SourceType, context.MappingSpecifications).ToArray();
-         GeneratePartialMappers(builder, unmapped);
-      }
+         unmappedToLeft = GenerateMappingMethod(builder, context.TargetType, context.SourceType, context.MappingSpecifications).ToArray();
+
+      GeneratePartialMappers(builder, unmappedToRight);
+      if (unmappedToLeft != null)
+         GeneratePartialMappers(builder, unmappedToLeft);
 
       builder.AppendLine("}");
    }
@@ -162,7 +163,6 @@ internal class TypeMapperGenerator : IGenerator
             {
                if (!target.Type.Equals(source.Type, SymbolEqualityComparer.Default))
                {
-                  builder.AppendLine("// types do not match");
                   builder.Append($"Map{source.Name}(target, source.{source.Name});");
                   yield return (source, target);
                }
@@ -177,12 +177,19 @@ internal class TypeMapperGenerator : IGenerator
       builder.AppendLine("}");
    }
 
+   /// <summary>Generates the partial mappers.</summary>
+   /// <param name="builder">The builder.</param>
+   /// <param name="unmapped">The unmapped.</param>
    private void GeneratePartialMappers(StringBuilder builder, (IPropertySymbol source, IPropertySymbol target)[] unmapped)
    {
       foreach (var tuple in unmapped)
       {
-         builder.Append(
-            $"partial void Map{tuple.target.Name}({context.TargetType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} target, {tuple.source.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} value);");
+         var targetType = tuple.target.ContainingType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+         var sourceValueType = tuple.source.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+
+         builder.AppendLine($"/// <summary>Can be implemented to support the mapping of the {tuple.target.Name} property</summary>");
+         builder.AppendLine($"partial void Map{tuple.target.Name}({targetType} target, {sourceValueType} value);");
+         builder.AppendLine();
       }
    }
 
