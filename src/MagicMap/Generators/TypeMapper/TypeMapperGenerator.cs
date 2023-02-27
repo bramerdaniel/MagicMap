@@ -21,13 +21,16 @@ internal class TypeMapperGenerator : IGenerator
 
    private readonly ITypeMapperContext context;
 
+   private readonly string fileName;
+
    #endregion
 
    #region Constructors and Destructors
 
-   public TypeMapperGenerator(ITypeMapperContext context)
+   public TypeMapperGenerator(ITypeMapperContext context, string fileName)
    {
       this.context = context ?? throw new ArgumentNullException(nameof(context));
+      this.fileName = fileName ?? throw new ArgumentNullException(nameof(fileName));
    }
 
    #endregion
@@ -49,7 +52,11 @@ internal class TypeMapperGenerator : IGenerator
       if (!context.MapperType.ContainingNamespace.IsGlobalNamespace)
          builder.AppendLine("}");
 
-      var generatedSource = new GeneratedSource { Name = $"{MapperTypeName}.generated.cs", Code = builder.ToString() };
+      var generatedSource = new GeneratedSource
+      {
+         Name = fileName,
+         Code = builder.ToString()
+      };
 
       return generatedSource;
    }

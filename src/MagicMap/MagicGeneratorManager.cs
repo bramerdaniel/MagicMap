@@ -6,14 +6,21 @@
 
 namespace MagicMap
 {
+   using System.Collections.Generic;
+
    using MagicMap.Generators;
    using MagicMap.Generators.TypeMapper;
 
    using Microsoft.CodeAnalysis;
-   using Microsoft.CodeAnalysis.CSharp.Syntax;
 
    internal class MagicGeneratorManager
    {
+      #region Constants and Fields
+
+      private readonly HashSet<string> usedFileNames = new();
+
+      #endregion
+
       #region Public Properties
 
       public Compilation Compilation { get; private set; }
@@ -24,27 +31,21 @@ namespace MagicMap
 
       internal static string TypeMapperAttributeName => "MagicMap.TypeMapperAttribute";
 
-      internal INamedTypeSymbol TypeMapperAttribute { get; private set; }
-
       #endregion
 
       #region Public Methods and Operators
 
       public static MagicGeneratorManager FromCompilation(Compilation compilation)
       {
-         return new MagicGeneratorManager
-         {
-            Compilation = compilation, TypeMapperAttribute = compilation.GetTypeByMetadataName(TypeMapperAttributeName),
-            //BooleanType = compilation.GetTypeByMetadataName("System.Boolean"),
-            //VoidType = compilation.GetTypeByMetadataName("System.Void")
-         };
+         return new MagicGeneratorManager { Compilation = compilation };
       }
 
       public bool TryFindGenerator(IGeneratorContext generatorContext, out IGenerator generator)
       {
          if (generatorContext is ITypeMapperContext typeMapperContext)
          {
-            generator = new TypeMapperGenerator(typeMapperContext);
+            var fileName = GetFreeFileName(typeMapperContext.MapperType.Name);
+            generator = new TypeMapperGenerator(typeMapperContext, fileName);
             return true;
          }
 
@@ -56,58 +57,16 @@ namespace MagicMap
 
       #region Methods
 
-      internal bool IsTypeMapperAttribute(AttributeData attributeData)
+      private string GetFreeFileName(string hintName)
       {
-         if (TypeMapperAttribute.Equals(attributeData.AttributeClass, SymbolEqualityComparer.Default))
-            return true;
+         var fileName = $"{hintName}.generated.cs";
+         var counter = 0;
 
-         return false;
-      }
+         while (usedFileNames.Contains(fileName))
+            fileName = $"{hintName}.{++counter}.generated.cs";
 
-      private bool InspectAndInitialize(ClassDeclarationSyntax candidate, out SetupClassInfo setupClassInfo)
-      {
-         setupClassInfo = null;
-         var semanticModel = Compilation.GetSemanticModel(candidate.SyntaxTree);
-
-         if (!(ModelExtensions.GetDeclaredSymbol(semanticModel, candidate) is INamedTypeSymbol classSymbol))
-            return false;
-
-         foreach (var attributeData in classSymbol.GetAttributes())
-         {
-            if (IsTypeMapperAttribute(attributeData))
-            {
-               setupClassInfo = new SetupClassInfo(this, candidate, semanticModel, classSymbol, attributeData);
-               return true;
-            }
-         }
-
-         return false;
-      }
-
-      private bool IsSetupClass(ClassDeclarationSyntax candidate)
-      {
-         var semanticModel = Compilation.GetSemanticModel(candidate.SyntaxTree);
-
-         var classSymbol = (ITypeSymbol)ModelExtensions.GetDeclaredSymbol(semanticModel, candidate);
-
-         if (classSymbol == null)
-            return false;
-
-         foreach (var attributeData in classSymbol.GetAttributes())
-         {
-            if (TypeMapperAttribute.Equals(attributeData.AttributeClass, SymbolEqualityComparer.Default))
-               return true;
-
-            var attributeName = attributeData.AttributeClass?.Name;
-
-            if (attributeName == "FluentSetupAttribute")
-               return true;
-
-            if (attributeName == "FluentSetup")
-               return true;
-         }
-
-         return false;
+         usedFileNames.Add(fileName);
+         return fileName;
       }
 
       #endregion

@@ -40,6 +40,7 @@ namespace MagicMap
       private void GenerateSourceFromContext(SourceProductionContext productionContext, (ImmutableArray<IGeneratorContext> GeneratorContext, Compilation Compilation) data)
       {
          var generatorManager = MagicGeneratorManager.FromCompilation(data.Compilation);
+
          foreach (var generatorContext in data.GeneratorContext)
          {
             try
@@ -56,8 +57,7 @@ namespace MagicMap
          }
       }
 
-      private static void RunGenerator(SourceProductionContext productionContext, MagicGeneratorManager generatorManager,
-         IGeneratorContext generatorContext)
+      private static void RunGenerator(SourceProductionContext productionContext, MagicGeneratorManager generatorManager, IGeneratorContext generatorContext)
       {
          if (generatorManager.TryFindGenerator(generatorContext, out var generator))
          {

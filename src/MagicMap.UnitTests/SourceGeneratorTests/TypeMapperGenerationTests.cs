@@ -334,4 +334,43 @@ public class TypeMapperGenerationTests
 
       result.Print();
    }
+
+   [TestMethod]
+   public void EnsureTwoTypeMapperInDifferentNamespacesAreGeneratedCorrectly()
+   {
+      var code = @"namespace First
+                   {   
+                      internal class A { }
+                      internal class B { }
+                      
+                      [MagicMap.TypeMapperAttribute(typeof(A), typeof(B))]
+                      internal partial class Mapper { }
+                   }
+
+                   namespace Second
+                   {   
+                      internal class A { }
+                      internal class B { }
+                      
+                      [MagicMap.TypeMapperAttribute(typeof(A), typeof(B))]
+                      internal partial class Mapper { }
+                   }
+";
+
+      var result = Setup.SourceGeneratorTest()
+         .WithSource(code)
+         .Done();
+
+      result.Should().NotHaveErrors().And
+         .HaveClass("First.Mapper")
+         .WithMethod("Map", "First.A", "First.B")
+         .WithInternalModifier();
+
+      result.Should()
+         .HaveClass("Second.Mapper")
+         .WithMethod("Map", "Second.A", "Second.B")
+         .WithInternalModifier();
+
+      result.Print();
+   }
 }
