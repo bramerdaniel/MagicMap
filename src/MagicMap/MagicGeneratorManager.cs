@@ -18,8 +18,6 @@ namespace MagicMap
 
       public Compilation Compilation { get; private set; }
 
-      public INamedTypeSymbol VoidType { get; private set; }
-
       #endregion
 
       #region Properties
