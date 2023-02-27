@@ -2,7 +2,7 @@
 	<PropertyGroup>
 		<MagicMapPackageVersion>0.0.2</MagicMapPackageVersion>
 		<SignAssembly>True</SignAssembly>
-		<AssemblyOriginatorKeyFile>..\MagicMap.snk</AssemblyOriginatorKeyFile>
+		<AssemblyOriginatorKeyFile>$(SolutionDir)MagicMap.snk</AssemblyOriginatorKeyFile>
 	</PropertyGroup>
 
 	<PropertyGroup>
