@@ -25,6 +25,5 @@ namespace MagicMap
 
          return $"{char.ToUpperInvariant(value[0])}{value.Substring(1)}";
       }
-
    }
 }
