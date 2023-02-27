@@ -50,8 +50,9 @@ namespace MagicMap.UnitTests.Assertions
       public AndConstraint<GenerationResultAssertion> NotHaveClass(string className)
       {
          var classType = Subject.OutputCompilation.GetTypeByMetadataName(className);
-
-         Assert.IsNull(classType, $"The class {className} was found but it should not exist. {Environment.NewLine}{Subject.OutputSyntaxTrees.Last()}");
+         if(classType != null)
+            throw new AssertFailedException($"The class {className} was found but it should not exist. {Environment.NewLine}{Subject.OutputSyntaxTrees.Last()}");
+         
          return new AndConstraint<GenerationResultAssertion>(this);
       }
 

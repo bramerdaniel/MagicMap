@@ -14,17 +14,19 @@ namespace MagicMap.IntegrationTests.Tests
     {
         #region Public Methods and Operators
 
-        
-        private static PartialPersonMapper CreateTarget()
+
+        private static PersonMapper CreateTarget()
         {
-            return new PartialPersonMapper();
+            return new PersonMapper();
         }
 
         [TestMethod]
         public void EnsureMappingFromLeftToRightWorksCorrectly()
         {
             var value = "Robert";
-            //var personModel = CreateTarget()..Map(new Person { Name = value , Age = 34});
+
+
+            var personModel = new Person { Name = value, Age = 34 }.ToPersonModel();
             //personModel.Name.Should().Be(value);
             //personModel.Age.Should().Be(34);
         }
@@ -33,7 +35,7 @@ namespace MagicMap.IntegrationTests.Tests
         #endregion
 
         [TypeMapper(typeof(Person), typeof(PersonModel))]
-        internal partial class PartialPersonMapper
+        internal partial class PersonMapper
         {
         }
 
@@ -42,8 +44,8 @@ namespace MagicMap.IntegrationTests.Tests
             #region Public Properties
 
             public string Name { get; set; }
-            
-            public int Age{ get; set; }
+
+            public int Age { get; set; }
 
             #endregion
         }
@@ -62,6 +64,22 @@ namespace MagicMap.IntegrationTests.Tests
             public int Age { get; }
 
             #endregion
+        }
+    }
+
+    partial class Hans
+    {
+        partial class Peter
+        {
+            
+        }
+    }
+
+    partial class Hans
+    {
+        partial class Peter
+        {
+
         }
     }
 }

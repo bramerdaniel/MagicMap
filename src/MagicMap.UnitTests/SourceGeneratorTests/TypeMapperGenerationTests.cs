@@ -336,6 +336,36 @@ public class TypeMapperGenerationTests
    }
 
    [TestMethod]
+   public void EnsureNestedMapperTypesAreIgnored()
+   {
+      var code = @"namespace First
+                   {   
+                      internal class A { }
+                      internal class B { }
+
+                      internal class Outer
+                      {
+                         [MagicMap.TypeMapperAttribute(typeof(A), typeof(B))]
+                         internal partial class Mapper
+                         {
+
+                         }
+                      }
+                   }
+";
+
+      var result = Setup.SourceGeneratorTest()
+         .WithSource(code)
+         .Done();
+
+      result.Should().NotHaveErrors();
+      result.Should().NotHaveClass("First.Mapper");
+
+
+      result.Print();
+   }
+
+   [TestMethod]
    public void EnsureTwoTypeMapperInDifferentNamespacesAreGeneratedCorrectly()
    {
       var code = @"namespace First
