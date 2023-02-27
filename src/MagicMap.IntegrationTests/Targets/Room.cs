@@ -6,7 +6,7 @@
 
 using System.Collections.Generic;
 
-namespace FluentSetups.IntegrationTests.Targets
+namespace MagicMap.IntegrationTests.Targets
 {
     public record Room(IEnumerable<Person> People);
 }

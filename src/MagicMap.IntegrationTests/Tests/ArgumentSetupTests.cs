@@ -4,15 +4,9 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-using System.Collections.Generic;
-
-using FluentAssertions;
-
-using FluentSetups.IntegrationTests.Targets;
-
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace FluentSetups.IntegrationTests.Tests
+namespace MagicMap.IntegrationTests.Tests
 {
     [TestClass]
     public class ArgumentSetupTests
@@ -22,13 +16,7 @@ namespace FluentSetups.IntegrationTests.Tests
         [TestMethod]
         public void SetupArgumentWithValue()
         {
-            var argument = Setup.Argument()
-                .WithName("FilePath")
-                .WithValue("SomeFilePath.cs")
-                .Done();
 
-            argument.Name.Should().Be("FilePath");
-            argument.Value.Should().Be("SomeFilePath.cs");
         }
 
         #endregion

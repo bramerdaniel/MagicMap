@@ -4,11 +4,8 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-using FluentSetups.IntegrationTests.Targets;
-
-namespace FluentSetups.IntegrationTests.Setups
+namespace MagicMap.IntegrationTests.Setups
 {
-    [FluentSetup(typeof(Argument))]
     public partial class ArgumentSetup
     {
     }

@@ -352,6 +352,3 @@ MigrationBackup/
 # private soulution folders
 /_private
 
-# certificates
-/certificate
-*.snk

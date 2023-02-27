@@ -4,12 +4,9 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-using FluentSetups.IntegrationTests.Setups;
-
-namespace FluentSetups.IntegrationTests
+namespace MagicMap.IntegrationTests
 {
     public partial class Setup
     {
-        public static MugliSetup Mugli() => new MugliSetup().WithLightPower(20);
     }
 }

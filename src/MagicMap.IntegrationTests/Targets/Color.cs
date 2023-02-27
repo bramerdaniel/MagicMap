@@ -4,7 +4,7 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace FluentSetups.IntegrationTests.Targets;
+namespace MagicMap.IntegrationTests.Targets;
 
 public class Color
 {

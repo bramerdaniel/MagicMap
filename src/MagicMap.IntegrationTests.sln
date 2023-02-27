@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.1.32414.318
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FluentSetups.IntegrationTests", "FluentSetups.IntegrationTests\FluentSetups.IntegrationTests.csproj", "{F24EC104-98D1-41C9-81F1-4F5C6E0DB3FD}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{E7DEA3F5-C140-42F0-8B72-102639603466}"
 	ProjectSection(SolutionItems) = preProject
 		..\.github\workflows\buildAndTest.yml = ..\.github\workflows\buildAndTest.yml
@@ -12,16 +10,18 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		Directory.Build.targets = Directory.Build.targets
 	EndProjectSection
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MagicMap.IntegrationTests", "MagicMap.IntegrationTests\MagicMap.IntegrationTests.csproj", "{40123E01-D53F-4434-AE7A-D30125A2DD65}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{F24EC104-98D1-41C9-81F1-4F5C6E0DB3FD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F24EC104-98D1-41C9-81F1-4F5C6E0DB3FD}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F24EC104-98D1-41C9-81F1-4F5C6E0DB3FD}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F24EC104-98D1-41C9-81F1-4F5C6E0DB3FD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{40123E01-D53F-4434-AE7A-D30125A2DD65}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{40123E01-D53F-4434-AE7A-D30125A2DD65}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{40123E01-D53F-4434-AE7A-D30125A2DD65}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{40123E01-D53F-4434-AE7A-D30125A2DD65}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
