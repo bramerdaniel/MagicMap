@@ -16,8 +16,6 @@ namespace MagicMap
    {
       #region Public Properties
 
-      public ITypeSymbol BooleanType { get; private set; }
-
       public Compilation Compilation { get; private set; }
 
       public INamedTypeSymbol VoidType { get; private set; }
