@@ -1,0 +1,137 @@
+name: build workflow
+
+on:
+  push:
+    paths-ignore:
+    - 'README.md'
+  pull_request:
+    paths-ignore:
+    - 'README.md'    
+  workflow_dispatch:
+
+env:
+  SOLUTION_DIRECTORY : src
+  SOLUTION_PATH : src/MagicMap.sln
+  INTEGRATION_TEST_SOLUTION : src/MagicMap.IntegrationTests.sln
+  
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: checkout branch
+      uses: actions/checkout@v3
+    
+    - name: setup NuGet.exe
+      uses: NuGet/setup-nuget@v1.0.6 
+      with:
+        nuget-version: latest
+        nuget-api-key: ${{secrets.NUGET_API_KEY}}
+    
+    - name: create Debug
+      run: mkdir ${{ env.SOLUTION_DIRECTORY }}\Debug
+
+    - name: restore NuGet packages
+      run: nuget restore ${{ env.SOLUTION_PATH }}
+    
+    - name: setup MSBuild
+      uses: microsoft/setup-msbuild@v1.1
+
+    - name: build solution
+      run: msbuild ${{ env.SOLUTION_PATH }} -property:Configuration=Release
+
+    - name: show build results
+      run: dir ${{ env.SOLUTION_DIRECTORY }}\Release
+
+    - name: upload nuget package
+      uses: actions/upload-artifact@v3.0.0
+      with:
+        name: nugetPackage
+        path: ${{ env.SOLUTION_DIRECTORY }}\Release\*.nupkg
+        retention-days: 1
+
+    - name: setup VSTest.console.exe
+      uses: darenm/Setup-VSTest@v1
+
+    - name: run net48 unit tests
+      run: vstest.console.exe ${{ env.SOLUTION_DIRECTORY }}\Release\net48\MagicMap.UnitTests.dll
+    
+    - name: run net6.0 unit tests
+      run: vstest.console.exe ${{ env.SOLUTION_DIRECTORY }}\Release\net6.0\MagicMap.UnitTests.dll
+
+    - name: upload binaries
+      uses: actions/upload-artifact@v3.0.0
+      with:
+        name: binaries
+        path: ${{ env.SOLUTION_DIRECTORY }}\Release\net48\*
+        retention-days: 1      
+
+    
+  integration-tests:
+    needs: build
+    runs-on: windows-latest
+    steps:
+    - name: checkout branch
+      uses: actions/checkout@v3
+
+    # the output directory of the MagicMap project,
+    # this makes it possible to use that also for local usage
+    - name: download artifacts
+      uses: actions/download-artifact@v3.0.0
+      with:
+        name: nugetPackage
+        path: src\Debug 
+    
+    - name: show working dir
+      run: dir
+
+    #- name: show nuget packages
+    #  run: dir src\Debug\*.nupkg /B
+
+    - name: setup NuGet.exe
+      uses: NuGet/setup-nuget@v1.0.6
+      with:
+        nuget-version: latest
+        nuget-api-key: ${{secrets.NUGET_API_KEY}}
+    
+    - name: restore NuGet packages
+      run: nuget restore ${{ env.INTEGRATION_TEST_SOLUTION }}
+    
+    - name: setup MSBuild
+      uses: microsoft/setup-msbuild@v1.1
+
+    - name: build solution
+      run: msbuild ${{ env.INTEGRATION_TEST_SOLUTION }} -property:Configuration=Release
+   
+    - name: setup VSTest.console.exe
+      uses: darenm/Setup-VSTest@v1
+
+    - name: run integration tests
+      run: vstest.console.exe src/Release/net6.0/MagicMap.IntegrationTests.dll
+
+    - name: show working dir
+      run: dir
+
+  publish:
+    needs: [integration-tests]
+    runs-on: windows-latest
+    if: ${{ github.ref == 'refs/heads/master' }}
+    steps:
+    - name: download artifacts
+      uses: actions/download-artifact@v3.0.0
+      with:
+        name: nugetPackage
+        path: packages
+        
+    - name: show packages
+      run: dir packages
+      
+    - name: setup NuGet.exe
+      uses: NuGet/setup-nuget@v1.0.6
+      with:
+        nuget-version: latest
+        #nuget-api-key: ${{secrets.NUGET_API_KEY}} 
+      
+    - name: push to nuget.org
+      run: nuget push packages\*.nupkg -src https://api.nuget.org/v3/index.json -ApiKey ${{secrets.NUGET_API_KEY}} -SkipDuplicate
+  
