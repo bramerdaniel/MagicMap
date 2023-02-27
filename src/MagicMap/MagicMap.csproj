@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
+		<OutputPath>$(SolutionDir)$(Configuration)</OutputPath>
 		<TargetFramework>netstandard2.0</TargetFramework>
 		<LangVersion>11</LangVersion>
 
