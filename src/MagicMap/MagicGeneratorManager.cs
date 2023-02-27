@@ -1,20 +1,18 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="FluentGeneratorContext.cs" company="consolovers">
-//   Copyright (c) daniel bramer 2022 - 2022
+// <copyright file="MagicGeneratorManager.cs" company="consolovers">
+//   Copyright (c) daniel bramer 2022 - 2023
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
 namespace MagicMap
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
-    using MagicMap.Generators;
-    using MagicMap.Generators.TypeMapper;
-    using Microsoft.CodeAnalysis;
-    using Microsoft.CodeAnalysis.CSharp.Syntax;
+   using MagicMap.Generators;
+   using MagicMap.Generators.TypeMapper;
 
-    internal class MagicGeneratorManager
+   using Microsoft.CodeAnalysis;
+   using Microsoft.CodeAnalysis.CSharp.Syntax;
+
+   internal class MagicGeneratorManager
    {
       #region Public Properties
 
@@ -28,7 +26,6 @@ namespace MagicMap
 
       #region Properties
 
-
       internal static string TypeMapperAttributeName => "MagicMap.TypeMapperAttribute";
 
       internal INamedTypeSymbol TypeMapperAttribute { get; private set; }
@@ -41,13 +38,23 @@ namespace MagicMap
       {
          return new MagicGeneratorManager
          {
-            Compilation = compilation,
-            TypeMapperAttribute = compilation.GetTypeByMetadataName(TypeMapperAttributeName),
+            Compilation = compilation, TypeMapperAttribute = compilation.GetTypeByMetadataName(TypeMapperAttributeName),
             //BooleanType = compilation.GetTypeByMetadataName("System.Boolean"),
             //VoidType = compilation.GetTypeByMetadataName("System.Void")
          };
       }
 
+      public bool TryFindGenerator(IGeneratorContext generatorContext, out IGenerator generator)
+      {
+         if (generatorContext is ITypeMapperContext typeMapperContext)
+         {
+            generator = new TypeMapperGenerator(typeMapperContext);
+            return true;
+         }
+
+         generator = null;
+         return false;
+      }
 
       #endregion
 
@@ -108,17 +115,5 @@ namespace MagicMap
       }
 
       #endregion
-
-      public bool TryFindGenerator(IGeneratorContext generatorContext, out IGenerator generator)
-      {
-         if (generatorContext is ITypeMapperContext typeMapperContext)
-         {
-            generator = new TypeMapperGenerator(typeMapperContext);
-            return true;
-         }
-
-         generator = null;
-         return false;
-      }
    }
 }
