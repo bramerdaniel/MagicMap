@@ -11,6 +11,7 @@ using System.Reflection;
 using System.Text;
 
 using FluentAssertions;
+using FluentAssertions.Execution;
 using FluentAssertions.Primitives;
 
 using MagicMap.UnitTests.Setups;
@@ -60,6 +61,15 @@ internal class ClassAssertion : ReferenceTypeAssertions<INamedTypeSymbol, ClassA
 
       Assert.IsNotNull(methodSymbol, $"The method {methodName} could not be found.{GetGeneratedCode()}");
       return new MethodAssertion(generationResult, methodSymbol);
+   }
+
+   public PropertyAssertion WhereProperty(string propertyName)
+   {
+      var property = Subject.GetMembers(propertyName).OfType<IPropertySymbol>().FirstOrDefault();
+      if (property == null)
+         throw new AssertionFailedException($"The expected property {propertyName} could not be found.{GetGeneratedCode()}");
+
+      return new PropertyAssertion(generationResult, property);
    }
 
    private IMethodSymbol MatchMethodBySignature(IMethodSymbol[] methodSymbols, string signature)

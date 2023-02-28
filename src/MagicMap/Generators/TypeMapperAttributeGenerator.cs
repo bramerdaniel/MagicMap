@@ -11,13 +11,14 @@ namespace MagicMap.Generators
    using System.Linq;
    using MagicMap.Generators.TypeMapper;
    using Microsoft.CodeAnalysis;
-   using Microsoft.CodeAnalysis.CSharp.Syntax;
 
    internal class TypeMapperAttributeGenerator
    {
       private readonly INamedTypeSymbol attributeSymbol;
 
       private readonly PropertyMappingAttributeGenerator propertyMappingAttribute;
+
+      private readonly MapperFactoryAttributeGenerator mapperFactoryAttribute;
 
       #region Public Properties
 
@@ -58,26 +59,17 @@ namespace MagicMap
             throw new InvalidOperationException($"The source generator should have generated the type {TypeMapperAttributeName} before");
 
          var mappingAttribute = PropertyMappingAttributeGenerator.FromCompilation(compilation);
-         return new TypeMapperAttributeGenerator(attributeType, mappingAttribute);
+         var factoryAttribute = MapperFactoryAttributeGenerator.FromCompilation(compilation);
+         return new TypeMapperAttributeGenerator(attributeType, mappingAttribute, factoryAttribute);
       }
 
-      private TypeMapperAttributeGenerator(INamedTypeSymbol attributeSymbol, PropertyMappingAttributeGenerator propertyMappingAttribute)
+      private TypeMapperAttributeGenerator(INamedTypeSymbol attributeSymbol, 
+         PropertyMappingAttributeGenerator propertyMappingAttribute,
+         MapperFactoryAttributeGenerator mapperFactoryAttribute)
       {
          this.attributeSymbol = attributeSymbol ?? throw new ArgumentNullException(nameof(attributeSymbol));
          this.propertyMappingAttribute = propertyMappingAttribute ?? throw new ArgumentNullException(nameof(propertyMappingAttribute));
-      }
-
-      private static bool IsGeneratedPartialPart(INamedTypeSymbol namedTypeSymbol)
-      {
-         
-
-         foreach (var reference in namedTypeSymbol.DeclaringSyntaxReferences)
-         {
-            if (reference.SyntaxTree.FilePath.EndsWith(".generated.cs", StringComparison.InvariantCultureIgnoreCase))
-               return true;
-         }
-
-         return false;
+         this.mapperFactoryAttribute = mapperFactoryAttribute ?? throw new ArgumentNullException(nameof(mapperFactoryAttribute));
       }
 
       public bool TryExtractData(INamedTypeSymbol classSymbol, out ITypeMapperContext typeMapperContext)
@@ -109,7 +101,9 @@ namespace MagicMap
             MapperType = classSymbol,
             SourceType = left,
             TargetType = right,
-            MappingSpecifications = CreateMappingDescriptions(classSymbol)
+            MappingSpecifications = CreateMappingDescriptions(classSymbol),
+            FactoryAttribute = mapperFactoryAttribute.AttributeSymbol
+
          };
          return true;
       }

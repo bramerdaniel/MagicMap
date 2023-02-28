@@ -66,7 +66,7 @@ internal class TypeMapperGenerator : IGenerator
    #region Properties
 
    private string MapperTypeName => context.MapperType.Name;
-   
+
    #endregion
 
    #region Methods
@@ -127,9 +127,11 @@ internal class TypeMapperGenerator : IGenerator
       builder.AppendLine($"partial class {MapperTypeName}");
       builder.AppendLine("{");
 
+      GeneratedSingletonInstance(builder);
+
       var propertyContext = new PropertyMappingContext(context.SourceType, context.TargetType, InvertMappings(context.MappingSpecifications));
       GenerateMappingMethod(builder, propertyContext);
-      
+
       if (!context.SourceEqualsTargetType)
       {
          propertyContext = new PropertyMappingContext(context.TargetType, context.SourceType, context.MappingSpecifications);
@@ -137,6 +139,59 @@ internal class TypeMapperGenerator : IGenerator
       }
 
       builder.AppendLine("}");
+   }
+
+
+   /// <summary>
+   /// Generateds the singleton instance <see cref=""/>.
+   /// </summary>
+   /// <code>
+   /// [MapperFactory]
+   /// static Mapper CreateMapper() => new Mapper();
+   /// </code>
+   /// <param name="builder">The builder.</param>
+   private void GeneratedSingletonInstance(StringBuilder builder)
+   {
+      var method = context.MapperType.GetMethod(IsDefaultMapperFactory);
+      if (method != null)
+      {
+         builder.AppendLine("/// <summary>The default singleton instance of the generated type mapper.</summary>");
+         builder.AppendLine($"public static {context.MapperType.Name} Default {{ get; private set; }} = CreateDefaultMapper();");
+      }
+      else
+      {
+         var defaultConstructor = context.MapperType.Constructors.FirstOrDefault(c => c.Parameters.Length == 0);
+         if (defaultConstructor != null)
+         {
+            builder.AppendLine("/// <summary>");
+            builder.AppendLine("/// The default singleton instance of the generated type mapper.");
+            builder.AppendLine("/// To customize the creation of your default mapper, just create a static method, and mark it with the <see cref=\"MagicMap.MapperFactoryAttribute\"/>");
+            builder.AppendLine("/// </summary>");
+            builder.AppendLine("/// <code>");
+            builder.AppendLine("/// [MapperFactory]");
+            builder.AppendLine("/// static Mapper CreateMapper() => new Mapper();");
+            builder.AppendLine("/// </code>");
+            builder.AppendLine($"public static {context.MapperName()} Default {{ get; private set; }} = new {context.MapperName()}();");
+            builder.AppendLine();
+         }
+      }
+   }
+
+   private bool IsDefaultMapperFactory(IMethodSymbol m)
+   {
+      if (!m.IsStatic || m.Parameters.Length > 0)
+         return false;
+
+      if (!m.ReturnType.Equals(context.MapperType, SymbolEqualityComparer.Default))
+         return false;
+
+      return HasFactoryAttribute(m);
+   }
+
+   private bool HasFactoryAttribute(IMethodSymbol methodSymbol)
+   {
+      return methodSymbol.GetAttributes()
+         .Any(a => context.FactoryAttribute.Equals(a.AttributeClass, SymbolEqualityComparer.Default));
    }
 
    private void GenerateMappingMethod(StringBuilder builder, PropertyMappingContext propertyContext)
@@ -188,7 +243,7 @@ internal class TypeMapperGenerator : IGenerator
          builder.AppendLine(declaration);
    }
 
-   private void GenerateExtensionMethod(StringBuilder builder, INamedTypeSymbol sourceType,  INamedTypeSymbol targetType)
+   private void GenerateExtensionMethod(StringBuilder builder, INamedTypeSymbol sourceType, INamedTypeSymbol targetType)
    {
       var targetName = targetType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
       var sourceName = sourceType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);

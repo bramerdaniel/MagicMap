@@ -22,7 +22,9 @@ internal struct TypeMapperContext : ITypeMapperContext
 
    public bool SourceEqualsTargetType => SourceType.Equals(TargetType, SymbolEqualityComparer.Default);
 
-   public IDictionary<string, string> MappingSpecifications { get; set; } 
+   public IDictionary<string, string> MappingSpecifications { get; set; }
+
+   public INamedTypeSymbol FactoryAttribute { get; set; }
 
    public bool IsEnabled()
    {

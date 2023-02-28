@@ -22,4 +22,19 @@ interface ITypeMapperContext : IGeneratorContext
     bool SourceEqualsTargetType { get; }
 
    IDictionary<string, string> MappingSpecifications { get; }
+
+   INamedTypeSymbol FactoryAttribute { get; }
+}
+
+internal static class TypeMapperContextExtensions
+{
+   public static string FullMapperName(this ITypeMapperContext context)
+   {
+      return context.MapperType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+   }
+
+   public static string MapperName(this ITypeMapperContext context)
+   {
+      return context.MapperType.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
+   }
 }
