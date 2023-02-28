@@ -7,7 +7,7 @@
 namespace MagicMap.IntegrationTests.Tests.MapperTests
 {
     [TypeMapper(typeof(Person), typeof(PersonModel))]
-    internal partial class PersonMapper2
+    internal partial class PersonMapper
     {
     }
 }

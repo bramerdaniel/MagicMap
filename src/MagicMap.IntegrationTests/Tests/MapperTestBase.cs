@@ -6,9 +6,9 @@
 
 namespace MagicMap.IntegrationTests.Tests
 {
-    internal class MapperTestBase<T>
+    public class MapperTestBase<T>
         where T : new()
     {
-        public T Mapper { get; set; } = new T();
+        internal T Mapper { get; set; } = new T();
     }
 }

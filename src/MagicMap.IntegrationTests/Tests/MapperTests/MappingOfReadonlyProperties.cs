@@ -15,22 +15,28 @@ namespace MagicMap.IntegrationTests.Tests.MapperTests
     {
         #region Public Methods and Operators
 
-
         [TestMethod]
         public void EnsureMappingFromLeftToRightWorksCorrectly()
         {
-            var value = "Robert";
+            var person = new Person();
+            PersonMapper.Default.Map(new PersonModel { Name = "Model" }, person);
+            person.Name.Should().Be("Model");
+            person.Age.Should().Be(66);
+        }
 
-
-            var personModel = new Person { Name = value, Age = 34 }.ToPersonModel();
-            personModel.Name.Should().Be(value);
-            personModel.Age.Should().Be(34);
+        [TestMethod]
+        public void EnsureMappingFromRightToLeftWorksCorrectly()
+        {
+            var personModel = new PersonModel();
+            PersonMapper.Default.Map(new Person { Name = "Person", Age = 23 }, personModel);
+            personModel.Name.Should().Be("Person");
+            personModel.Age.Should().Be(66);
         }
 
 
         #endregion
 
-  
-   
+
+
     }
 }
