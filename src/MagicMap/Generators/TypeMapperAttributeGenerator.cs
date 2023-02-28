@@ -91,6 +91,7 @@ namespace MagicMap
             return false;
          }
 
+         // TODO we could support partial nested classes
          if (IsNestedClass(classSymbol))
          {
             typeMapperContext = null;
