@@ -10,4 +10,14 @@ namespace MagicMap.IntegrationTests.Tests.FirstNamespace
     internal partial class PersonMapper
     {
     }
+
+    [TypeMapper(typeof(Person), typeof(TrowTarget))]
+    internal partial class ThrowMupped
+    {
+        
+    }
+
+    internal class TrowTarget
+    {
+    }
 }

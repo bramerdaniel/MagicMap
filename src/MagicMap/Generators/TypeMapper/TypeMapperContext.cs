@@ -26,6 +26,8 @@ internal struct TypeMapperContext : ITypeMapperContext
 
    public INamedTypeSymbol FactoryAttribute { get; set; }
 
+   public string TargetName => MapperType?.Name ?? "TypeMapper";
+
    public bool IsEnabled()
    {
       return MapperType != null;

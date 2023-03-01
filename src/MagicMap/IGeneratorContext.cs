@@ -8,5 +8,7 @@ namespace MagicMap;
 
 internal interface IGeneratorContext
 {
+   string TargetName { get; }
+
    bool IsEnabled();
 }

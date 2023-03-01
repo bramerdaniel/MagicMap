@@ -46,6 +46,11 @@ internal class TypeMapperGenerator : IGenerator
          builder.AppendLine("{");
       }
 
+#if DEBUG
+      if (MapperTypeName.StartsWith("Throw", StringComparison.InvariantCultureIgnoreCase))
+         throw new InvalidOperationException("Throw is not supported here as mapper type name.");
+#endif
+
       GenerateMapperClass(builder);
       GenerateExtensionsClass(builder);
 
