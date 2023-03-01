@@ -9,7 +9,7 @@ namespace MagicMap.UnitTests.SourceGeneratorTests;
 using MagicMap.UnitTests.Setups;
 
 [TestClass]
-public class TypeMapperGenerationTests
+public partial class TypeMapperGenerationTests
 {
    [TestMethod]
    public void EnsureTypeMapperIsGeneratedCorrectly()
@@ -457,4 +457,7 @@ public class TypeMapperGenerationTests
 
       result.Print();
    }
+
+
+
 }

@@ -141,15 +141,6 @@ internal class TypeMapperGenerator : IGenerator
       builder.AppendLine("}");
    }
 
-
-   /// <summary>
-   /// Generateds the singleton instance <see cref=""/>.
-   /// </summary>
-   /// <code>
-   /// [MapperFactory]
-   /// static Mapper CreateMapper() => new Mapper();
-   /// </code>
-   /// <param name="builder">The builder.</param>
    private void GeneratedSingletonInstance(StringBuilder builder)
    {
       var method = context.MapperType.GetMethod(IsDefaultMapperFactory);
@@ -219,16 +210,8 @@ internal class TypeMapperGenerator : IGenerator
             var sourcePropertyName = GetSourcePropertyName(propertyContext.PropertyMappings, targetProperty.Name);
             if (TryFindSourceProperty(sourceProperties, sourcePropertyName, out var sourceProperty))
             {
-               if (!targetProperty.Type.Equals(sourceProperty.Type, SymbolEqualityComparer.Default))
-               {
-                  builder.Append($"Map{targetProperty.Name}(target, source.{sourceProperty.Name});");
-                  propertyContext.AddPartialDeclaration($"/// <summary>Can be implemented to support the mapping of the {targetProperty.Name} property</summary>");
-                  propertyContext.AddPartialDeclaration($"partial void Map{targetProperty.Name}({targetProperty.ContainingType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} target, {sourceProperty.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} value);");
-               }
-               else
-               {
-                  builder.AppendLine($"target.{targetProperty.Name} = source.{sourceProperty.Name};");
-               }
+               var mapping = CreatePropertyMapping(propertyContext, sourceProperty, targetProperty);
+               builder.AppendLine(mapping);
             }
          }
       }
@@ -236,11 +219,56 @@ internal class TypeMapperGenerator : IGenerator
       builder.AppendLine($"MapOverride(source, target);");
       builder.AppendLine("}");
 
-      propertyContext.AddPartialDeclaration("/// <summary>Implement this method to map properties the mapper could not handle for any reason</summary>");
+      builder.AppendLine("/// <summary>Implement this method to map properties the mapper could not handle for any reason</summary>");
       builder.AppendLine($"partial void MapOverride({propertyContext.SourceType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} source, {propertyContext.TargetType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} target);");
 
-      foreach (var declaration in propertyContext.PartialDeclarations)
-         builder.AppendLine(declaration);
+      foreach (var declaration in propertyContext.MemberDeclarations)
+         builder.AppendLine(declaration());
+   }
+
+   private string CreatePropertyMapping(PropertyMappingContext propertyContext, IPropertySymbol sourceProperty, IPropertySymbol targetProperty)
+   {
+      if (targetProperty.Type.Equals(sourceProperty.Type, SymbolEqualityComparer.Default))
+         return $"target.{targetProperty.Name} = source.{sourceProperty.Name};";
+
+      if (TryCreateEnumMapping(propertyContext, sourceProperty, targetProperty, out var enumMapping))
+         return enumMapping;
+
+      propertyContext.AddMemberDeclaration(() => CreatePartialMethod(sourceProperty, targetProperty));
+      return $"Map{targetProperty.Name}(target, source.{sourceProperty.Name});";
+   }
+
+   private bool TryCreateEnumMapping(PropertyMappingContext propertyContext, IPropertySymbol sourceProperty, IPropertySymbol targetProperty, out string enumMapping)
+   {
+      enumMapping = null;
+      if (IsEnum(sourceProperty.Type) && IsEnum(targetProperty.Type))
+      {
+         enumMapping = $"target.{targetProperty.Name} = ConvertEnum(source.{sourceProperty.Name});";
+         propertyContext.AddMemberDeclaration(ConvertEnumMethod);
+         return true;
+
+         string ConvertEnumMethod()
+         {
+            return $"private {targetProperty.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} ConvertEnum({sourceProperty.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} value) => default;";
+         }
+      }
+
+      return false;
+   }
+
+   private bool IsEnum(ITypeSymbol typeSymbol)
+   {
+      if (typeSymbol is INamedTypeSymbol namedTypeSymbol)
+         return namedTypeSymbol.EnumUnderlyingType != null;
+      return false;
+   }
+
+   private string CreatePartialMethod(IPropertySymbol sourceProperty, IPropertySymbol targetProperty)
+   {
+      var builder = new StringBuilder();
+      builder.AppendLine($"/// <summary>Can be implemented to support the mapping of the {targetProperty.Name} property</summary>");
+      builder.AppendLine($"partial void Map{targetProperty.Name}({targetProperty.ContainingType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} target, {sourceProperty.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} value);");
+      return builder.ToString();
    }
 
    private void GenerateExtensionMethod(StringBuilder builder, INamedTypeSymbol sourceType, INamedTypeSymbol targetType)

@@ -6,32 +6,31 @@
 
 namespace MagicMap.Generators.TypeMapper;
 
+using System;
 using System.Collections.Generic;
 
 using Microsoft.CodeAnalysis;
 
 internal class PropertyMappingContext
 {
-   public List<string> PartialDeclarations { get; }
-
    public INamedTypeSymbol SourceType { get; }
 
    public INamedTypeSymbol TargetType { get; }
 
    public IDictionary<string, string> PropertyMappings { get; }
+   
+   public List<Func<string>> MemberDeclarations { get; }
 
    public PropertyMappingContext(INamedTypeSymbol sourceType, INamedTypeSymbol targetType, IDictionary<string, string> propertyMappings)
    {
       SourceType = sourceType;
       TargetType = targetType;
       PropertyMappings = propertyMappings;
-      PartialDeclarations = new List<string>();
+      MemberDeclarations = new List<Func<string>>();
    }
 
-
-
-   public void AddPartialDeclaration(string partialDeclaration)
+   public void AddMemberDeclaration(Func<string> memberDeclaration)
    {
-      PartialDeclarations.Add(partialDeclaration);
+      MemberDeclarations.Add(memberDeclaration);
    }
 }
