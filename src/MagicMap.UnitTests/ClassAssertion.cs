@@ -72,13 +72,13 @@ internal class ClassAssertion : ReferenceTypeAssertions<INamedTypeSymbol, ClassA
       return new PropertyAssertion(generationResult, property);
    }
 
-   private IMethodSymbol MatchMethodBySignature(IMethodSymbol[] methodSymbols, string signature)
+   private IMethodSymbol MatchMethodBySignature(IMethodSymbol[] methodSymbols, string signature = null)
    {
       IMethodSymbol candidate = null;
       foreach (var methodSymbol in methodSymbols)
       {
          var methodSignature = ToSignatureString(methodSymbol);
-         if (methodSignature.StartsWith(signature))
+         if (methodSignature.StartsWith(signature ?? string.Empty))
          {
             if (candidate == null)
             {
