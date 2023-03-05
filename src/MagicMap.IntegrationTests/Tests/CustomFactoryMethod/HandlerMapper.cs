@@ -9,21 +9,21 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace MagicMap.IntegrationTests.Tests.CustomFactoryMethod
 {
-    [TypeMapper(typeof(SourcePerson), typeof(TargetPerson))]
-    internal partial class MauleMapper
+    [TypeMapper(typeof(SourceHandler), typeof(TargetHandler))]
+    internal partial class HandlerMapper
     {
-        public MauleMapper()
+        public HandlerMapper()
         {
             throw new AssertFailedException("Should never be called with true");
         }
 
-        public MauleMapper(bool flag)
+        public HandlerMapper(bool flag)
         {
         }
     }
 
-    //internal static partial class MauleMapperExtensions
-    //{
-    //    private static MauleMapper Mapper => new MauleMapper(true);
-    //}
+    internal static partial class HandlerMapperExtensions
+    {
+        // private static HandlerMapper Mapper => new HandlerMapper(true);
+    }
 }

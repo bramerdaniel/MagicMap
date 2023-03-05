@@ -6,7 +6,7 @@
 
 namespace MagicMap.IntegrationTests.Tests.CustomFactoryMethod
 {
-    internal class TargetPerson
+    internal class TargetHandler
     {
     }
 }

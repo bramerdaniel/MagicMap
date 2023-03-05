@@ -137,7 +137,7 @@ internal class TypeMapperGenerator : PartialClassGenerator, IGenerator
       builder.AppendLine($"/// The instance of the <see cref=\"{MapperTypeName}\"/> all extension methods use.");
       builder.AppendLine($"/// You can customize this by implementing this property in your own partial implementation of the extensions class.");
       builder.AppendLine("/// </summary>");
-      builder.AppendLine($"private static {MapperTypeName} Mapper =>  {MapperTypeName}.Default;");
+      builder.AppendLine($"private static {context.MapperType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} Mapper => {context.MapperType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}.Default;");
    }
 
    private void GenerateMapperClass(StringBuilder builder)

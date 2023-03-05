@@ -18,7 +18,7 @@ namespace MagicMap.IntegrationTests.Tests.CustomFactoryMethod
         [TestMethod]
         public void EnsureExtensionClassUsedCustomFactory()
         {
-            new SourceAnimal().Invoking(x => x.ToTargetAnimal())
+            new SourceHandler().Invoking(x => x.ToTargetHandler())
                 .Should().NotThrow();
         }
 
