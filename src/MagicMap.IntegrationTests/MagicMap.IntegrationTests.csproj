@@ -8,7 +8,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="MagicMap" Version="1.0.0-alpha.5" />
+		<PackageReference Include="MagicMap" Version="$(MagicMapPackageVersion)" />
 		<PackageReference Include="FluentAssertions" Version="6.10.0" />
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.5.0" />
 		<PackageReference Include="MSTest.TestAdapter" Version="3.0.2" />
@@ -25,6 +25,10 @@
 
 	<ItemGroup>
 	  <None Include="C:\Users\bramerd\source\repos\FluentSetups\src\FluentSetups.IntegrationTests\.editorconfig" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="Tests\SecondNamespace\" />
 	</ItemGroup>
 
 </Project>

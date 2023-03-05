@@ -352,3 +352,5 @@ MigrationBackup/
 # private soulution folders
 /_private
 
+# rider folder
+.idea

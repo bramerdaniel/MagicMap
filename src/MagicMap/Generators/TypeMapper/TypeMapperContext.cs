@@ -28,6 +28,8 @@ internal struct TypeMapperContext : ITypeMapperContext
 
    public string TargetName => MapperType?.Name ?? "TypeMapper";
 
+   public INamedTypeSymbol MapperExtensionsType { get; set; }
+
    public bool IsEnabled()
    {
       return MapperType != null;

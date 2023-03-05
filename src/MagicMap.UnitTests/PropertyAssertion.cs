@@ -135,7 +135,12 @@ internal class PropertyAssertion : ReferenceTypeAssertions<IPropertySymbol, Prop
          .FirstOrDefault()
          .GetSyntax();
 
-      var equalsValueClauseSyntax = syntaxNode.DescendantNodes().OfType<EqualsValueClauseSyntax>().FirstOrDefault();
+      var syntaxNodes = syntaxNode.DescendantNodes().ToArray();
+      var arrowExpression = syntaxNodes.OfType<ArrowExpressionClauseSyntax>().FirstOrDefault();
+      if (arrowExpression != null)
+         return arrowExpression.Expression.ToFullString();
+
+      var equalsValueClauseSyntax = syntaxNodes.OfType<EqualsValueClauseSyntax>().FirstOrDefault();
       return equalsValueClauseSyntax?.Value.ToString() ?? string.Empty;
    }
 }

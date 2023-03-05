@@ -118,14 +118,26 @@ internal class TypeMapperGenerator : PartialClassGenerator, IGenerator
    {
       builder.AppendLine($"{ComputeModifier()} static partial class {MapperTypeName}Extensions");
       builder.AppendLine("{");
-      builder.AppendLine($"private static {MapperTypeName} mapper = new {MapperTypeName}();");
-
+      GenerateMapperProperty(builder);
       GenerateExtensionMethod(builder, context.TargetType, context.SourceType);
 
       if (!context.SourceEqualsTargetType)
          GenerateExtensionMethod(builder, context.SourceType, context.TargetType);
 
       builder.AppendLine("}");
+   }
+
+   private void GenerateMapperProperty(StringBuilder builder)
+   {
+      var property = context.MapperExtensionsType?.GetProperty(p => p.Name == "Mapper");
+      if (property != null)
+         return;
+
+      builder.AppendLine("/// <summary>");
+      builder.AppendLine($"/// The instance of the <see cref=\"{MapperTypeName}\"/> all extension methods use.");
+      builder.AppendLine($"/// You can customize this by implementing this property in your own partial implementation of the extensions class.");
+      builder.AppendLine("/// </summary>");
+      builder.AppendLine($"private static {MapperTypeName} Mapper =>  {MapperTypeName}.Default;");
    }
 
    private void GenerateMapperClass(StringBuilder builder)
@@ -153,7 +165,7 @@ internal class TypeMapperGenerator : PartialClassGenerator, IGenerator
       if (method != null)
       {
          builder.AppendLine("/// <summary>The default singleton instance of the generated type mapper.</summary>");
-         builder.AppendLine($"public static {context.MapperType.Name} Default {{ get; private set; }} = CreateDefaultMapper();");
+         builder.AppendLine($"public static {context.MapperType.Name} Default {{ get; private set; }} = {method.Name}();");
       }
       else
       {
@@ -284,7 +296,7 @@ internal class TypeMapperGenerator : PartialClassGenerator, IGenerator
       builder.AppendLine($"if ({valueName} == null)");
       builder.AppendLine($"throw new global::System.ArgumentNullException(nameof({valueName}));");
       builder.AppendLine($"var result = new {targetName}();");
-      builder.AppendLine($"mapper.Map({valueName}, result);");
+      builder.AppendLine($"Mapper.Map({valueName}, result);");
       builder.AppendLine("return result;");
       builder.AppendLine("}");
    }

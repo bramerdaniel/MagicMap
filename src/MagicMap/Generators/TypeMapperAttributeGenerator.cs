@@ -60,10 +60,12 @@ namespace MagicMap
 
          var mappingAttribute = PropertyMappingAttributeGenerator.FromCompilation(compilation);
          var factoryAttribute = MapperFactoryAttributeGenerator.FromCompilation(compilation);
-         return new TypeMapperAttributeGenerator(attributeType, mappingAttribute, factoryAttribute);
+         return new TypeMapperAttributeGenerator(attributeType, mappingAttribute, factoryAttribute) { Compilation = compilation };
       }
 
-      private TypeMapperAttributeGenerator(INamedTypeSymbol attributeSymbol, 
+      protected Compilation Compilation { get; private set; }
+
+      private TypeMapperAttributeGenerator(INamedTypeSymbol attributeSymbol,
          PropertyMappingAttributeGenerator propertyMappingAttribute,
          MapperFactoryAttributeGenerator mapperFactoryAttribute)
       {
@@ -99,6 +101,7 @@ namespace MagicMap
          typeMapperContext = new TypeMapperContext
          {
             MapperType = classSymbol,
+            MapperExtensionsType = Compilation.GetTypeByMetadataName(GetExtensionsClassName(classSymbol)),
             SourceType = left,
             TargetType = right,
             MappingSpecifications = CreateMappingDescriptions(classSymbol),
@@ -108,11 +111,18 @@ namespace MagicMap
          return true;
       }
 
+      private static string GetExtensionsClassName(INamedTypeSymbol classSymbol)
+      {
+         if (classSymbol.ContainingNamespace.IsGlobalNamespace)
+            return $"{classSymbol.Name}Extensions";
+         return $"{classSymbol.ContainingNamespace.Name}.{classSymbol.Name}Extensions";
+      }
+
       private static bool IsNestedClass(INamedTypeSymbol classSymbol)
       {
          if (classSymbol.ContainingType == null)
             return false;
-         
+
          return classSymbol.ContainingType.IsType;
       }
 

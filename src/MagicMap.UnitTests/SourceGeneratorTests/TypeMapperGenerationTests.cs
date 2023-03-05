@@ -441,7 +441,7 @@ public partial class TypeMapperGenerationTests
                       internal partial class MapMaster 
                       {
                           [MagicMap.MapperFactory]
-                          private static MapMaster CreateDefaultMapper() => new MapMaster();
+                          private static MapMaster CustomMapper() => new MapMaster();
                       }
                    }";
 
@@ -452,7 +452,7 @@ public partial class TypeMapperGenerationTests
       result.Should().NotHaveErrors().And
          .HaveClass("NS.MapMaster")
          .WhereProperty("Default")
-         .HasInitializationExpression("CreateDefaultMapper()")
+         .HasInitializationExpression("CustomMapper()")
          .IsStatic();
 
       result.Print();

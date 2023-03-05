@@ -7,7 +7,6 @@
 namespace MagicMap.UnitTests.SourceGeneratorTests;
 
 using MagicMap.UnitTests.Setups;
-using Newtonsoft.Json.Linq;
 
 [TestClass]
 public class TypeMapperExtensionsTests
@@ -100,7 +99,7 @@ public class TypeMapperExtensionsTests
       result.Should().HaveClass("PersonMapperExtensions")
          .WhereMethod("ToEmployee", "Person")
          .IsInternal()
-         .Contains("mapper.Map(person, result)");
+         .Contains("Mapper.Map(person, result)");
 
       result.Print();
    }
@@ -133,7 +132,7 @@ public class TypeMapperExtensionsTests
       result.Should().HaveClass("PersonMapperExtensions")
          .WhereMethod("ToPerson", "Employee")
          .IsInternal()
-         .Contains("mapper.Map(employee, result)");
+         .Contains("Mapper.Map(employee, result)");
 
       result.Print();
    }
@@ -170,6 +169,81 @@ public class TypeMapperExtensionsTests
          .WhereMethod("ToEmployee", "Person")
          .Contains("if (person == null)")
          .Contains("throw new global::System.ArgumentNullException(nameof(person));");
+
+      result.Print();
+   }
+
+   [TestMethod]
+   public void EnsurePartialExtensionMethodIsPossible()
+   {
+      var code = @"[MagicMap.TypeMapper(typeof(Person), typeof(Employee))]
+                   internal partial class PersonMapper { }
+
+                   internal partial class PersonMapperExtensions
+                   {
+                      private static PersonMapper Mapper => new PersonMapper();
+                   }
+                       
+                   internal class Person 
+                   {
+                       internal string Name { get; set; }
+                   }
+
+                   internal class Employee 
+                   {
+                       internal string Name { get; set; }
+                   }            
+";
+
+      var result = Setup.SourceGeneratorTest()
+         .WithSource(code)
+         .Done();
+
+      result.Should().NotHaveErrors();
+
+      result.Should().HaveClass("PersonMapperExtensions").WithInternalModifier()
+         .WhereProperty("Mapper")
+         .HasInitializationExpression("new PersonMapper()")
+         .IsStatic();
+
+      result.Print();
+   }
+   
+   [TestMethod]
+   public void EnsurePartialExtensionMethodIsPossibleInsideANamespace()
+   {
+      var code = @"namespace ANamespace
+                   {
+                      [MagicMap.TypeMapper(typeof(Person), typeof(Employee))]
+                      internal partial class PersonMapper { }
+
+                      internal partial class PersonMapperExtensions
+                      {
+                         private static PersonMapper Mapper => new PersonMapper();
+                      }
+                          
+                      internal class Person 
+                      {
+                          internal string Name { get; set; }
+                      }
+
+                      internal class Employee 
+                      {
+                          internal string Name { get; set; }
+                      }            
+                   }            
+";
+
+      var result = Setup.SourceGeneratorTest()
+         .WithSource(code)
+         .Done();
+
+      result.Should().NotHaveErrors();
+
+      result.Should().HaveClass("ANamespace.PersonMapperExtensions").WithInternalModifier()
+         .WhereProperty("Mapper")
+         .HasInitializationExpression("new PersonMapper()")
+         .IsStatic();
 
       result.Print();
    }
