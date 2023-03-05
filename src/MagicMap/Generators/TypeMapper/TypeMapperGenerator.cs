@@ -15,7 +15,7 @@ using Microsoft.CodeAnalysis;
 
 /// <summary>Generator for type mapping</summary>
 /// <seealso cref="MagicMap.Generators.IGenerator" />
-internal class TypeMapperGenerator : IGenerator
+internal class TypeMapperGenerator : PartialClassGenerator, IGenerator
 {
    #region Constants and Fields
 
@@ -28,6 +28,7 @@ internal class TypeMapperGenerator : IGenerator
    #region Constructors and Destructors
 
    public TypeMapperGenerator(ITypeMapperContext context, string fileName)
+      : base(context.MapperType)
    {
       this.context = context ?? throw new ArgumentNullException(nameof(context));
       this.fileName = fileName ?? throw new ArgumentNullException(nameof(fileName));
@@ -246,25 +247,20 @@ internal class TypeMapperGenerator : IGenerator
    private bool TryCreateEnumMapping(PropertyMappingContext propertyContext, IPropertySymbol sourceProperty, IPropertySymbol targetProperty, out string enumMapping)
    {
       enumMapping = null;
-      if (IsEnum(sourceProperty.Type) && IsEnum(targetProperty.Type))
+      if (EnumConverterGenerator.IsEnum(sourceProperty.Type) && EnumConverterGenerator.IsEnum(targetProperty.Type))
       {
          enumMapping = $"target.{targetProperty.Name} = ConvertEnum(source.{sourceProperty.Name});";
-         propertyContext.AddMemberDeclaration(ConvertEnumMethod);
-         return true;
 
-         string ConvertEnumMethod()
+         var existingMethod = context.MapperType.FindMethod("ConvertEnum", targetProperty.Type, sourceProperty.Type);
+         if (existingMethod == null)
          {
-            return $"private {targetProperty.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} ConvertEnum({sourceProperty.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} value) => default;";
+            // We could not find an user defined implementation of the enum conversion method => we have to generate one
+            propertyContext.AddMemberDeclaration(() => EnumConverterGenerator.GenerateEnum(sourceProperty.Type, targetProperty.Type, "ConvertEnum"));
          }
+
+         return true;
       }
 
-      return false;
-   }
-
-   private bool IsEnum(ITypeSymbol typeSymbol)
-   {
-      if (typeSymbol is INamedTypeSymbol namedTypeSymbol)
-         return namedTypeSymbol.EnumUnderlyingType != null;
       return false;
    }
 
