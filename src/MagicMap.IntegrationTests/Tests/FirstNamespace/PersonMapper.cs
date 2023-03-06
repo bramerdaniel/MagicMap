@@ -11,7 +11,7 @@ namespace MagicMap.IntegrationTests.Tests.FirstNamespace
     {
     }
 
-    [TypeMapper(typeof(Person), typeof(TrowTarget))]
+    // [TypeMapper(typeof(Person), typeof(TrowTarget))]
     internal partial class ThrowMupped
     {
         

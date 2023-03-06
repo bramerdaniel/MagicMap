@@ -247,4 +247,43 @@ public class TypeMapperExtensionsTests
 
       result.Print();
    }
+
+   [TestMethod]
+   public void EnsureCustomMapperIsPossibleWithNormalProperty()
+   {
+      var code = @"[MagicMap.TypeMapper(typeof(Person), typeof(Employee))]
+                   internal partial class PersonMapper 
+                   {
+                       internal PersonMapper(bool flag) { }
+                   }
+
+                   internal partial class PersonMapperExtensions
+                   {
+                      private static PersonMapper Mapper { get; } = new PersonMapper(true);
+                   }
+                       
+                   internal class Person 
+                   {
+                       internal string Name { get; set; }
+                   }
+
+                   internal class Employee 
+                   {
+                       internal string Name { get; set; }
+                   }            
+";
+
+      var result = Setup.SourceGeneratorTest()
+         .WithSource(code)
+         .Done();
+
+      result.Should().NotHaveErrors();
+
+      result.Should().HaveClass("PersonMapperExtensions").WithInternalModifier()
+         .WhereProperty("Mapper")
+         .HasInitializationExpression("new PersonMapper(true)")
+         .IsStatic();
+
+      result.Print();
+   }
 }

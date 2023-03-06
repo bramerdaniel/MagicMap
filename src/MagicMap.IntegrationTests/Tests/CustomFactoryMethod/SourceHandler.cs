@@ -8,5 +8,6 @@ namespace MagicMap.IntegrationTests.Tests.CustomFactoryMethod
 {
     internal class SourceHandler
     {
+        public int Age { get; set; }
     }
 }

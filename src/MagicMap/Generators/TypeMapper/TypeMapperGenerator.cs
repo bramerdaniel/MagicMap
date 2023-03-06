@@ -156,7 +156,20 @@ internal class TypeMapperGenerator : PartialClassGenerator, IGenerator
          GenerateMappingMethod(builder, propertyContext);
       }
 
+      GenerateOverrides(builder);
       builder.AppendLine("}");
+   }
+
+   private void GenerateOverrides(StringBuilder builder)
+   {
+      builder.AppendLine("/// <summary>Implement this method to map properties the mapper could not handle for any reason</summary>");
+      builder.AppendLine($"partial void MapOverride({context.SourceType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} source, {context.TargetType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} target);");
+
+      if (!context.SourceEqualsTargetType)
+      {
+         builder.AppendLine("/// <summary>Implement this method to map properties the mapper could not handle for any reason</summary>");
+         builder.AppendLine($"partial void MapOverride({context.TargetType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} source, {context.SourceType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} target);");
+      }
    }
 
    private void GeneratedSingletonInstance(StringBuilder builder)
@@ -236,9 +249,6 @@ internal class TypeMapperGenerator : PartialClassGenerator, IGenerator
 
       builder.AppendLine($"MapOverride(source, target);");
       builder.AppendLine("}");
-
-      builder.AppendLine("/// <summary>Implement this method to map properties the mapper could not handle for any reason</summary>");
-      builder.AppendLine($"partial void MapOverride({propertyContext.SourceType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} source, {propertyContext.TargetType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} target);");
 
       foreach (var declaration in propertyContext.MemberDeclarations)
          builder.AppendLine(declaration());
