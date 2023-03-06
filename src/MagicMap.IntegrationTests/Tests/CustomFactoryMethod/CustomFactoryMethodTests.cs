@@ -11,7 +11,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace MagicMap.IntegrationTests.Tests.CustomFactoryMethod
 {
     [TestClass]
-    public class MapByName
+    public class CustomFactoryMethodTests
     {
         #region Public Methods and Operators
 

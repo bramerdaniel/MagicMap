@@ -9,7 +9,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace MagicMap.IntegrationTests.Tests.CustomFactoryMethod
 {
     [TypeMapper(typeof(SourceAnimal), typeof(TargetAnimal))]
-    public partial class AnimalMapper
+    internal partial class AnimalMapper
     {
         #region Constructors and Destructors
 

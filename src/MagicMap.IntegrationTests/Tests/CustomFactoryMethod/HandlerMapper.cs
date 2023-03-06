@@ -21,9 +21,4 @@ namespace MagicMap.IntegrationTests.Tests.CustomFactoryMethod
         {
         }
     }
-
-    static partial class HandlerMapperExtensions
-    {
-         internal static HandlerMapper Mapper => new HandlerMapper(true);
-    }
 }
