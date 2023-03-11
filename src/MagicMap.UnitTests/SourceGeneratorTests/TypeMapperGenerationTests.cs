@@ -458,6 +458,56 @@ public partial class TypeMapperGenerationTests
       result.Print();
    }
 
+   [TestMethod]
+   public void EnsurePartialMemberForTargetCreationIsCreated()
+   {
+      var code = @"
+                      internal class A { }
+                      internal class B { private B(bool flag){ } }
+                      
+                      [MagicMap.TypeMapperAttribute(typeof(A), typeof(B))]
+                      internal partial class ElMapper { }
+                  ";
 
+      var result = Setup.SourceGeneratorTest()
+         .WithSource(code)
+         .Done();
+
+      result.Should().NotHaveErrors().And
+         .HaveClass("ElMapperExtensions")
+         .WhereMethod("ToB")
+         .Contains("throw new global::System.NotSupportedException()");
+
+      result.Print();
+   }
+
+   [TestMethod]
+   public void EnsureTargetGenerationCanBeOverwritten()
+   {
+      var code = @"
+                      internal class A { }
+                      internal class B { internal B(bool flag){ } }
+                      
+                      [MagicMap.TypeMapperAttribute(typeof(A), typeof(B))]
+                      internal partial class ElMapper { }
+
+                      internal static partial class ElMapperExtensions 
+                      { 
+                         private static B CreateB() => new B(true);
+                      }
+                  ";
+
+      var result = Setup.SourceGeneratorTest()
+         .WithSource(code)
+         .Done();
+
+      result.Should().NotHaveErrors().And
+         .HaveClass("ElMapperExtensions")
+         .WhereMethod("CreateB")
+         .Contains("new B(true);")
+         .IsPrivate();
+
+      result.Print();
+   }
 
 }

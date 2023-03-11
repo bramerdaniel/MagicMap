@@ -47,6 +47,14 @@ namespace MagicMap.UnitTests.Assertions
          return new ClassAssertion(Subject, classType);
       }
 
+      public ClassAssertion HaveInterface(string interfaceName)
+      {
+         var classType = Subject.OutputCompilation.GetTypeByMetadataName(interfaceName);
+         
+         Assert.IsNotNull(classType, $"The class {interfaceName} could not be found. {Environment.NewLine}{Subject.OutputSyntaxTrees.Last()}");
+         return new ClassAssertion(Subject, classType);
+      }
+
       public AndConstraint<GenerationResultAssertion> NotHaveClass(string className)
       {
          var classType = Subject.OutputCompilation.GetTypeByMetadataName(className);

@@ -48,12 +48,29 @@ public static class NamedTypeSymbolExtensions
       return null;
    }
 
+   /// <summary>Gets the default constructor of a type.</summary>
+   /// <param name="typeSymbol">The type symbol.</param>
+   /// <returns></returns>
+   /// <exception cref="System.ArgumentNullException">typeSymbol</exception>
+   public static IMethodSymbol GetDefaultConstructor(this INamedTypeSymbol typeSymbol)
+   {
+      if (typeSymbol == null)
+         throw new ArgumentNullException(nameof(typeSymbol));
+
+      return typeSymbol.Constructors.FirstOrDefault(c => c.Parameters.Length == 0);
+   }
+
    public static IEnumerable<IMethodSymbol> GetMethods(this INamedTypeSymbol typeSymbol)
    {
       if (typeSymbol == null)
          throw new ArgumentNullException(nameof(typeSymbol));
 
       return typeSymbol.GetMembers().OfType<IMethodSymbol>();
+   }
+
+   public static bool IsPrivate(this IMethodSymbol methodSymbol)
+   {
+      return methodSymbol.DeclaredAccessibility.HasFlag(Accessibility.Private);
    }
 
    public static IEnumerable<IMethodSymbol> GetMethods(this INamedTypeSymbol typeSymbol, string name)

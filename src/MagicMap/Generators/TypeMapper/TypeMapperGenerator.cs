@@ -116,28 +116,48 @@ internal class TypeMapperGenerator : PartialClassGenerator, IGenerator
 
    private void GenerateExtensionsClass(StringBuilder builder)
    {
-      builder.AppendLine($"{ComputeModifier()} static partial class {MapperTypeName}Extensions");
-      builder.AppendLine("{");
-      GenerateMapperProperty(builder);
-      GenerateExtensionMethod(builder, context.TargetType, context.SourceType);
+      var mapperExtensions = CreateGenerationContext();
+      GenerateMapperProperty(mapperExtensions);
+      GenerateExtensionMethod(mapperExtensions, context.TargetType, context.SourceType);
 
       if (!context.SourceEqualsTargetType)
-         GenerateExtensionMethod(builder, context.SourceType, context.TargetType);
+         GenerateExtensionMethod(mapperExtensions, context.SourceType, context.TargetType);
 
-      builder.AppendLine("}");
+      builder.AppendLine(mapperExtensions.GenerateCode());
    }
 
-   private void GenerateMapperProperty(StringBuilder builder)
+   private ClassGenerationContext CreateGenerationContext()
+   {
+      if (context.MapperExtensionsType == null)
+      {
+         return new ClassGenerationContext($"{MapperTypeName}Extensions")
+         {
+            IsStatic = true,
+            Partial = true,
+            Modifier = ComputeModifier()
+         };
+      }
+
+      return new ClassGenerationContext(context.MapperExtensionsType)
+      {
+         IsStatic = true
+      };
+   }
+
+   private void GenerateMapperProperty(ClassGenerationContext generationContext)
    {
       var property = context.MapperExtensionsType?.GetProperty(p => p.Name == "Mapper");
       if (property != null)
          return;
 
+
+      var builder = new StringBuilder();
       builder.AppendLine("/// <summary>");
       builder.AppendLine($"/// The instance of the <see cref=\"{MapperTypeName}\"/> all extension methods use.");
       builder.AppendLine($"/// You can customize this by implementing this property in your own partial implementation of the extensions class.");
       builder.AppendLine("/// </summary>");
       builder.AppendLine($"private static {context.MapperType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} Mapper => {context.MapperType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}.Default;");
+      generationContext.AddCode(builder.ToString());
    }
 
    private void GenerateMapperClass(StringBuilder builder)
@@ -294,21 +314,50 @@ internal class TypeMapperGenerator : PartialClassGenerator, IGenerator
       return builder.ToString();
    }
 
-   private void GenerateExtensionMethod(StringBuilder builder, INamedTypeSymbol sourceType, INamedTypeSymbol targetType)
+   private void GenerateExtensionMethod(ClassGenerationContext generationContext, INamedTypeSymbol sourceType, INamedTypeSymbol targetType)
    {
       var targetName = targetType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
       var sourceName = sourceType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
       var valueName = sourceType.Name.ToFirstLower();
 
+      var builder = new StringBuilder();
       builder.AppendLine($"{ComputeModifier()} static {targetName} To{targetType.Name}(this {sourceName} {valueName})");
       builder.AppendLine("{");
 
       builder.AppendLine($"if ({valueName} == null)");
       builder.AppendLine($"throw new global::System.ArgumentNullException(nameof({valueName}));");
-      builder.AppendLine($"var result = new {targetName}();");
+
+      builder.AppendLine($"var result = Mapper is MagicMap.ITypeFactory<{targetName}, {sourceName}> factory");
+      builder.AppendLine($"? factory.Create({valueName})");
+
+
+      var constructor = targetType.GetDefaultConstructor();
+      if (constructor == null || constructor.IsPrivate())
+      {
+         builder.AppendLine(": throw new global::System.NotSupportedException();");
+
+         // var method = context.MapperExtensionsType?.GetMethod(x => x.Name == factoryMethodName && x.ReturnType.Equals(targetType, SymbolEqualityComparer.Default));
+         //if (method == null)
+         //{
+         //var methodBuilder = new StringBuilder();
+         //methodBuilder.AppendLine($"private static {targetType} {factoryMethodName}({sourceName} {valueName})");
+         //methodBuilder.AppendLine("{");
+         //methodBuilder.AppendLine($"if(Mapper is MagicMap.ITypeFactory<{targetName}, {sourceName}> factory)");
+         //methodBuilder.AppendLine($"return factory.Create({valueName});");
+         //methodBuilder.AppendLine("throw new global::System.NotSupportedException();");
+         //methodBuilder.AppendLine("}");
+         //generationContext.AddMemberLazy(methodBuilder.ToString());
+         //}
+      }
+      else
+      {
+         builder.AppendLine($": new {targetName}();");
+      }
       builder.AppendLine($"Mapper.Map({valueName}, result);");
       builder.AppendLine("return result;");
       builder.AppendLine("}");
+
+      generationContext.AddCode(builder.ToString());
    }
 
    private string GetSourcePropertyName(IDictionary<string, string> nameMappings, string targetName)

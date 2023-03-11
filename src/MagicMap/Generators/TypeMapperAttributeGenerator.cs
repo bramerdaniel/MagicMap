@@ -20,6 +20,8 @@ namespace MagicMap.Generators
 
       private readonly MapperFactoryAttributeGenerator mapperFactoryAttribute;
 
+      private readonly TypeFactoryInterfaceGenerator typeFactory;
+
       #region Public Properties
 
       public static string Code { get; } = @"//------------------------------------------------
@@ -60,18 +62,19 @@ namespace MagicMap
 
          var mappingAttribute = PropertyMappingAttributeGenerator.FromCompilation(compilation);
          var factoryAttribute = MapperFactoryAttributeGenerator.FromCompilation(compilation);
-         return new TypeMapperAttributeGenerator(attributeType, mappingAttribute, factoryAttribute) { Compilation = compilation };
+         var typeFactory = TypeFactoryInterfaceGenerator.FromCompilation(compilation);
+         return new TypeMapperAttributeGenerator(attributeType, mappingAttribute, factoryAttribute, typeFactory) { Compilation = compilation };
       }
 
       protected Compilation Compilation { get; private set; }
 
-      private TypeMapperAttributeGenerator(INamedTypeSymbol attributeSymbol,
-         PropertyMappingAttributeGenerator propertyMappingAttribute,
-         MapperFactoryAttributeGenerator mapperFactoryAttribute)
+      private TypeMapperAttributeGenerator(INamedTypeSymbol attributeSymbol, PropertyMappingAttributeGenerator propertyMappingAttribute,
+         MapperFactoryAttributeGenerator mapperFactoryAttribute, TypeFactoryInterfaceGenerator typeFactory)
       {
          this.attributeSymbol = attributeSymbol ?? throw new ArgumentNullException(nameof(attributeSymbol));
          this.propertyMappingAttribute = propertyMappingAttribute ?? throw new ArgumentNullException(nameof(propertyMappingAttribute));
          this.mapperFactoryAttribute = mapperFactoryAttribute ?? throw new ArgumentNullException(nameof(mapperFactoryAttribute));
+         this.typeFactory = typeFactory ?? throw new ArgumentNullException(nameof(typeFactory));
       }
 
       public bool TryExtractData(INamedTypeSymbol classSymbol, out ITypeMapperContext typeMapperContext)

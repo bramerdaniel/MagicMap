@@ -27,8 +27,4 @@
 	  <None Include="C:\Users\bramerd\source\repos\FluentSetups\src\FluentSetups.IntegrationTests\.editorconfig" />
 	</ItemGroup>
 
-	<ItemGroup>
-	  <Folder Include="Tests\SecondNamespace\" />
-	</ItemGroup>
-
 </Project>
