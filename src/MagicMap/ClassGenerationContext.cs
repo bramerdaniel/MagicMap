@@ -52,6 +52,7 @@ internal class ClassGenerationContext
    private StringBuilder InitializeSourceBuilder()
    {
       var builder = new StringBuilder();
+      builder.AppendLine("[global::System.Runtime.CompilerServices.CompilerGenerated]");
       if (Modifier != null)
          builder.Append($"{Modifier} ");
 
@@ -93,13 +94,5 @@ internal class ClassGenerationContext
          return;
 
       SourceBuilder.AppendLine(code);
-   }
-
-   public void AddMemberLazy(string memberCode)
-   {
-      if (string.IsNullOrWhiteSpace(memberCode))
-         return;
-
-      lazyMembers.Add(memberCode);
    }
 }
