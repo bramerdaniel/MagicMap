@@ -4,7 +4,7 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace MagicMap.IntegrationTests.Tests
+namespace MagicMap.IntegrationTests.Tests.NoConstructorTests
 {
     [TypeMapper(typeof(Wobbler), typeof(WobblerModel))]
     internal partial class WobblerMapper

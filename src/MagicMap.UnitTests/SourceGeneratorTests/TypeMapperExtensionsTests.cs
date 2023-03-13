@@ -217,7 +217,7 @@ public class TypeMapperExtensionsTests
                       [MagicMap.TypeMapper(typeof(Person), typeof(Employee))]
                       internal partial class PersonMapper { }
 
-                      internal partial class PersonMapperExtensions
+                      internal static partial class PersonMapperExtensions
                       {
                          private static PersonMapper Mapper => new PersonMapper();
                       }
@@ -286,4 +286,6 @@ public class TypeMapperExtensionsTests
 
       result.Print();
    }
+
+
 }

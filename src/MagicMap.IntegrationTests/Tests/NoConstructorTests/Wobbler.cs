@@ -4,7 +4,7 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace MagicMap.IntegrationTests.Tests
+namespace MagicMap.IntegrationTests.Tests.NoConstructorTests
 {
     internal class Wobbler
     {

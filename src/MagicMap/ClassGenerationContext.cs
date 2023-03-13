@@ -34,6 +34,14 @@ internal class ClassGenerationContext
 
    private StringBuilder SourceBuilder => sourceBuilder ??= InitializeSourceBuilder();
 
+   public bool ContainsProperty(string name)
+   {
+      if (name == null)
+         throw new ArgumentNullException(nameof(name));
+
+      return userDefinedPart?.GetProperty(p => p.Name == name) != null;
+   }
+
    internal string GenerateCode()
    {
       GenerateLazyMembers();

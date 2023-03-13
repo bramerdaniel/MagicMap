@@ -8,10 +8,10 @@ using FluentAssertions;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace MagicMap.IntegrationTests.Tests
+namespace MagicMap.IntegrationTests.Tests.NoConstructorTests
 {
     [TestClass]
-    public class NoConstructorTests
+    public class Tests
     {
         [TestMethod]
         public void Name()
@@ -19,19 +19,5 @@ namespace MagicMap.IntegrationTests.Tests
             var wobbler = new Wobbler(){ Name = "Robert"};
             wobbler.ToWobblerModel().Name.Should().Be("Robert");
         }
-    }
-
-    internal class Wobbler
-    {
-        public string Name { get; set; }
-    }
-
-    internal class WobblerModel
-    {
-        public WobblerModel(bool withFlag)
-        {
-        }
-
-        public string Name { get; set; }
     }
 }

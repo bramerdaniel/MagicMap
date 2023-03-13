@@ -146,11 +146,9 @@ internal class TypeMapperGenerator : PartialClassGenerator, IGenerator
 
    private void GenerateMapperProperty(ClassGenerationContext generationContext)
    {
-      var property = context.MapperExtensionsType?.GetProperty(p => p.Name == "Mapper");
-      if (property != null)
+      if (generationContext.ContainsProperty("Mapper") )
          return;
-
-
+      
       var builder = new StringBuilder();
       builder.AppendLine("/// <summary>");
       builder.AppendLine($"/// The instance of the <see cref=\"{MapperTypeName}\"/> all extension methods use.");
