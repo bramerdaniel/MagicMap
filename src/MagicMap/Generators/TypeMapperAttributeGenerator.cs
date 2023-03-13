@@ -101,10 +101,12 @@ namespace MagicMap
          value = typeMapperAttribute.ConstructorArguments[1].Value;
          var right = value as INamedTypeSymbol;
 
+         var extensionsClassName = GetExtensionsClassName(classSymbol);
+         var typeSymbol = Compilation.GetTypeByMetadataName(extensionsClassName);
          typeMapperContext = new TypeMapperContext
          {
             MapperType = classSymbol,
-            MapperExtensionsType = Compilation.GetTypeByMetadataName(GetExtensionsClassName(classSymbol)),
+            MapperExtensionsType = typeSymbol,
             SourceType = left,
             TargetType = right,
             MappingSpecifications = CreateMappingDescriptions(classSymbol),
@@ -118,7 +120,10 @@ namespace MagicMap
       {
          if (classSymbol.ContainingNamespace.IsGlobalNamespace)
             return $"{classSymbol.Name}Extensions";
-         return $"{classSymbol.ContainingNamespace.Name}.{classSymbol.Name}Extensions";
+
+         var fullNamespace = classSymbol.ContainingNamespace.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+         fullNamespace = fullNamespace.Replace("global::", string.Empty);
+         return $"{fullNamespace}.{classSymbol.Name}Extensions";
       }
 
       private static bool IsNestedClass(INamedTypeSymbol classSymbol)
