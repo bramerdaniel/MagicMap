@@ -1,12 +1,12 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="ArgumentSetup.cs" company="consolovers">
-//   Copyright (c) daniel bramer 2022 - 2022
+// <copyright file="SourceAnimal.cs" company="KUKA Deutschland GmbH">
+//   Copyright (c) KUKA Deutschland GmbH 2006 - 2023
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace MagicMap.IntegrationTests.Setups
+namespace MagicMap.IntegrationTests.Tests.CustomFactoryMethod
 {
-    public partial class ArgumentSetup
+    internal class SourceAnimal
     {
     }
 }

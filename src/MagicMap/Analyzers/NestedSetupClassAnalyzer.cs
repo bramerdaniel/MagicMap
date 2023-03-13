@@ -17,6 +17,8 @@ namespace MagicMap.Analyzers
    {
       #region Public Properties
 
+ 
+
       /// <summary>Returns a set of descriptors for the diagnostics that this analyzer is capable of producing.</summary>
       public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } =
          ImmutableArray.Create(MagicMapDiagnostics.NotSupportedNestedSetup);

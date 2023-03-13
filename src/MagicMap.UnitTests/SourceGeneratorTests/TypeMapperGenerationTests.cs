@@ -9,7 +9,7 @@ namespace MagicMap.UnitTests.SourceGeneratorTests;
 using MagicMap.UnitTests.Setups;
 
 [TestClass]
-public class TypeMapperGenerationTests
+public partial class TypeMapperGenerationTests
 {
    [TestMethod]
    public void EnsureTypeMapperIsGeneratedCorrectly()
@@ -334,4 +334,180 @@ public class TypeMapperGenerationTests
 
       result.Print();
    }
+
+   [TestMethod]
+   public void EnsureNestedMapperTypesAreIgnored()
+   {
+      var code = @"namespace First
+                   {   
+                      internal class A { }
+                      internal class B { }
+
+                      internal class Outer
+                      {
+                         [MagicMap.TypeMapperAttribute(typeof(A), typeof(B))]
+                         internal partial class Mapper
+                         {
+
+                         }
+                      }
+                   }
+";
+
+      var result = Setup.SourceGeneratorTest()
+         .WithSource(code)
+         .Done();
+
+      result.Should().NotHaveErrors();
+      result.Should().NotHaveClass("First.Mapper");
+
+
+      result.Print();
+   }
+
+   [TestMethod]
+   public void EnsureTwoTypeMapperInDifferentNamespacesAreGeneratedCorrectly()
+   {
+      var code = @"namespace First
+                   {   
+                      internal class A { }
+                      internal class B { }
+                      
+                      [MagicMap.TypeMapperAttribute(typeof(A), typeof(B))]
+                      internal partial class Mapper { }
+                   }
+
+                   namespace Second
+                   {   
+                      internal class A { }
+                      internal class B { }
+                      
+                      [MagicMap.TypeMapperAttribute(typeof(A), typeof(B))]
+                      internal partial class Mapper { }
+                   }
+";
+
+      var result = Setup.SourceGeneratorTest()
+         .WithSource(code)
+         .Done();
+
+      result.Should().NotHaveErrors().And
+         .HaveClass("First.Mapper")
+         .WithMethod("Map", "First.A", "First.B")
+         .WithInternalModifier();
+
+      result.Should()
+         .HaveClass("Second.Mapper")
+         .WithMethod("Map", "Second.A", "Second.B")
+         .WithInternalModifier();
+
+      result.Print();
+   }
+
+   [TestMethod]
+   public void EnsureDefaultPropertyIsCreatedOnTypeMapper()
+   {
+      var code = @"namespace NS
+                   {   
+                      internal class A { }
+                      internal class B { }
+                      
+                      [MagicMap.TypeMapperAttribute(typeof(A), typeof(B))]
+                      internal partial class MapMaster { }
+                   }";
+
+      var result = Setup.SourceGeneratorTest()
+         .WithSource(code)
+         .Done();
+
+      result.Should().NotHaveErrors().And
+         .HaveClass("NS.MapMaster")
+         .WhereProperty("Default")
+         .HasInitializationExpression("new MapMaster()")
+         .IsStatic();
+
+      result.Print();
+   }
+
+   [TestMethod]
+   public void EnsureDefaultPropertyCanBeInitialized()
+   {
+      var code = @"namespace NS
+                   {   
+                      internal class A { }
+                      internal class B { }
+                      
+                      [MagicMap.TypeMapperAttribute(typeof(A), typeof(B))]
+                      internal partial class MapMaster 
+                      {
+                          [MagicMap.MapperFactory]
+                          private static MapMaster CustomMapper() => new MapMaster();
+                      }
+                   }";
+
+      var result = Setup.SourceGeneratorTest()
+         .WithSource(code)
+         .Done();
+
+      result.Should().NotHaveErrors().And
+         .HaveClass("NS.MapMaster")
+         .WhereProperty("Default")
+         .HasInitializationExpression("CustomMapper()")
+         .IsStatic();
+
+      result.Print();
+   }
+
+   [TestMethod]
+   public void EnsurePartialMemberForTargetCreationIsCreated()
+   {
+      var code = @"
+                      internal class A { }
+                      internal class B { private B(bool flag){ } }
+                      
+                      [MagicMap.TypeMapperAttribute(typeof(A), typeof(B))]
+                      internal partial class ElMapper { }
+                  ";
+
+      var result = Setup.SourceGeneratorTest()
+         .WithSource(code)
+         .Done();
+
+      result.Should().NotHaveErrors().And
+         .HaveClass("ElMapperExtensions")
+         .WhereMethod("ToB")
+         .Contains("throw new global::System.NotSupportedException(\"The target type B can not be created\")");
+
+      result.Print();
+   }
+
+   [TestMethod]
+   public void EnsureTargetGenerationCanBeOverwritten()
+   {
+      var code = @"
+                      internal class A { }
+                      internal class B { internal B(bool flag){ } }
+                      
+                      [MagicMap.TypeMapperAttribute(typeof(A), typeof(B))]
+                      internal partial class ElMapper { }
+
+                      internal static partial class ElMapperExtensions 
+                      { 
+                         private static B CreateB() => new B(true);
+                      }
+                  ";
+
+      var result = Setup.SourceGeneratorTest()
+         .WithSource(code)
+         .Done();
+
+      result.Should().NotHaveErrors().And
+         .HaveClass("ElMapperExtensions")
+         .WhereMethod("CreateB")
+         .Contains("new B(true);")
+         .IsPrivate();
+
+      result.Print();
+   }
+
 }

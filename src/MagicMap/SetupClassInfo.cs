@@ -110,16 +110,6 @@ namespace MagicMap
          return default;
       }
 
-      private bool IsFluentSetupAttribute(AttributeData attributeData)
-      {
-         return IsFluentSetupAttribute(attributeData.AttributeClass);
-      }
-
-      private bool IsFluentSetupAttribute(INamedTypeSymbol attributeSymbol)
-      {
-         return Context.TypeMapperAttribute.Equals(attributeSymbol, SymbolEqualityComparer.Default);
-      }
-
       private bool TryGetConstructorArgument(TypedConstantKind type, out TypedConstant targetType)
       {
          var attribute = FluentSetupAttribute;

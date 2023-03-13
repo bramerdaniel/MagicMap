@@ -1,12 +1,12 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="Room.cs" company="consolovers">
-//   Copyright (c) daniel bramer 2022 - 2022
+// <copyright file="TargetAnimal.cs" company="KUKA Deutschland GmbH">
+//   Copyright (c) KUKA Deutschland GmbH 2006 - 2023
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-using System.Collections.Generic;
-
-namespace MagicMap.IntegrationTests.Targets
+namespace MagicMap.IntegrationTests.Tests.CustomFactoryMethod
 {
-    public record Room(IEnumerable<Person> People);
+    internal class TargetAnimal
+    {
+    }
 }

@@ -1,34 +1,31 @@
-﻿namespace FluentSetupTester
+﻿
+namespace MagicMap.IntegrationTests.Tests.CustomFactoryMethod
 {
-   using System.Collections.Generic;
-   using System.Runtime.CompilerServices;
-   using MagicMap;
-
-   [TypeMapper(typeof(Person), typeof(PersonModel))]
-   [PropertyMapping(nameof(Person.Children), nameof(PersonModel.ChildCount))]
-   public partial class PersonMapper
+   [TypeMapper(typeof(SourceHandler), typeof(TargetHandler))]
+   internal partial class HandlerMapper
    {
-      private void MapAge(Person target, double age)
+      public HandlerMapper()
       {
-         target.Age = (int)age;
+         throw new AssertFailedException("Should never be called with true");
+      }
+
+      public HandlerMapper(bool flag)
+      {
       }
    }
 
-   class Person
+   internal class SourceHandler
    {
-      public string Name { get; set; }
-
-      public int Age{ get; set; }
-
-      public int Children{ get; set; }
+      public int Age { get; set; }
    }
 
-   class PersonModel
+   internal class TargetHandler
    {
-      public string Name { get; set; }
+      public int Age { get; set; }
+   }
 
-      public double Age{ get; set; }
-
-      public int ChildCount { get; set; }
+   static partial class HandlerMapperExtensions
+   {
+      internal static HandlerMapper Mapper => new HandlerMapper(true);
    }
 }

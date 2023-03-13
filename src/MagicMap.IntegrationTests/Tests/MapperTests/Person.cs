@@ -1,18 +1,18 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="Argument.cs" company="consolovers">
-//   Copyright (c) daniel bramer 2022 - 2022
+// <copyright file="Person.cs" company="KUKA Deutschland GmbH">
+//   Copyright (c) KUKA Deutschland GmbH 2006 - 2023
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace MagicMap.IntegrationTests.Targets
+namespace MagicMap.IntegrationTests.Tests.MapperTests
 {
-    public class Argument
+    internal class Person
     {
         #region Public Properties
 
         public string Name { get; set; }
 
-        public string Value { get; set; }
+        public int Age { get; set; }
 
         #endregion
     }

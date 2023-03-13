@@ -1,25 +1,16 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="School.cs" company="consolovers">
-//   Copyright (c) daniel bramer 2022 - 2022
+// <copyright file="Person.cs" company="KUKA Deutschland GmbH">
+//   Copyright (c) KUKA Deutschland GmbH 2006 - 2023
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-using System.Collections.Generic;
-
-namespace MagicMap.IntegrationTests.Targets
+namespace MagicMap.IntegrationTests.Tests.FirstNamespace
 {
-    public class School
+    internal class Person
     {
         #region Public Properties
 
-        public IList<Child> Children { get; set; }
-
-        #endregion
-    }
-
-    public class Child
-    {
-        #region Public Properties
+        public int Age { get; set; }
 
         public string Name { get; set; }
 
