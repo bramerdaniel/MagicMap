@@ -312,7 +312,7 @@ internal class TypeMapperGenerator : PartialClassGenerator, IGenerator
       return builder.ToString();
    }
 
-   private void GenerateExtensionMethod(ClassGenerationContext generationContext, INamedTypeSymbol sourceType, INamedTypeSymbol targetType)
+   private void GenerateExtensionMethod(ClassGenerationContext extensionsClass, INamedTypeSymbol sourceType, INamedTypeSymbol targetType)
    {
       var targetName = targetType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
       var sourceName = sourceType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
@@ -332,20 +332,7 @@ internal class TypeMapperGenerator : PartialClassGenerator, IGenerator
       var constructor = targetType.GetDefaultConstructor();
       if (constructor == null || constructor.IsPrivate())
       {
-         builder.AppendLine(": throw new global::System.NotSupportedException();");
-
-         // var method = context.MapperExtensionsType?.GetMethod(x => x.Name == factoryMethodName && x.ReturnType.Equals(targetType, SymbolEqualityComparer.Default));
-         //if (method == null)
-         //{
-         //var methodBuilder = new StringBuilder();
-         //methodBuilder.AppendLine($"private static {targetType} {factoryMethodName}({sourceName} {valueName})");
-         //methodBuilder.AppendLine("{");
-         //methodBuilder.AppendLine($"if(Mapper is MagicMap.ITypeFactory<{targetName}, {sourceName}> factory)");
-         //methodBuilder.AppendLine($"return factory.Create({valueName});");
-         //methodBuilder.AppendLine("throw new global::System.NotSupportedException();");
-         //methodBuilder.AppendLine("}");
-         //generationContext.AddMemberLazy(methodBuilder.ToString());
-         //}
+         builder.AppendLine($": throw new global::System.NotSupportedException(\"The target type {targetType.Name} can not be created\");");
       }
       else
       {
@@ -355,7 +342,7 @@ internal class TypeMapperGenerator : PartialClassGenerator, IGenerator
       builder.AppendLine("return result;");
       builder.AppendLine("}");
 
-      generationContext.AddCode(builder.ToString());
+      extensionsClass.AddCode(builder.ToString());
    }
 
    private string GetSourcePropertyName(IDictionary<string, string> nameMappings, string targetName)
