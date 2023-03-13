@@ -1,13 +1,15 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="Wobbler.cs" company="KUKA Deutschland GmbH">
+// <copyright file="Target.cs" company="KUKA Deutschland GmbH">
 //   Copyright (c) KUKA Deutschland GmbH 2006 - 2023
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace MagicMap.IntegrationTests.Tests.NoConstructorTests
+namespace MagicMap.IntegrationTests.Tests.PrivateTargetConstructor
 {
-    internal class Wobbler
+    public class Target
     {
-        public string Name { get; set; }
+        private Target() => Number = 55;
+
+        public int Number { get; set; }
     }
 }

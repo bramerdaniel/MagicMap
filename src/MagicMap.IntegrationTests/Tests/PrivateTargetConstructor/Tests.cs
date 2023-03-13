@@ -1,23 +1,26 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="NoConstructorTests.cs" company="KUKA Deutschland GmbH">
+// <copyright file="Tests.cs" company="KUKA Deutschland GmbH">
 //   Copyright (c) KUKA Deutschland GmbH 2006 - 2023
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
+
+using System;
 
 using FluentAssertions;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace MagicMap.IntegrationTests.Tests.NoConstructorTests
+namespace MagicMap.IntegrationTests.Tests.PrivateTargetConstructor
 {
     [TestClass]
     public class Tests
     {
         [TestMethod]
-        public void Name()
+        public void EnsureTypeFactoryIsUsedEvenIfConstructorWithoutParameterIsAvailable()
         {
-            var wobbler = new Wobbler(){ Name = "Robert"};
-            wobbler.ToWobblerModel().Name.Should().Be("Robert");
+            var wobbler = new Source { Number = 66 };
+            wobbler.Invoking(x => x.ToTarget()).Should().Throw<NotSupportedException>();
         }
+
     }
 }

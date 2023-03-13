@@ -4,11 +4,11 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace MagicMap.IntegrationTests.Tests.NoConstructorTests
+namespace MagicMap.IntegrationTests.Tests.MapperUsesTypeFactory
 {
-    [TypeMapper(typeof(Wobbler), typeof(WobblerModel))]
-    internal partial class WobblerMapper
+    [TypeMapper(typeof(Source), typeof(Target))]
+    internal partial class MapperWithTypeFactory : ITypeFactory<Target, Source>
     {
-        public string Name { get; set; }
+        public Target Create(Source source) => new(nameof(MapperWithTypeFactory));
     }
 }

@@ -1,17 +1,13 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="WobblerModel.cs" company="KUKA Deutschland GmbH">
+// <copyright file="Mapper.cs" company="KUKA Deutschland GmbH">
 //   Copyright (c) KUKA Deutschland GmbH 2006 - 2023
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace MagicMap.IntegrationTests.Tests.NoConstructorTests
+namespace MagicMap.IntegrationTests.Tests.PrivateTargetConstructor
 {
-    internal class WobblerModel
+    [TypeMapper(typeof(Source), typeof(Target))]
+    internal partial class MapperWithoutTargetCreation
     {
-        public WobblerModel(bool withFlag)
-        {
-        }
-
-        public string Name { get; set; }
     }
 }
