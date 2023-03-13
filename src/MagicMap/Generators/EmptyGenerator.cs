@@ -7,6 +7,7 @@
 namespace MagicMap.Generators
 {
     using System;
+    using System.Collections.Generic;
 
     internal class EmptyGenerator : IGenerator
     {
@@ -20,7 +21,7 @@ namespace MagicMap.Generators
 
         #region IMagicGenerator Members
 
-        public GeneratedSource Generate()
+        public IEnumerable<GeneratedSource> Generate()
         {
             throw new NotSupportedException();
         }

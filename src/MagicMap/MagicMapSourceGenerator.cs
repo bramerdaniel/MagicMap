@@ -8,7 +8,6 @@ namespace MagicMap
 {
    using System;
    using System.Collections.Immutable;
-   using System.Diagnostics;
    using System.Text;
    using System.Threading;
 
@@ -96,8 +95,9 @@ namespace MagicMap
       {
          try
          {
-            var source = generator.Generate();
-            AddSourceOrReportError(productionContext, source);
+            var generatedSources = generator.Generate();
+            foreach (var source in generatedSources)
+               AddSourceOrReportError(productionContext, source);
          }
          catch (Exception e)
          {

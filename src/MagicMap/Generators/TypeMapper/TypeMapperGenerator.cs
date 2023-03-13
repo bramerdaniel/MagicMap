@@ -15,30 +15,29 @@ using Microsoft.CodeAnalysis;
 
 /// <summary>Generator for type mapping</summary>
 /// <seealso cref="MagicMap.Generators.IGenerator" />
-internal class TypeMapperGenerator : PartialClassGenerator, IGenerator
+internal class TypeMapperGenerator : IGenerator
 {
    #region Constants and Fields
 
    private readonly ITypeMapperContext context;
 
-   private readonly string fileName;
+   private readonly IUniqueNameProvider uniqueNameProvider;
 
    #endregion
 
    #region Constructors and Destructors
 
-   public TypeMapperGenerator(ITypeMapperContext context, string fileName)
-      : base(context.MapperType)
+   public TypeMapperGenerator(ITypeMapperContext context, IUniqueNameProvider uniqueNameProvider)
    {
       this.context = context ?? throw new ArgumentNullException(nameof(context));
-      this.fileName = fileName ?? throw new ArgumentNullException(nameof(fileName));
+      this.uniqueNameProvider = uniqueNameProvider ?? throw new ArgumentNullException(nameof(uniqueNameProvider));
    }
 
    #endregion
 
    #region IGenerator Members
 
-   public GeneratedSource Generate()
+   public IEnumerable<GeneratedSource> Generate()
    {
       var builder = new StringBuilder();
       if (!context.MapperType.ContainingNamespace.IsGlobalNamespace)
@@ -58,13 +57,14 @@ internal class TypeMapperGenerator : PartialClassGenerator, IGenerator
       if (!context.MapperType.ContainingNamespace.IsGlobalNamespace)
          builder.AppendLine("}");
 
+      var mapperFileName = uniqueNameProvider.GetFileNameForClass(context.MapperType.Name);
       var generatedSource = new GeneratedSource
       {
-         Name = fileName,
+         Name = mapperFileName,
          Code = builder.ToString()
       };
 
-      return generatedSource;
+      yield return generatedSource;
    }
 
    #endregion
@@ -375,4 +375,6 @@ internal class TypeMapperGenerator : PartialClassGenerator, IGenerator
    }
 
    #endregion
+
+
 }

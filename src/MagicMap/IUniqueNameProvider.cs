@@ -1,20 +1,16 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="IMagicGenerator.cs" company="consolovers">
+// <copyright file="IUniqueNameProvider.cs" company="consolovers">
 //   Copyright (c) daniel bramer 2022 - 2023
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace MagicMap.Generators;
+namespace MagicMap;
 
-using System.Collections.Generic;
-
-internal interface IGenerator
+internal interface IUniqueNameProvider
 {
    #region Public Methods and Operators
 
-   /// <summary>Generates the sources of the generator.</summary>
-   /// <returns></returns>
-   IEnumerable<GeneratedSource> Generate();
+   string GetFileNameForClass(string hintClassName);
 
-    #endregion
+   #endregion
 }
