@@ -52,19 +52,23 @@ internal class TypeMapperGenerator : IGenerator
 #endif
 
       GenerateMapperClass(builder);
-      GenerateExtensionsClass(builder);
 
       if (!context.MapperType.ContainingNamespace.IsGlobalNamespace)
          builder.AppendLine("}");
 
-      var mapperFileName = uniqueNameProvider.GetFileNameForClass(context.MapperType.Name);
-      var generatedSource = new GeneratedSource
+      yield return new GeneratedSource
       {
-         Name = mapperFileName,
+         Name = uniqueNameProvider.GetFileNameForClass(context.MapperType.Name),
          Code = builder.ToString()
       };
 
-      yield return generatedSource;
+      var extensionsClass = GenerateExtensionsClass();
+      var extensionFileName = uniqueNameProvider.GetFileNameForClass(extensionsClass.ClassName);
+      yield return new GeneratedSource
+      {
+         Name = extensionFileName,
+         Code = extensionsClass.GenerateCode()
+      };
    }
 
    #endregion
@@ -114,7 +118,7 @@ internal class TypeMapperGenerator : IGenerator
       return "public";
    }
 
-   private void GenerateExtensionsClass(StringBuilder builder)
+   private ClassGenerationContext GenerateExtensionsClass()
    {
       var mapperExtensions = CreateGenerationContext();
       GenerateMapperProperty(mapperExtensions);
@@ -123,7 +127,7 @@ internal class TypeMapperGenerator : IGenerator
       if (!context.SourceEqualsTargetType)
          GenerateExtensionMethod(mapperExtensions, context.SourceType, context.TargetType);
 
-      builder.AppendLine(mapperExtensions.GenerateCode());
+      return mapperExtensions;
    }
 
    private ClassGenerationContext CreateGenerationContext()
@@ -134,21 +138,23 @@ internal class TypeMapperGenerator : IGenerator
          {
             IsStatic = true,
             Partial = true,
-            Modifier = ComputeModifier()
+            Modifier = ComputeModifier(),
+            Namespace = context.MapperType.ContainingNamespace
+
          };
       }
 
       return new ClassGenerationContext(context.MapperExtensionsType)
       {
-         IsStatic = true
+         IsStatic = true,
       };
    }
 
    private void GenerateMapperProperty(ClassGenerationContext generationContext)
    {
-      if (generationContext.ContainsProperty("Mapper") )
+      if (generationContext.ContainsProperty("Mapper"))
          return;
-      
+
       var builder = new StringBuilder();
       builder.AppendLine("/// <summary>");
       builder.AppendLine($"/// The instance of the <see cref=\"{MapperTypeName}\"/> all extension methods use.");

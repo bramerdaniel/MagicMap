@@ -25,6 +25,7 @@ internal class ClassGenerationContext
       this.userDefinedPart = userDefinedPart ?? throw new ArgumentNullException(nameof(userDefinedPart));
       ClassName = userDefinedPart.Name;
       IsStatic = userDefinedPart.IsStatic;
+      Namespace = userDefinedPart.ContainingNamespace;
    }
 
    public ClassGenerationContext(string className)
@@ -46,12 +47,22 @@ internal class ClassGenerationContext
    {
       GenerateLazyMembers();
       SourceBuilder.AppendLine("}");
+
+      if (!Namespace.IsGlobalNamespace)
+         SourceBuilder.AppendLine("}");
+
       return sourceBuilder.ToString();
    }
 
    private StringBuilder InitializeSourceBuilder()
    {
       var builder = new StringBuilder();
+      if (!Namespace.IsGlobalNamespace)
+      {
+         builder.AppendLine($"namespace {Namespace.ToDisplayString()}");
+         builder.AppendLine("{");
+      }
+
       builder.AppendLine("[global::System.Runtime.CompilerServices.CompilerGenerated]");
       if (Modifier != null)
          builder.Append($"{Modifier} ");
@@ -87,6 +98,8 @@ internal class ClassGenerationContext
    public bool IsStatic { get; set; }
 
    public bool Partial { get; set; } = true;
+
+   public INamespaceSymbol Namespace { get; set; }
 
    public void AddCode(string code)
    {

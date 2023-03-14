@@ -13,7 +13,7 @@ internal interface IGenerator
    #region Public Methods and Operators
 
    /// <summary>Generates the sources of the generator.</summary>
-   /// <returns></returns>
+   /// <returns>The generated source file of the generator</returns>
    IEnumerable<GeneratedSource> Generate();
 
     #endregion
