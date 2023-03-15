@@ -428,36 +428,7 @@ public partial class TypeMapperGenerationTests
 
       result.Print();
    }
-
-   [TestMethod]
-   public void EnsureDefaultPropertyCanBeInitialized()
-   {
-      var code = @"namespace NS
-                   {   
-                      internal class A { }
-                      internal class B { }
-                      
-                      [MagicMap.TypeMapperAttribute(typeof(A), typeof(B))]
-                      internal partial class MapMaster 
-                      {
-                          [MagicMap.MapperFactory]
-                          private static MapMaster CustomMapper() => new MapMaster();
-                      }
-                   }";
-
-      var result = Setup.SourceGeneratorTest()
-         .WithSource(code)
-         .Done();
-
-      result.Should().NotHaveErrors().And
-         .HaveClass("NS.MapMaster")
-         .WhereProperty("Default")
-         .HasInitializationExpression("CustomMapper()")
-         .IsStatic();
-
-      result.Print();
-   }
-
+   
    [TestMethod]
    public void EnsurePartialMemberForTargetCreationIsCreated()
    {

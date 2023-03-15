@@ -19,9 +19,7 @@ internal class TypeFactoryInterfaceGenerator
    private readonly INamedTypeSymbol interfaceSymbol;
 
    private readonly PropertyMappingAttributeGenerator propertyMappingAttribute;
-
-   private readonly MapperFactoryAttributeGenerator mapperFactoryAttribute;
-
+   
    #region Public Properties
 
    public static string Code { get; } = @"//------------------------------------------------

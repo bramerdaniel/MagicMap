@@ -50,7 +50,7 @@ namespace MagicMap.UnitTests.Assertions
       public ClassAssertion HaveInterface(string interfaceName)
       {
          var classType = Subject.OutputCompilation.GetTypeByMetadataName(interfaceName);
-         
+
          Assert.IsNotNull(classType, $"The class {interfaceName} could not be found. {Environment.NewLine}{Subject.OutputSyntaxTrees.Last()}");
          return new ClassAssertion(Subject, classType);
       }
@@ -58,9 +58,9 @@ namespace MagicMap.UnitTests.Assertions
       public AndConstraint<GenerationResultAssertion> NotHaveClass(string className)
       {
          var classType = Subject.OutputCompilation.GetTypeByMetadataName(className);
-         if(classType != null)
+         if (classType != null)
             throw new AssertFailedException($"The class {className} was found but it should not exist. {Environment.NewLine}{Subject.OutputSyntaxTrees.Last()}");
-         
+
          return new AndConstraint<GenerationResultAssertion>(this);
       }
 
@@ -101,10 +101,53 @@ namespace MagicMap.UnitTests.Assertions
       {
          var builder = new StringBuilder();
          builder.AppendLine("MESSAGE");
-         builder.AppendLine($"{errorDiagnostic.Id}: {errorDiagnostic.GetMessage()}");     
+         builder.AppendLine($"{errorDiagnostic.Id}: {errorDiagnostic.GetMessage()}");
+         builder.AppendLine($"ERROR AT : {GetError(errorDiagnostic)}");
          builder.AppendLine("SOURCE");
-         builder.AppendLine(errorDiagnostic.Location.SourceTree?.ToString());
+         
+         var codeWithMarkedLine = CreateSource(errorDiagnostic);
+         builder.AppendLine(codeWithMarkedLine);
+
          return builder.ToString();
+      }
+
+      private static string CreateSource(Diagnostic errorDiagnostic)
+      {
+         var lineNumber = errorDiagnostic.Location.GetLineSpan().StartLinePosition.Line;
+         var lines = errorDiagnostic.Location.SourceTree?.ToString()
+            .Split(new[] { Environment.NewLine }, StringSplitOptions.None);
+
+         var stringBuilder = new StringBuilder();
+
+         for (var lineIndex = 0; lineIndex < lines.Length; lineIndex++)
+         {
+            var line = lines[lineIndex];
+            if (lineIndex == lineNumber)
+            {
+               stringBuilder.Append(">>");
+               if (line.StartsWith("  "))
+                  line = line.Substring(2);
+            }
+
+            stringBuilder.AppendLine(line);
+         }
+
+         return stringBuilder.ToString();
+      }
+
+      private static string GetError(Diagnostic diagnostic)
+      {
+         var sourceTree = diagnostic.Location.SourceTree?.ToString();
+         if (sourceTree == null)
+            return string.Empty;
+         
+         var span = diagnostic.Location.SourceSpan;
+         var builder = new StringBuilder();
+         var expansion = 5;
+         builder.AppendLine($"{sourceTree.Substring(span.Start - expansion, span.Length + expansion * 2)}");
+         builder.Append($"           {string.Empty.PadRight(expansion)}{"".PadRight(span.Length, '^')}");
+         return builder.ToString();
+
       }
 
       private static void ThrowOnErrors(IEnumerable<Diagnostic> diagnostics)

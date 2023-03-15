@@ -151,17 +151,17 @@ internal class ClassAssertion : ReferenceTypeAssertions<INamedTypeSymbol, ClassA
       return this;
    }
 
-   public ClassAssertion WithoutMethod(string methodName, string signature)
+   public ClassAssertion WithoutMethod(string methodName, params string[] parameterTypes)
    {
       IMethodSymbol methodSymbol;
       var methodSymbols = Subject.GetMembers(methodName).OfType<IMethodSymbol>().ToArray();
-      if (methodSymbols.Length == 1 && signature == null)
+      if (methodSymbols.Length == 1 && parameterTypes.Length == 0)
       {
          methodSymbol = methodSymbols[0];
       }
       else
       {
-         methodSymbol = methodSymbols.FirstOrDefault(m => m.Parameters.FirstOrDefault()?.ToString() == signature);
+         methodSymbol = methodSymbols.FirstOrDefault(m => HasSignature(m, parameterTypes));
       }
 
       Assert.IsNull(methodSymbol, $"The method {methodName}({methodSymbol?.Parameters.FirstOrDefault()?.ToString()}) was found but it should not.");
