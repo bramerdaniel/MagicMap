@@ -447,7 +447,7 @@ public partial class TypeMapperGenerationTests
       result.Should().NotHaveErrors().And
          .HaveClass("ElMapperExtensions")
          .WhereMethod("ToB")
-         .Contains("throw new global::System.NotSupportedException(\"The target type B can not be created\")");
+         .Contains("throw new global::System.NotSupportedException(\"The target type B can not be created");
 
       result.Print();
    }

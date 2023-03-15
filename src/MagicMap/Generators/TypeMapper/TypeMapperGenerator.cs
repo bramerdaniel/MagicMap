@@ -310,12 +310,11 @@ internal class TypeMapperGenerator : IGenerator
 
       builder.AppendLine($"var result = Mapper is MagicMap.ITypeFactory<{targetName}, {sourceName}> factory");
       builder.AppendLine($"? factory.Create({valueName})");
-
-
+      
       var constructor = targetType.GetDefaultConstructor();
       if (constructor == null || constructor.IsPrivate())
       {
-         builder.AppendLine($": throw new global::System.NotSupportedException(\"The target type {targetType.Name} can not be created\");");
+         builder.AppendLine($": throw new global::System.NotSupportedException(\"The target type {targetType.Name} can not be created. Provide a accessible parameterless constructor or implement the ITypeFactory interface in the responsible mapper.\");");
       }
       else
       {
