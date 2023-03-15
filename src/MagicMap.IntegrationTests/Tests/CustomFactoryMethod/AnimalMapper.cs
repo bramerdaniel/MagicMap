@@ -16,10 +16,9 @@ namespace MagicMap.IntegrationTests.Tests.CustomFactoryMethod
         public AnimalMapper()
             : this(true)
         {
-
         }
 
-        public AnimalMapper(bool throwFailure)
+        private AnimalMapper(bool throwFailure)
         {
             if (throwFailure)
                 throw new AssertFailedException("Should never be called with true");
@@ -27,10 +26,9 @@ namespace MagicMap.IntegrationTests.Tests.CustomFactoryMethod
 
         #endregion
 
-        #region Methods
+        #region Public Properties
 
-        [MapperFactory]
-        static AnimalMapper CreateDefaultMapper() => new(false);
+        public static AnimalMapper Default => new(false);
 
         #endregion
     }
