@@ -15,56 +15,53 @@ using Microsoft.CodeAnalysis;
 
 /// <summary>Generator for type mapping</summary>
 /// <seealso cref="MagicMap.Generators.IGenerator" />
-internal class TypeMapperGenerator : PartialClassGenerator, IGenerator
+internal class TypeMapperGenerator : IGenerator
 {
    #region Constants and Fields
 
    private readonly ITypeMapperContext context;
 
-   private readonly string fileName;
+   private readonly IUniqueNameProvider uniqueNameProvider;
 
    #endregion
 
    #region Constructors and Destructors
 
-   public TypeMapperGenerator(ITypeMapperContext context, string fileName)
-      : base(context.MapperType)
+   public TypeMapperGenerator(ITypeMapperContext context, IUniqueNameProvider uniqueNameProvider)
    {
       this.context = context ?? throw new ArgumentNullException(nameof(context));
-      this.fileName = fileName ?? throw new ArgumentNullException(nameof(fileName));
+      this.uniqueNameProvider = uniqueNameProvider ?? throw new ArgumentNullException(nameof(uniqueNameProvider));
    }
 
    #endregion
 
    #region IGenerator Members
 
-   public GeneratedSource Generate()
+   public IEnumerable<GeneratedSource> Generate()
    {
-      var builder = new StringBuilder();
-      if (!context.MapperType.ContainingNamespace.IsGlobalNamespace)
-      {
-         builder.AppendLine($"namespace {context.MapperType.ContainingNamespace.ToDisplayString()}");
-         builder.AppendLine("{");
-      }
+
 
 #if DEBUG
       if (MapperTypeName.StartsWith("Throw", StringComparison.InvariantCultureIgnoreCase))
          throw new InvalidOperationException("Throw is not supported here as mapper type name.");
 #endif
 
-      GenerateMapperClass(builder);
-      GenerateExtensionsClass(builder);
+      var mapperClass = GenerateMapperClass();
 
-      if (!context.MapperType.ContainingNamespace.IsGlobalNamespace)
-         builder.AppendLine("}");
 
-      var generatedSource = new GeneratedSource
+      yield return new GeneratedSource
       {
-         Name = fileName,
-         Code = builder.ToString()
+         Name = uniqueNameProvider.GetFileNameForClass(context.MapperType.Name),
+         Code = mapperClass.GenerateCode()
       };
 
-      return generatedSource;
+      var extensionsClass = GenerateExtensionsClass();
+      var extensionFileName = uniqueNameProvider.GetFileNameForClass(extensionsClass.ClassName);
+      yield return new GeneratedSource
+      {
+         Name = extensionFileName,
+         Code = extensionsClass.GenerateCode()
+      };
    }
 
    #endregion
@@ -88,18 +85,22 @@ internal class TypeMapperGenerator : PartialClassGenerator, IGenerator
       return true;
    }
 
-   private void AppendMapperSignature(StringBuilder builder, INamedTypeSymbol fromType, INamedTypeSymbol toType)
+   private void AppendMapperSignature(PartialClassGenerator mapperGenerator, INamedTypeSymbol fromType,
+      INamedTypeSymbol toType)
    {
-      builder.AppendLine("/// <summary>");
-      builder.AppendLine("/// Maps all properties of the <see cref=\"source\"/> to the properties of the <see cref=\"target\"/>");
-      builder.AppendLine("/// </summary>");
-      builder.Append("public void Map(");
-      builder.Append(fromType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
-      builder.Append(" source");
-      builder.Append(", ");
-      builder.Append(toType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
-      builder.Append(" target");
-      builder.AppendLine(")");
+      mapperGenerator.AppendLine("/// <summary>");
+      mapperGenerator.AppendLine("/// Maps all properties of the <see cref=\"source\"/> to the properties of the <see cref=\"target\"/>");
+      mapperGenerator.AppendLine("/// </summary>");
+      var stringBuilder = new StringBuilder();
+      stringBuilder.Append("public void Map(");
+      stringBuilder.Append(fromType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
+      stringBuilder.Append(" source");
+      stringBuilder.Append(", ");
+      stringBuilder.Append(toType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
+      stringBuilder.Append(" target");
+      stringBuilder.Append(")");
+
+      mapperGenerator.AppendLine(stringBuilder.ToString());
    }
 
    private string ComputeModifier()
@@ -114,7 +115,7 @@ internal class TypeMapperGenerator : PartialClassGenerator, IGenerator
       return "public";
    }
 
-   private void GenerateExtensionsClass(StringBuilder builder)
+   private ClassGenerationContext GenerateExtensionsClass()
    {
       var mapperExtensions = CreateGenerationContext();
       GenerateMapperProperty(mapperExtensions);
@@ -123,7 +124,7 @@ internal class TypeMapperGenerator : PartialClassGenerator, IGenerator
       if (!context.SourceEqualsTargetType)
          GenerateExtensionMethod(mapperExtensions, context.SourceType, context.TargetType);
 
-      builder.AppendLine(mapperExtensions.GenerateCode());
+      return mapperExtensions;
    }
 
    private ClassGenerationContext CreateGenerationContext()
@@ -134,21 +135,23 @@ internal class TypeMapperGenerator : PartialClassGenerator, IGenerator
          {
             IsStatic = true,
             Partial = true,
-            Modifier = ComputeModifier()
+            Modifier = ComputeModifier(),
+            Namespace = context.MapperType.ContainingNamespace
+
          };
       }
 
       return new ClassGenerationContext(context.MapperExtensionsType)
       {
-         IsStatic = true
+         IsStatic = true,
       };
    }
 
    private void GenerateMapperProperty(ClassGenerationContext generationContext)
    {
-      if (generationContext.ContainsProperty("Mapper") )
+      if (generationContext.ContainsProperty("Mapper"))
          return;
-      
+
       var builder = new StringBuilder();
       builder.AppendLine("/// <summary>");
       builder.AppendLine($"/// The instance of the <see cref=\"{MapperTypeName}\"/> all extension methods use.");
@@ -158,83 +161,63 @@ internal class TypeMapperGenerator : PartialClassGenerator, IGenerator
       generationContext.AddCode(builder.ToString());
    }
 
-   private void GenerateMapperClass(StringBuilder builder)
+   private PartialClassGenerator GenerateMapperClass()
    {
-      builder.AppendLine($"partial class {MapperTypeName}");
-      builder.AppendLine("{");
+      var mapperGenerator = new PartialClassGenerator(context.MapperType);
 
-      GeneratedSingletonInstance(builder);
+      GeneratedSingletonInstance(mapperGenerator);
 
-      var propertyContext = new PropertyMappingContext(context.SourceType, context.TargetType, InvertMappings(context.MappingSpecifications));
-      GenerateMappingMethod(builder, propertyContext);
+      if (!mapperGenerator.ContainsMethod("Map", context.SourceType, context.TargetType))
+      {
+         var propertyContext = new PropertyMappingContext(context.SourceType, context.TargetType, InvertMappings(context.MappingSpecifications));
+         GenerateMappingMethod(propertyContext, mapperGenerator);
+      }
+
+      if (!context.SourceEqualsTargetType && !mapperGenerator.ContainsMethod("Map", context.TargetType, context.SourceType))
+      {
+         var propertyContext = new PropertyMappingContext(context.TargetType, context.SourceType, context.MappingSpecifications);
+         GenerateMappingMethod(propertyContext, mapperGenerator);
+      }
+
+      GenerateOverrides(mapperGenerator);
+      return mapperGenerator;
+   }
+
+   private void GenerateOverrides(PartialClassGenerator mapperGenerator)
+   {
+      mapperGenerator.AppendLine("/// <summary>Implement this method to map properties the mapper could not handle for any reason</summary>");
+      mapperGenerator.AppendLine($"partial void MapOverride({context.SourceType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} source, {context.TargetType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} target);");
+
 
       if (!context.SourceEqualsTargetType)
       {
-         propertyContext = new PropertyMappingContext(context.TargetType, context.SourceType, context.MappingSpecifications);
-         GenerateMappingMethod(builder, propertyContext);
-      }
 
-      GenerateOverrides(builder);
-      builder.AppendLine("}");
-   }
-
-   private void GenerateOverrides(StringBuilder builder)
-   {
-      builder.AppendLine("/// <summary>Implement this method to map properties the mapper could not handle for any reason</summary>");
-      builder.AppendLine($"partial void MapOverride({context.SourceType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} source, {context.TargetType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} target);");
-
-      if (!context.SourceEqualsTargetType)
-      {
-         builder.AppendLine("/// <summary>Implement this method to map properties the mapper could not handle for any reason</summary>");
-         builder.AppendLine($"partial void MapOverride({context.TargetType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} source, {context.SourceType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} target);");
+         mapperGenerator.AppendLine("/// <summary>Implement this method to map properties the mapper could not handle for any reason</summary>");
+         mapperGenerator.AppendLine($"partial void MapOverride({context.TargetType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} source, {context.SourceType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} target);");
       }
    }
 
-   private void GeneratedSingletonInstance(StringBuilder builder)
+   private void GeneratedSingletonInstance(PartialClassGenerator mapperGenerator)
    {
-      var method = context.MapperType.GetMethod(IsDefaultMapperFactory);
-      if (method != null)
+      if (mapperGenerator.ContainsProperty("Default"))
+         return;
+
+      mapperGenerator.AppendLine("/// <summary>");
+      mapperGenerator.AppendLine("/// The default singleton instance of the generated type mapper.");
+      mapperGenerator.AppendLine("/// To customize the creation of the default mapper, just implement this property in the defining partial part.");
+      mapperGenerator.AppendLine("/// </summary>");
+
+      if (mapperGenerator.UserDefinedPart.GetDefaultConstructor() != null)
       {
-         builder.AppendLine("/// <summary>The default singleton instance of the generated type mapper.</summary>");
-         builder.AppendLine($"public static {context.MapperType.Name} Default {{ get; private set; }} = {method.Name}();");
+         mapperGenerator.AppendLine($"public static {context.MapperName()} Default {{ get; }} = new {context.MapperName()}();");
       }
       else
       {
-         var defaultConstructor = context.MapperType.Constructors.FirstOrDefault(c => c.Parameters.Length == 0);
-         if (defaultConstructor != null)
-         {
-            builder.AppendLine("/// <summary>");
-            builder.AppendLine("/// The default singleton instance of the generated type mapper.");
-            builder.AppendLine("/// To customize the creation of your default mapper, just create a static method, and mark it with the <see cref=\"MagicMap.MapperFactoryAttribute\"/>");
-            builder.AppendLine("/// </summary>");
-            builder.AppendLine("/// <code>");
-            builder.AppendLine("/// [MapperFactory]");
-            builder.AppendLine("/// static Mapper CreateMapper() => new Mapper();");
-            builder.AppendLine("/// </code>");
-            builder.AppendLine($"public static {context.MapperName()} Default {{ get; private set; }} = new {context.MapperName()}();");
-            builder.AppendLine();
-         }
+         mapperGenerator.AppendLine($"public static {context.MapperName()} Default => throw new global::System.NotSupportedException(\"The type {context.MapperName()} does not define a default constructor.\");");
       }
    }
 
-   private bool IsDefaultMapperFactory(IMethodSymbol m)
-   {
-      if (!m.IsStatic || m.Parameters.Length > 0)
-         return false;
-
-      if (!m.ReturnType.Equals(context.MapperType, SymbolEqualityComparer.Default))
-         return false;
-
-      return HasFactoryAttribute(m);
-   }
-
-   private bool HasFactoryAttribute(IMethodSymbol methodSymbol)
-   {
-      return methodSymbol.GetAttributes()
-         .Any(a => context.FactoryAttribute.Equals(a.AttributeClass, SymbolEqualityComparer.Default));
-   }
-
-   private void GenerateMappingMethod(StringBuilder builder, PropertyMappingContext propertyContext)
+   private void GenerateMappingMethod(PropertyMappingContext propertyContext, PartialClassGenerator mapperGenerator)
    {
       var targetProperties = propertyContext.TargetType.GetMembers()
          .OfType<IPropertySymbol>()
@@ -244,13 +227,13 @@ internal class TypeMapperGenerator : PartialClassGenerator, IGenerator
          .OfType<IPropertySymbol>()
          .ToDictionary(p => p.Name, StringComparer.InvariantCultureIgnoreCase);
 
-      AppendMapperSignature(builder, propertyContext.SourceType, propertyContext.TargetType);
-      builder.AppendLine("{");
+      AppendMapperSignature(mapperGenerator, propertyContext.SourceType, propertyContext.TargetType);
+      mapperGenerator.AppendLine("{");
 
       if (targetProperties.Count == 0)
       {
-         builder.AppendLine("// target type does not contain any properties.");
-         builder.AppendLine("// No mappings were generated");
+         mapperGenerator.AppendLine("// target type does not contain any properties.");
+         mapperGenerator.AppendLine("// No mappings were generated");
       }
       else
       {
@@ -260,16 +243,16 @@ internal class TypeMapperGenerator : PartialClassGenerator, IGenerator
             if (TryFindSourceProperty(sourceProperties, sourcePropertyName, out var sourceProperty))
             {
                var mapping = CreatePropertyMapping(propertyContext, sourceProperty, targetProperty);
-               builder.AppendLine(mapping);
+               mapperGenerator.AppendLine(mapping);
             }
          }
       }
 
-      builder.AppendLine($"MapOverride(source, target);");
-      builder.AppendLine("}");
+      mapperGenerator.AppendLine("MapOverride(source, target);");
+      mapperGenerator.AppendLine("}");
 
       foreach (var declaration in propertyContext.MemberDeclarations)
-         builder.AppendLine(declaration());
+         mapperGenerator.AppendLine(declaration());
    }
 
    private string CreatePropertyMapping(PropertyMappingContext propertyContext, IPropertySymbol sourceProperty, IPropertySymbol targetProperty)
@@ -327,12 +310,11 @@ internal class TypeMapperGenerator : PartialClassGenerator, IGenerator
 
       builder.AppendLine($"var result = Mapper is MagicMap.ITypeFactory<{targetName}, {sourceName}> factory");
       builder.AppendLine($"? factory.Create({valueName})");
-
-
+      
       var constructor = targetType.GetDefaultConstructor();
       if (constructor == null || constructor.IsPrivate())
       {
-         builder.AppendLine($": throw new global::System.NotSupportedException(\"The target type {targetType.Name} can not be created\");");
+         builder.AppendLine($": throw new global::System.NotSupportedException(\"The target type {targetType.Name} can not be created. Provide a accessible parameterless constructor or implement the ITypeFactory interface in the responsible mapper.\");");
       }
       else
       {
@@ -375,4 +357,6 @@ internal class TypeMapperGenerator : PartialClassGenerator, IGenerator
    }
 
    #endregion
+
+
 }

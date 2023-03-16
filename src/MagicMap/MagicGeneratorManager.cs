@@ -6,8 +6,6 @@
 
 namespace MagicMap
 {
-   using System.Collections.Generic;
-
    using MagicMap.Generators;
    using MagicMap.Generators.TypeMapper;
 
@@ -17,7 +15,7 @@ namespace MagicMap
    {
       #region Constants and Fields
 
-      private readonly HashSet<string> usedFileNames = new();
+      private readonly UniqueFileNameProvider uniqueNameProvider = new();
 
       #endregion
 
@@ -44,8 +42,7 @@ namespace MagicMap
       {
          if (generatorContext is ITypeMapperContext typeMapperContext)
          {
-            var fileName = GetFreeFileName(typeMapperContext.MapperType.Name);
-            generator = new TypeMapperGenerator(typeMapperContext, fileName);
+            generator = new TypeMapperGenerator(typeMapperContext, uniqueNameProvider);
             return true;
          }
 
@@ -55,20 +52,5 @@ namespace MagicMap
 
       #endregion
 
-      #region Methods
-
-      private string GetFreeFileName(string hintName)
-      {
-         var fileName = $"{hintName}.generated.cs";
-         var counter = 0;
-
-         while (usedFileNames.Contains(fileName))
-            fileName = $"{hintName}.{++counter}.generated.cs";
-
-         usedFileNames.Add(fileName);
-         return fileName;
-      }
-
-      #endregion
    }
 }

@@ -1,5 +1,5 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="ClassGenerationContext.cs" company="consolovers">
+// <copyright file="PartialClassGenerationContext.cs" company="consolovers">
 //   Copyright (c) daniel bramer 2022 - 2023
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
@@ -8,29 +8,23 @@ namespace MagicMap;
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
 using System.Text;
 
 using Microsoft.CodeAnalysis;
 
-internal class ClassGenerationContext
+internal class PartialClassGenerator
 {
-   private readonly INamedTypeSymbol userDefinedPart;
-
    private StringBuilder sourceBuilder;
 
    private List<string> lazyMembers = new();
 
-   public ClassGenerationContext(INamedTypeSymbol userDefinedPart)
+   public PartialClassGenerator(INamedTypeSymbol userDefinedPart)
    {
-      this.userDefinedPart = userDefinedPart ?? throw new ArgumentNullException(nameof(userDefinedPart));
+      UserDefinedPart = userDefinedPart ?? throw new ArgumentNullException(nameof(userDefinedPart));
       ClassName = userDefinedPart.Name;
       IsStatic = userDefinedPart.IsStatic;
-      Namespace = userDefinedPart.ContainingNamespace;
-   }
-
-   public ClassGenerationContext(string className)
-   {
-      ClassName = className ?? throw new ArgumentNullException(nameof(className));
    }
 
    private StringBuilder SourceBuilder => sourceBuilder ??= InitializeSourceBuilder();
@@ -40,7 +34,7 @@ internal class ClassGenerationContext
       if (name == null)
          throw new ArgumentNullException(nameof(name));
 
-      return userDefinedPart?.GetProperty(p => p.Name == name) != null;
+      return UserDefinedPart.GetProperty(p => p.Name == name) != null;
    }
 
    internal string GenerateCode()
@@ -86,8 +80,8 @@ internal class ClassGenerationContext
 
    private string ComputeClassName()
    {
-      if (userDefinedPart != null)
-         return userDefinedPart.Name;
+      if (UserDefinedPart != null)
+         return UserDefinedPart.Name;
       return ClassName;
    }
 
@@ -99,13 +93,55 @@ internal class ClassGenerationContext
 
    public bool Partial { get; set; } = true;
 
-   public INamespaceSymbol Namespace { get; set; }
+   public INamespaceSymbol Namespace => UserDefinedPart.ContainingNamespace;
 
-   public void AddCode(string code)
+   public INamedTypeSymbol UserDefinedPart { get; }
+
+   public void AppendLine(string code)
    {
-      if(string.IsNullOrWhiteSpace(code))
+      if (string.IsNullOrWhiteSpace(code))
          return;
 
       SourceBuilder.AppendLine(code);
+   }
+
+   public bool ContainsMethod(INamedTypeSymbol returnType, string name, params INamedTypeSymbol[] parameterTypes)
+   {
+      foreach (var candidate in UserDefinedPart.GetMethods(name))
+      {
+         if (ParametersMatch(candidate.Parameters, parameterTypes) && ReturnTypeMatches(candidate.ReturnType, returnType))
+            return true;
+      }
+
+      return false;
+   }
+
+   public bool ContainsMethod(string name, params INamedTypeSymbol[] parameterTypes)
+   {
+      return UserDefinedPart.GetMethods(name)
+         .Any(candidate => ParametersMatch(candidate.Parameters, parameterTypes));
+   }
+
+   private bool ReturnTypeMatches(ITypeSymbol actualReturnType, INamedTypeSymbol expectedReturnType)
+   {
+      // TODO handle void
+      if (actualReturnType.Equals(expectedReturnType, SymbolEqualityComparer.Default))
+         return true;
+      return false;
+
+   }
+
+   private bool ParametersMatch(ImmutableArray<IParameterSymbol> definedParameter, INamedTypeSymbol[] parameterTypes)
+   {
+      if (definedParameter.Length != parameterTypes.Length)
+         return false;
+
+      for (var i = 0; i < definedParameter.Length; i++)
+      {
+         if (!definedParameter[i].Type.Equals(parameterTypes[i], SymbolEqualityComparer.Default))
+            return false;
+      }
+
+      return true;
    }
 }

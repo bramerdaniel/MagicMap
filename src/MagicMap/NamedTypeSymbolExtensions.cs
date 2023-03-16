@@ -34,6 +34,7 @@ public static class NamedTypeSymbolExtensions
       return null;
    }
 
+
    public static IMethodSymbol GetMethod(this INamedTypeSymbol typeSymbol, Func<IMethodSymbol, bool> selector)
    {
       if (typeSymbol == null)

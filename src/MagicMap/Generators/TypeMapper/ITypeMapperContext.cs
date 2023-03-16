@@ -13,9 +13,7 @@ using Microsoft.CodeAnalysis;
 interface ITypeMapperContext : IGeneratorContext
 {
    #region Public Properties
-
-   INamedTypeSymbol FactoryAttribute { get; }
-
+   
    INamedTypeSymbol MapperExtensionsType { get; }
 
    INamedTypeSymbol MapperType { get; }

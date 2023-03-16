@@ -6,11 +6,15 @@
 
 namespace MagicMap.Generators;
 
+using System.Collections.Generic;
+
 internal interface IGenerator
 {
-    #region Public Methods and Operators
+   #region Public Methods and Operators
 
-    GeneratedSource Generate();
+   /// <summary>Generates the sources of the generator.</summary>
+   /// <returns>The generated source file of the generator</returns>
+   IEnumerable<GeneratedSource> Generate();
 
     #endregion
 }
