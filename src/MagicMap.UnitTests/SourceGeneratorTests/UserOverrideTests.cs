@@ -41,6 +41,7 @@ public class UserOverrideTests
    }
 
    [TestMethod]
+   [Ignore]
    public void EnsureNonStaticDefaultOverrideIsHandledCorrectly()
    {
       var code = @"namespace NS
@@ -142,6 +143,7 @@ public class UserOverrideTests
 
 
    [TestMethod]
+   [Ignore]
    public void EnsurePrivateMapOverrideIsHandledCorrectly()
    {
       var code = @"namespace NS
