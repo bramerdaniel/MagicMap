@@ -8,7 +8,5 @@ namespace MagicMap.Utils;
 
 internal interface IMemberBuilder
 {
-   bool WasBuild();
-
    string Build();
 }

@@ -21,15 +21,8 @@ internal class PartialMethodBuilder : MethodBuilderBase<PartialMethodBuilder>
 
    #region Public Methods and Operators
 
-   public void Build()
+   protected override string BuildOverride(StringBuilder sourceBuilder)
    {
-      if (!GenerationRequired())
-         return;
-
-      var sourceBuilder = new StringBuilder();
-
-      AppendDescription(sourceBuilder);
-
       if (Modifier != null)
          sourceBuilder.Append($"{Modifier()} ");
 
@@ -38,7 +31,7 @@ internal class PartialMethodBuilder : MethodBuilderBase<PartialMethodBuilder>
       AppendSignature(sourceBuilder);
       sourceBuilder.AppendLine(");/*NEWLINE*/");
 
-      Owner.AppendLine(sourceBuilder.ToString());
+      return sourceBuilder.ToString();
    }
 
    #endregion

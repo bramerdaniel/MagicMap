@@ -28,15 +28,8 @@ internal class MethodBuilder : MethodBuilderBase<MethodBuilder>
 
    #region Public Methods and Operators
 
-   public void Build()
+   protected override string BuildOverride(StringBuilder sourceBuilder)
    {
-      if (!GenerationRequired())
-         return;
-
-      var sourceBuilder = new StringBuilder();
-
-      AppendDescription(sourceBuilder);
-
       sourceBuilder.Append($"{Modifier()} {ReturnType()} {Name()}");
       sourceBuilder.Append("(");
       AppendSignature(sourceBuilder);
@@ -45,7 +38,7 @@ internal class MethodBuilder : MethodBuilderBase<MethodBuilder>
       sourceBuilder.AppendLine(MethodBody());
       sourceBuilder.AppendLine("}");
 
-      Owner.AppendLine(sourceBuilder.ToString());
+      return sourceBuilder.ToString();
    }
 
    public MethodBuilder WithBody(Func<string> body)

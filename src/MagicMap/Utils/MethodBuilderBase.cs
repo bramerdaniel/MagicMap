@@ -11,8 +11,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-internal class MethodBuilderBase<T>
+internal abstract class MethodBuilderBase<T> : IMemberBuilder
 {
+   #region Constants and Fields
+
+   private string code;
+
+   private bool wasBuild;
+
+   #endregion
+
    #region Constructors and Destructors
 
    protected MethodBuilderBase(ICodeBuilder owner)
@@ -22,9 +30,39 @@ internal class MethodBuilderBase<T>
 
    #endregion
 
+   #region IMemberBuilder Members
+
+   public string Build()
+   {
+      try
+      {
+         if (wasBuild)
+            return code;
+
+         if (GenerationRequired())
+         {
+            var sourceBuilder = new StringBuilder();
+            AppendDescription(sourceBuilder);
+            code = BuildOverride(sourceBuilder);
+         }
+         else
+         {
+            code = string.Empty;
+         }
+
+         return code;
+      }
+      finally
+      {
+         wasBuild = true;
+      }
+   }
+
+   #endregion
+
    #region Properties
 
-   protected IList<Predicate<T>> Conditions { get; set; } = new List<Predicate<T>>();
+   protected IList<Predicate<T>> Conditions { get; } = new List<Predicate<T>>();
 
    protected Func<string> Modifier { get; set; }
 
@@ -32,11 +70,11 @@ internal class MethodBuilderBase<T>
 
    protected ICodeBuilder Owner { get; }
 
-   private List<(Func<string> type, Func<string> name)> Parameters { get; } = new();
-
    protected Func<string> ReturnType { get; set; } = () => "void";
 
-   private Func<string> Summary { get; set; }
+   private List<(Func<string> type, Func<string> name)> Parameters { get; } = new();
+
+   private Func<string> Description { get; set; }
 
    #endregion
 
@@ -48,31 +86,12 @@ internal class MethodBuilderBase<T>
       return (T)(object)this;
    }
 
-   protected bool GenerationRequired()
-   {
-      foreach (var condition in Conditions)
-      {
-         if (!condition((T)(object)this))
-            return false;
-      }
-
-      return true;
-   }
-
    public T WithModifier(string modifier)
    {
       if (modifier == null)
          throw new ArgumentNullException(nameof(modifier));
 
       return WithModifier(() => modifier);
-   }
-
-   public T WithSummary(string summary)
-   {
-      if (summary == null)
-         throw new ArgumentNullException(nameof(summary));
-
-      return WithSummary(() => summary);
    }
 
    public T WithModifier(Func<string> modifier)
@@ -109,6 +128,14 @@ internal class MethodBuilderBase<T>
       return (T)(object)this;
    }
 
+   public T WithSummary(string summary)
+   {
+      if (summary == null)
+         throw new ArgumentNullException(nameof(summary));
+
+      return WithSummary(() => summary);
+   }
+
    public T WithSummary(Action<StringBuilder> summary)
    {
       if (summary == null)
@@ -121,18 +148,17 @@ internal class MethodBuilderBase<T>
 
    public T WithSummary(Func<string> summary)
    {
-      Summary = summary ?? throw new ArgumentNullException(nameof(summary));
+      Description = summary ?? throw new ArgumentNullException(nameof(summary));
       return (T)(object)this;
    }
 
-   protected void AppendSignature(StringBuilder sourceBuilder)
+   #endregion
+
+   #region Methods
+
+   private void AppendDescription(StringBuilder sourceBuilder)
    {
-      var parameterString = string.Join(", ", Parameters.Select(parameter => $"{parameter.type()} {parameter.name()}"));
-      sourceBuilder.Append(parameterString);
-   }
-   protected void AppendDescription(StringBuilder sourceBuilder)
-   {
-      if (Summary == null)
+      if (Description == null)
          return;
 
       var lines = SplitDescriptionIntoLines();
@@ -149,14 +175,32 @@ internal class MethodBuilderBase<T>
       }
    }
 
+   protected void AppendSignature(StringBuilder sourceBuilder)
+   {
+      var parameterString = string.Join(", ", Parameters.Select(parameter => $"{parameter.type()} {parameter.name()}"));
+      sourceBuilder.Append(parameterString);
+   }
+
+   protected abstract string BuildOverride(StringBuilder sourceBuilder);
+
+   private bool GenerationRequired()
+   {
+      foreach (var condition in Conditions)
+      {
+         if (!condition((T)(object)this))
+            return false;
+      }
+
+      return true;
+   }
+
    private string[] SplitDescriptionIntoLines()
    {
-      return Summary()
+      return Description()
          .Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries)
          .Select(line => $"/// {line.TrimStart('/')}")
          .ToArray();
    }
-
 
    #endregion
 }

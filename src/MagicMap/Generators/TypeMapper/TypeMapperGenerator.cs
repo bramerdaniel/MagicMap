@@ -189,13 +189,11 @@ internal class TypeMapperGenerator : IGenerator
    private void GenerateOverrides(PartialClassGenerator mapperGenerator)
    {
       mapperGenerator.AddPartialMethod("MapOverride", (context.SourceType, "source"), (context.TargetType, "target"))
-         .WithSummary("Implement this method, to map the properties the mapper could not handle for any reason.")
-         .Build();
+         .WithSummary("Implement this method, to map the properties the mapper could not handle for any reason.");
 
       mapperGenerator.AddPartialMethod("MapOverride", (context.TargetType, "source"), (context.SourceType, "target"))
          .WithCondition(_ => !context.SourceEqualsTargetType)
-         .WithSummary("Implement this method, to map the properties the mapper could not handle for any reason.")
-         .Build();
+         .WithSummary("Implement this method, to map the properties the mapper could not handle for any reason.");
    }
 
    private void GeneratedSingletonInstance(PartialClassGenerator mapperGenerator)

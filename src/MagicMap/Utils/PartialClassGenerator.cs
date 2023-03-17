@@ -7,7 +7,6 @@
 namespace MagicMap.Utils;
 
 using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
@@ -18,7 +17,7 @@ internal class PartialClassGenerator : ICodeBuilder
 {
    #region Constants and Fields
 
-   private List<string> lazyMembers = new();
+   private IMemberBuilder activeBuilder;
 
    private StringBuilder sourceBuilder;
 
@@ -39,6 +38,8 @@ internal class PartialClassGenerator : ICodeBuilder
 
    public ICodeBuilder Append(string code)
    {
+      CloseActiveBuilder();
+
       if (!string.IsNullOrWhiteSpace(code))
          SourceBuilder.Append(code);
 
@@ -47,10 +48,17 @@ internal class PartialClassGenerator : ICodeBuilder
 
    public ICodeBuilder AppendLine(string code)
    {
+      CloseActiveBuilder();
+
       if (!string.IsNullOrWhiteSpace(code))
          SourceBuilder.AppendLine(code);
 
       return this;
+   }
+
+   private void CloseActiveBuilder()
+   {
+      UpdateActiveBuilder((IMemberBuilder)null);
    }
 
    #endregion
@@ -79,14 +87,12 @@ internal class PartialClassGenerator : ICodeBuilder
 
    public MethodBuilder AddMethod()
    {
-      return new MethodBuilder(this);
+      return UpdateActiveBuilder(new MethodBuilder(this));
    }
-
-   private IMemberBuilder activeBuilder;
 
    public PartialMethodBuilder AddPartialMethod()
    {
-      return new PartialMethodBuilder(this);
+      return UpdateActiveBuilder(new PartialMethodBuilder(this));
    }
 
    public bool ContainsMethod(INamedTypeSymbol returnType, string name, params INamedTypeSymbol[] parameterTypes)
@@ -120,13 +126,14 @@ internal class PartialClassGenerator : ICodeBuilder
 
    internal string GenerateCode()
    {
-      GenerateLazyMembers();
+      CloseActiveBuilder();
+
       SourceBuilder.AppendLine("}");
 
       if (!Namespace.IsGlobalNamespace)
          SourceBuilder.AppendLine("}");
 
-      return sourceBuilder.ToString();
+      return SourceBuilder.ToString();
    }
 
    private string ComputeClassName()
@@ -134,12 +141,6 @@ internal class PartialClassGenerator : ICodeBuilder
       if (UserDefinedPart != null)
          return UserDefinedPart.Name;
       return ClassName;
-   }
-
-   private void GenerateLazyMembers()
-   {
-      foreach (var lazyMember in lazyMembers)
-         SourceBuilder.AppendLine(lazyMember);
    }
 
    private StringBuilder InitializeSourceBuilder()
@@ -185,7 +186,15 @@ internal class PartialClassGenerator : ICodeBuilder
       return false;
    }
 
+   private T UpdateActiveBuilder<T>(T builder)
+      where T : IMemberBuilder
+   {
+      if (activeBuilder != null)
+         SourceBuilder.AppendLine(activeBuilder.Build());
+
+      activeBuilder = builder;
+      return builder;
+   }
+
    #endregion
-
-
 }
