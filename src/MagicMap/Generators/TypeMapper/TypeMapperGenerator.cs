@@ -186,38 +186,16 @@ internal class TypeMapperGenerator : IGenerator
       return mapperGenerator;
    }
 
-   private PartialClassGenerator GenerateMapperClassOld()
-   {
-      var mapperGenerator = new PartialClassGenerator(context.MapperType);
-
-      GeneratedSingletonInstance(mapperGenerator);
-
-      if (!mapperGenerator.ContainsMethod("Map", context.SourceType, context.TargetType))
-      {
-         var propertyContext = new PropertyMappingContext(context.SourceType, context.TargetType, InvertMappings(context.MappingSpecifications));
-         GenerateMappingMethod(propertyContext, mapperGenerator);
-      }
-
-      if (!context.SourceEqualsTargetType && !mapperGenerator.ContainsMethod("Map", context.TargetType, context.SourceType))
-      {
-         var propertyContext = new PropertyMappingContext(context.TargetType, context.SourceType, context.MappingSpecifications);
-         GenerateMappingMethod(propertyContext, mapperGenerator);
-      }
-
-      GenerateOverrides(mapperGenerator);
-      return mapperGenerator;
-   }
-
    private void GenerateOverrides(PartialClassGenerator mapperGenerator)
    {
-      mapperGenerator.AppendLine("/// <summary>Implement this method to map properties the mapper could not handle for any reason</summary>");
-      mapperGenerator.AppendLine($"partial void MapOverride({context.SourceType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} source, {context.TargetType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} target);/*NEWLINE*/");
+      mapperGenerator.AddPartialMethod("MapOverride", (context.SourceType, "source"), (context.TargetType, "target"))
+         .WithSummary("Implement this method, to map the properties the mapper could not handle for any reason.")
+         .Build();
 
-      if (!context.SourceEqualsTargetType)
-      {
-         mapperGenerator.AppendLine("/// <summary>Implement this method to map properties the mapper could not handle for any reason</summary>");
-         mapperGenerator.AppendLine($"partial void MapOverride({context.TargetType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} source, {context.SourceType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} target);/*NEWLINE*/");
-      }
+      mapperGenerator.AddPartialMethod("MapOverride", (context.TargetType, "source"), (context.SourceType, "target"))
+         .WithCondition(_ => !context.SourceEqualsTargetType)
+         .WithSummary("Implement this method, to map the properties the mapper could not handle for any reason.")
+         .Build();
    }
 
    private void GeneratedSingletonInstance(PartialClassGenerator mapperGenerator)

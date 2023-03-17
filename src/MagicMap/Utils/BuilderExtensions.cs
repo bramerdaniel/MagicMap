@@ -14,10 +14,6 @@ internal static class BuilderExtensions
 {
    #region Public Methods and Operators
 
-   /// <summary>Adds the method.</summary>
-   /// <param name="owner">The owner.</param>
-   /// <param name="name">The name.</param>
-   /// <returns></returns>
    public static MethodBuilder AddMethod(this PartialClassGenerator owner, string name)
    {
       return owner.AddMethod()
@@ -27,7 +23,7 @@ internal static class BuilderExtensions
    public static MethodBuilder AddMethod(this PartialClassGenerator owner, string name, params (INamedTypeSymbol Type, string Name)[] parameters)
    {
       var methodBuilder = owner.AddMethod()
-         .Condition(_ => !owner.ContainsMethod("Map", parameters.Select(x => x.Type).ToArray()))
+         .WithCondition(_ => !owner.ContainsMethod(name, parameters.Select(x => x.Type).ToArray()))
          .WithName(name);
 
       foreach (var parameter in parameters)
@@ -38,6 +34,22 @@ internal static class BuilderExtensions
       }
 
       return methodBuilder;
+   }
+
+   public static PartialMethodBuilder AddPartialMethod(this PartialClassGenerator owner, string name,
+      params (INamedTypeSymbol Type, string Name)[] parameters)
+   {
+      var partialMethod = owner.AddPartialMethod()
+         .WithName(name);
+
+      foreach (var parameter in parameters)
+      {
+         partialMethod.WithParameter(
+            () => parameter.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+            () => parameter.Name);
+      }
+
+      return partialMethod;
    }
 
    #endregion

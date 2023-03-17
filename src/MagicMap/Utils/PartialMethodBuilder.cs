@@ -1,28 +1,21 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="MethodBuilder.cs" company="consolovers">
+// <copyright file="PartialMethodBuilder.cs" company="consolovers">
 //   Copyright (c) daniel bramer 2022 - 2023
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
 namespace MagicMap.Utils;
 
-using System;
 using System.Text;
 
-internal class MethodBuilder : MethodBuilderBase<MethodBuilder>
+internal class PartialMethodBuilder : MethodBuilderBase<PartialMethodBuilder>
 {
    #region Constructors and Destructors
 
-   public MethodBuilder(ICodeBuilder owner)
+   public PartialMethodBuilder(ICodeBuilder owner)
       : base(owner)
    {
    }
-
-   #endregion
-
-   #region Properties
-
-   private Func<string> MethodBody { get; set; }
 
    #endregion
 
@@ -37,21 +30,15 @@ internal class MethodBuilder : MethodBuilderBase<MethodBuilder>
 
       AppendDescription(sourceBuilder);
 
-      sourceBuilder.Append($"{Modifier()} {ReturnType()} {Name()}");
+      if (Modifier != null)
+         sourceBuilder.Append($"{Modifier()} ");
+
+      sourceBuilder.Append($"partial {ReturnType()} {Name()}");
       sourceBuilder.Append("(");
       AppendSignature(sourceBuilder);
-      sourceBuilder.AppendLine(")");
-      sourceBuilder.AppendLine("{");
-      sourceBuilder.AppendLine(MethodBody());
-      sourceBuilder.AppendLine("}");
+      sourceBuilder.AppendLine(");/*NEWLINE*/");
 
       Owner.AppendLine(sourceBuilder.ToString());
-   }
-
-   public MethodBuilder WithBody(Func<string> body)
-   {
-      MethodBody = body ?? throw new ArgumentNullException(nameof(body));
-      return this;
    }
 
    #endregion
