@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using MagicMap.Generators;
+using MagicMap.Utils;
 using Microsoft.CodeAnalysis;
 
 /// <summary>Generator for type mapping</summary>
@@ -39,16 +40,7 @@ internal class TypeMapperGenerator : IGenerator
 
    public IEnumerable<GeneratedSource> Generate()
    {
-
-
-#if DEBUG
-      if (MapperTypeName.StartsWith("Throw", StringComparison.InvariantCultureIgnoreCase))
-         throw new InvalidOperationException("Throw is not supported here as mapper type name.");
-#endif
-
       var mapperClass = GenerateMapperClass();
-
-
       yield return new GeneratedSource
       {
          Name = uniqueNameProvider.GetFileNameForClass(context.MapperType.Name),
@@ -167,6 +159,39 @@ internal class TypeMapperGenerator : IGenerator
 
       GeneratedSingletonInstance(mapperGenerator);
 
+      var pc = new PropertyMappingContext(context.SourceType, context.TargetType, InvertMappings(context.MappingSpecifications));
+      mapperGenerator.AddMethod("Map", (context.SourceType, "source"), (context.TargetType, "target"))
+         .WithModifier("public")
+         .WithSummary(x => x.AppendLine("Maps all properties of the <see cref=\"source\"/> to the properties of the <see cref=\"target\"/>"))
+         .WithBody(() => GenerateMapBody(pc))
+         .Build();
+      
+      foreach (var declaration in pc.MemberDeclarations)
+         mapperGenerator.AppendLine(declaration());
+      
+      if (!context.SourceEqualsTargetType && !mapperGenerator.ContainsMethod("Map", context.TargetType, context.SourceType))
+      {
+         var propertyContext = new PropertyMappingContext(context.TargetType, context.SourceType, context.MappingSpecifications);
+         mapperGenerator.AddMethod("Map", (context.TargetType, "source"), (context.SourceType, "target"))
+            .WithModifier("public")
+            .WithSummary(x => x.AppendLine("Maps all properties of the <see cref=\"source\"/> to the properties of the <see cref=\"target\"/>"))
+            .WithBody(() => GenerateMapBody(propertyContext))
+            .Build();
+
+         foreach (var declaration in propertyContext.MemberDeclarations)
+            mapperGenerator.AppendLine(declaration());
+      }
+
+      GenerateOverrides(mapperGenerator);
+      return mapperGenerator;
+   }
+
+   private PartialClassGenerator GenerateMapperClassOld()
+   {
+      var mapperGenerator = new PartialClassGenerator(context.MapperType);
+
+      GeneratedSingletonInstance(mapperGenerator);
+
       if (!mapperGenerator.ContainsMethod("Map", context.SourceType, context.TargetType))
       {
          var propertyContext = new PropertyMappingContext(context.SourceType, context.TargetType, InvertMappings(context.MappingSpecifications));
@@ -186,14 +211,12 @@ internal class TypeMapperGenerator : IGenerator
    private void GenerateOverrides(PartialClassGenerator mapperGenerator)
    {
       mapperGenerator.AppendLine("/// <summary>Implement this method to map properties the mapper could not handle for any reason</summary>");
-      mapperGenerator.AppendLine($"partial void MapOverride({context.SourceType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} source, {context.TargetType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} target);");
-
+      mapperGenerator.AppendLine($"partial void MapOverride({context.SourceType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} source, {context.TargetType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} target);/*NEWLINE*/");
 
       if (!context.SourceEqualsTargetType)
       {
-
          mapperGenerator.AppendLine("/// <summary>Implement this method to map properties the mapper could not handle for any reason</summary>");
-         mapperGenerator.AppendLine($"partial void MapOverride({context.TargetType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} source, {context.SourceType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} target);");
+         mapperGenerator.AppendLine($"partial void MapOverride({context.TargetType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} source, {context.SourceType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} target);/*NEWLINE*/");
       }
    }
 
@@ -209,13 +232,49 @@ internal class TypeMapperGenerator : IGenerator
 
       if (mapperGenerator.UserDefinedPart.GetDefaultConstructor() != null)
       {
-         mapperGenerator.AppendLine($"public static {context.MapperName()} Default {{ get; }} = new {context.MapperName()}();");
+         mapperGenerator.AppendLine($"public static {context.MapperName()} Default {{ get; }} = new {context.MapperName()}();/*NEWLINE*/");
       }
       else
       {
          mapperGenerator.AppendLine($"public static {context.MapperName()} Default => throw new global::System.NotSupportedException(\"The type {context.MapperName()} does not define a default constructor.\");");
       }
    }
+
+
+   private string GenerateMapBody(PropertyMappingContext propertyContext)
+   {
+      var targetProperties = propertyContext.TargetType.GetMembers()
+         .OfType<IPropertySymbol>()
+         .ToDictionary(p => p.Name, StringComparer.InvariantCultureIgnoreCase);
+
+      var sourceProperties = propertyContext.SourceType.GetMembers()
+         .OfType<IPropertySymbol>()
+         .ToDictionary(p => p.Name, StringComparer.InvariantCultureIgnoreCase);
+
+      var bodyCode = new StringBuilder();
+
+      if (targetProperties.Count == 0)
+      {
+         bodyCode.AppendLine("// target type does not contain any properties.");
+         bodyCode.AppendLine("// No mappings were generated");
+      }
+      else
+      {
+         foreach (var targetProperty in targetProperties.Values.Where(MappingPossible))
+         {
+            var sourcePropertyName = GetSourcePropertyName(propertyContext.PropertyMappings, targetProperty.Name);
+            if (TryFindSourceProperty(sourceProperties, sourcePropertyName, out var sourceProperty))
+            {
+               var mapping = CreatePropertyMapping(propertyContext, sourceProperty, targetProperty);
+               bodyCode.AppendLine(mapping);
+            }
+         }
+      }
+
+      bodyCode.AppendLine("MapOverride(source, target);");
+      return bodyCode.ToString();
+   }
+
 
    private void GenerateMappingMethod(PropertyMappingContext propertyContext, PartialClassGenerator mapperGenerator)
    {
@@ -310,7 +369,7 @@ internal class TypeMapperGenerator : IGenerator
 
       builder.AppendLine($"var result = Mapper is MagicMap.ITypeFactory<{targetName}, {sourceName}> factory");
       builder.AppendLine($"? factory.Create({valueName})");
-      
+
       var constructor = targetType.GetDefaultConstructor();
       if (constructor == null || constructor.IsPrivate())
       {

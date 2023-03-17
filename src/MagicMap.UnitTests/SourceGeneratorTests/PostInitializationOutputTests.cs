@@ -30,7 +30,7 @@ public class PostInitializationOutputTests
          .HaveClass("MagicMap.TypeMapperAttribute")
          .WithInternalModifier();
 
-      result.Print();
+      result.Print(0 , 1);
    }
 
    [TestMethod]
@@ -54,9 +54,9 @@ public class PostInitializationOutputTests
         result.Should().NotHaveErrors().And
            .HaveClass("MagicMap.TypeMapperAttribute")
            .WithInternalModifier();
-
-        result.Print();
-    }
+      
+        result.Print(0, 1);
+   }
 
     [TestMethod]
     public void EnsureTypeMapperFactoryInterfaceIsGenerated()
@@ -78,6 +78,25 @@ public class PostInitializationOutputTests
           .HaveInterface("MagicMap.ITypeFactory`2")
           .WithInternalModifier();
 
-       result.Print();
-    }
+       result.Print(2, 1);
+   }
+
+    [TestMethod]
+    public void EnsurePropertyMappingAttributeIsGenerated()
+    {
+       var code = @"namespace RonnyTheRobber
+                   {   
+                      internal partial class Mapper { }
+                   }";
+
+       var result = Setup.SourceGeneratorTest()
+          .WithSource(code)
+          .Done();
+
+       result.Should().NotHaveErrors().And
+          .HaveInterface("MagicMap.PropertyMappingAttribute")
+          .WithInternalModifier();
+
+       result.Print(1, 1);
+   }
 }
