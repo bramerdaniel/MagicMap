@@ -140,8 +140,7 @@ public class UserOverrideTests
 
       result.Print();
    }
-
-
+   
    [TestMethod]
    [Ignore]
    public void EnsurePrivateMapOverrideIsHandledCorrectly()
@@ -223,6 +222,58 @@ public class UserOverrideTests
    }
 
    [TestMethod]
+   public void EnsurePropertyMappingCanBeCustomizedWithSourceValueOnly()
+   {
+      var code = @"namespace Root
+                   {   
+                      using MagicMap;
+
+                      internal class Animal
+                      {
+                          public int AgeInMonths{ get; set; }
+                      }
+
+                      internal class Person
+                      {
+                          public int AgeInYears { get; set; }
+                      }
+                                        
+                      [TypeMapper(typeof(Person), typeof(Animal))]
+                      partial class ObjectMapper
+                      {
+                          [PropertyMapping(nameof(Person.AgeInYears), nameof(Animal.AgeInMonths))]
+                          private void AgeFromYears(int years, Animal animal)
+                          {
+                              animal.AgeInMonths = years * 12;
+                          }
+
+                          [PropertyMapping(nameof(Animal.AgeInMonths), nameof(Person.AgeInYears))]
+                          private void AgeFromMonths(int months, Person person)
+                          {
+                              person.AgeInYears = months / 12;
+                          }
+                      }
+                   }";
+
+      var result = Setup.SourceGeneratorTest()
+         .WithSource(code)
+         .Done();
+
+      result.Should().NotHaveErrors();
+      result.Should()
+         .HaveClass("Root.ObjectMapper")
+         .WhereMethod("Map", "Root.Person source, Root.Animal target")
+         .Contains("AgeFromYears(source.AgeInYears, target);");
+
+      result.Should()
+         .HaveClass("Root.ObjectMapper")
+         .WhereMethod("Map", "Root.Animal source, Root.Person target")
+         .Contains("AgeFromMonths(source.AgeInMonths, target);");
+
+      result.Print();
+   }
+
+   [TestMethod]
    public void EnsurePropertyMappingCanBeUserDefinedWithAttributeUsingOnlyPropertyValues()
    {
       var code = @"namespace Root
@@ -270,6 +321,160 @@ public class UserOverrideTests
          .HaveClass("Root.ObjectMapper")
          .WhereMethod("Map", "Root.Animal source, Root.Person target")
          .Contains("target.AgeInYears = MonthsToYears(source.AgeInMonths);");
+
+      result.Print();
+   }
+
+   [TestMethod]
+   public void EnsurePropertyMappingCanBeUserDefinedWithAttributeUsingOnlyPropertyValues2()
+   {
+      var code = @"namespace Root
+                   {   
+                      using MagicMap;
+
+                      internal class Animal
+                      {
+                          public int AgeInMonths{ get; set; }
+                      }
+
+                      internal class Person
+                      {
+                          public int AgeInYears { get; set; }
+                      }
+                                        
+                      [TypeMapper(typeof(Person), typeof(Animal))]
+                      partial class ObjectMapper
+                      {
+                          [PropertyMapping(nameof(Person.AgeInYears), nameof(Animal.AgeInMonths))]
+                          private int YearsToMonths(Person person)
+                          {
+                              return person.AgeInYears * 12;
+                          }
+
+                          [PropertyMapping(nameof(Animal.AgeInMonths), nameof(Person.AgeInYears))]
+                          private int MonthsToYears(Animal animal)
+                          {
+                              return animal.AgeInMonths / 12;
+                          }
+                      }
+                   }";
+
+      var result = Setup.SourceGeneratorTest()
+         .WithSource(code)
+         .Done();
+
+      result.Should().NotHaveErrors();
+      result.Should()
+         .HaveClass("Root.ObjectMapper")
+         .WhereMethod("Map", "Root.Person source, Root.Animal target")
+         .Contains("target.AgeInMonths = YearsToMonths(source);");
+
+      result.Should()
+         .HaveClass("Root.ObjectMapper")
+         .WhereMethod("Map", "Root.Animal source, Root.Person target")
+         .Contains("target.AgeInYears = MonthsToYears(source);");
+
+      result.Print();
+   }
+
+   [TestMethod]
+   public void EnsureCustomMappingOfSamePropertiesIsPossible()
+   {
+      var code = @"namespace Root
+                   {   
+                      using MagicMap;
+
+                      internal class Animal
+                      {
+                          public int Age{ get; set; }
+                      }
+
+                      internal class Person
+                      {
+                          public int Age { get; set; }
+                      }
+                                        
+                      [TypeMapper(typeof(Person), typeof(Animal))]
+                      partial class ObjectMapper
+                      {
+                          [PropertyMapping(nameof(Person.Age), nameof(Animal.Age))]
+                          private int PersonToAnimalAge(int personAge) => personAge * 2;
+
+                          [PropertyMapping(nameof(Animal.Age), nameof(Person.Age))]
+                          private int AnimalToPersonAge(int animalAge) =>  animalAge / 2;
+                      }
+                   }";
+
+      var result = Setup.SourceGeneratorTest()
+         .WithSource(code)
+         .Done();
+
+      result.Should().NotHaveErrors();
+      result.Should()
+         .HaveClass("Root.ObjectMapper")
+         .WhereMethod("Map", "Root.Person source, Root.Animal target")
+         .Contains("target.Age = PersonToAnimalAge(source.Age);");
+
+      result.Should()
+         .HaveClass("Root.ObjectMapper")
+         .WhereMethod("Map", "Root.Animal source, Root.Person target")
+         .Contains("target.Age = AnimalToPersonAge(source.Age);");
+
+      result.Print();
+   }
+
+   [TestMethod]
+   public void EnsureCustomMappingOfTwoPropertiesIsPossible()
+   {
+      var code = @"namespace Root
+                   {   
+                      using MagicMap;
+
+                      internal class Animal
+                      {
+                          public string Name{ get; set; }
+                          public int Age{ get; set; }
+                      }
+
+                      internal class Person
+                      {
+                          public string Name{ get; set; }
+                          public int Age { get; set; }
+                      }
+                                        
+                      [TypeMapper(typeof(Person), typeof(Animal))]
+                      partial class ObjectMapper
+                      {
+                          [PropertyMapping(nameof(Person.Age), nameof(Animal.Age))]
+                          private int PersonToAnimalAge(Person person) => person.Age * 2;
+
+                          [PropertyMapping(nameof(Animal.Age), nameof(Person.Age))]
+                          private int AnimalToPersonAge(Animal animal) => animal.Age / 2;
+
+                          [PropertyMapping(nameof(Person.Name), nameof(Animal.Name))]
+                          private string ConvertName(Person person) => person.Name;
+
+                          [PropertyMapping(nameof(Animal.Name), nameof(Person.Name))]
+                          private string ConvertName(Animal animal) => animal.Name;
+                      }
+                   }";
+
+      var result = Setup.SourceGeneratorTest()
+         .WithSource(code)
+         .Done();
+
+      result.Should().NotHaveErrors();
+      result.Should()
+         .HaveClass("Root.ObjectMapper")
+         .WhereMethod("Map", "Root.Person source, Root.Animal target")
+         .Contains("target.Age = PersonToAnimalAge(source);")
+         .Contains("target.Name = ConvertName(source);");
+
+      result.Should()
+         .HaveClass("Root.ObjectMapper")
+         .WhereMethod("Map", "Root.Animal source, Root.Person target")
+         .Contains("target.Age = AnimalToPersonAge(source);")
+         .Contains("target.Name = ConvertName(source);");
 
       result.Print();
    }

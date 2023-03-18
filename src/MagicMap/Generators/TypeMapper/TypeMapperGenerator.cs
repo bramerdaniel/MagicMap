@@ -272,7 +272,6 @@ internal class TypeMapperGenerator : IGenerator
                   sourceProperties.Remove(sourcePropertyName);
                   targetProperties.Remove(targetPropertyName);
                   sourceBuilder.AppendLine(invocation);
-                  return;
                }
             }
          }
@@ -281,63 +280,43 @@ internal class TypeMapperGenerator : IGenerator
 
    private bool TryCreateInvocation(IMethodSymbol method, IPropertySymbol sourceProperty, IPropertySymbol targetProperty, out string invocation)
    {
-      if (method.ReturnType.Equals(targetProperty.Type))
+      var parameterCount = method.Parameters.Length;
+      if (method.ReturnsVoid && parameterCount == 2)
       {
-         // TODO check index
-         if (method.Parameters[0].Type.Equals(sourceProperty.Type))
+         if (method.IsCallableWith(sourceProperty.ContainingType, targetProperty.ContainingType))
+         {
+            invocation = $"{method.Name}(source, target);";
+            return true;
+         }
+
+         if (method.IsCallableWith(sourceProperty.Type, targetProperty.ContainingType))
+         {
+            invocation = $"{method.Name}(source.{sourceProperty.Name}, target);";
+            return true;
+         }
+
+         invocation = null;
+         return false;
+      }
+
+      if (method.ReturnType.Equals(targetProperty.Type) && parameterCount == 1)
+      {
+         var parameter = method.Parameters[0].Type;
+         if (parameter.Equals(sourceProperty.Type))
          {
             invocation = $"target.{targetProperty.Name} = {method.Name}(source.{sourceProperty.Name});";
             return true;
          }
 
-      }
-
-      if (method.ReturnsVoid)
-      {
-         invocation = $"{method.Name}(source, target);";
-         return true;
-      }
-
-      invocation = null;
-      return false;
-   }
-
-   private void GenerateMappingMethod(PropertyMappingContext propertyContext, PartialClassGenerator mapperGenerator)
-   {
-      var targetProperties = propertyContext.TargetType.GetMembers()
-         .OfType<IPropertySymbol>()
-         .ToDictionary(p => p.Name, StringComparer.InvariantCultureIgnoreCase);
-
-      var sourceProperties = propertyContext.SourceType.GetMembers()
-         .OfType<IPropertySymbol>()
-         .ToDictionary(p => p.Name, StringComparer.InvariantCultureIgnoreCase);
-
-      AppendMapperSignature(mapperGenerator, propertyContext.SourceType, propertyContext.TargetType);
-      mapperGenerator.AppendLine("{");
-
-      if (targetProperties.Count == 0)
-      {
-         mapperGenerator.AppendLine("// target type does not contain any properties.");
-         mapperGenerator.AppendLine("// No mappings were generated");
-      }
-      else
-      {
-         foreach (var targetProperty in targetProperties.Values.Where(MappingPossible))
+         if (parameter.Equals(sourceProperty.ContainingType))
          {
-            var sourcePropertyName = GetSourcePropertyName(propertyContext.PropertyMappings, targetProperty.Name);
-            if (TryFindSourceProperty(sourceProperties, sourcePropertyName, out var sourceProperty))
-            {
-               var mapping = CreatePropertyMapping(propertyContext, sourceProperty, targetProperty);
-               mapperGenerator.AppendLine(mapping);
-            }
+            invocation = $"target.{targetProperty.Name} = {method.Name}(source);";
+            return true;
          }
       }
-
-      mapperGenerator.AppendLine("MapOverride(source, target);");
-      mapperGenerator.AppendLine("}");
-
-      foreach (var declaration in propertyContext.MemberDeclarations)
-         mapperGenerator.AppendLine(declaration());
+      
+      invocation = null;
+      return false;
    }
 
    private string CreatePropertyMapping(PropertyMappingContext propertyContext, IPropertySymbol sourceProperty, IPropertySymbol targetProperty)

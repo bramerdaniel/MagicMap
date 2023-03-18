@@ -69,6 +69,23 @@ public static class NamedTypeSymbolExtensions
       return typeSymbol.GetMembers().OfType<IMethodSymbol>();
    }
 
+   public static bool IsCallableWith(this IMethodSymbol method, params ITypeSymbol[] parameterTypes)
+   {
+      if (method == null)
+         throw new ArgumentNullException(nameof(method));
+
+      if (method.Parameters.Length != parameterTypes.Length)
+         return false;
+      
+      for (var i = 0; i < method.Parameters.Length; i++)
+      {
+         if (!method.Parameters[i].Type.Equals(parameterTypes[i]))
+            return false;
+      }
+
+      return true;
+   }
+
    public static bool IsPrivate(this IMethodSymbol methodSymbol)
    {
       return methodSymbol.DeclaredAccessibility.HasFlag(Accessibility.Private);
@@ -91,7 +108,7 @@ public static class NamedTypeSymbolExtensions
 
       foreach (var methodSymbol in typeSymbol.GetMembers().OfType<IMethodSymbol>())
       {
-         if (TryGetAttribute(methodSymbol, attributeClass, out var  attributeData))
+         if (TryGetAttribute(methodSymbol, attributeClass, out var attributeData))
             yield return (methodSymbol, attributeData);
       }
    }

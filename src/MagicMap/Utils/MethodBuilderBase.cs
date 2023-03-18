@@ -164,7 +164,7 @@ internal abstract class MethodBuilderBase<T> : IMemberBuilder
       var lines = SplitDescriptionIntoLines();
       if (lines.Length == 1)
       {
-         sourceBuilder.AppendLine($"/// <summary>{lines[0]}</summary>");
+         sourceBuilder.AppendLine($"/// <summary>{lines[0].TrimStart('/', ' ')}</summary>");
       }
       else
       {

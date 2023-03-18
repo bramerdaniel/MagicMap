@@ -9,5 +9,7 @@ namespace MagicMap.IntegrationTests.Tests.CustomizedPropertyMappingTest
     internal class Animal
     {
         public int AgeInMonths{ get; set; }
+
+        public string Name { get; set; }
     }
 }

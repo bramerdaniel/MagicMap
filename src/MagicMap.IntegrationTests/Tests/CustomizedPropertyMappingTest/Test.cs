@@ -27,5 +27,13 @@ namespace MagicMap.IntegrationTests.Tests.CustomizedPropertyMappingTest
             animal.ToPerson().AgeInYears.Should().Be(11);
         }
 
+
+        [TestMethod]
+        public void MapPropertyWithSameNameForwardForward()
+        {
+            var person = new Person{ Name = "Robert [Person]"};
+            person.ToAnimal().Name.Should().Be("Robert [Animal]");
+        }
+
     }
 }

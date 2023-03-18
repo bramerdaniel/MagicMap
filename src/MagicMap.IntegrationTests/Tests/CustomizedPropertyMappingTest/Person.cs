@@ -9,5 +9,7 @@ namespace MagicMap.IntegrationTests.Tests.CustomizedPropertyMappingTest
     internal class Person
     {
         public int AgeInYears { get; set; }
+
+        public string Name { get; set; }
     }
 }

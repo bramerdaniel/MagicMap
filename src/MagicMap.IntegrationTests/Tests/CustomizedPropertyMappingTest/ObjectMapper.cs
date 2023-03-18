@@ -20,5 +20,11 @@ namespace MagicMap.IntegrationTests.Tests.CustomizedPropertyMappingTest
         {
             person.AgeInYears = animal.AgeInMonths / 12;
         }
+        
+        [PropertyMapping(nameof(Person.Name), nameof(Animal.Name))]
+        private string PersonToAnimal(string personName)
+        {
+            return personName.Replace("[Person]", "[Animal]");
+        }
     }
 }
