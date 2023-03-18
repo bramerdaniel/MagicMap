@@ -39,7 +39,7 @@ public class UserOverrideTests
 
       result.Print();
    }
-
+      
    [TestMethod]
    [Ignore]
    public void EnsureNonStaticDefaultOverrideIsHandledCorrectly()
@@ -167,6 +167,110 @@ public class UserOverrideTests
       
       // TODO: what should be generated here ?
       result.Should().NotHaveErrors();
+      result.Print();
+   }
+
+   [TestMethod]
+   public void EnsurePropertyMappingCanBeUserDefinedWithAttribute()
+   {
+      var code = @"namespace Root
+                   {   
+                      using MagicMap;
+
+                      internal class Animal
+                      {
+                          public int AgeInMonths{ get; set; }
+                      }
+
+                      internal class Person
+                      {
+                          public int AgeInYears { get; set; }
+                      }
+                                        
+                      [TypeMapper(typeof(Person), typeof(Animal))]
+                      partial class ObjectMapper
+                      {
+                          [PropertyMapping(nameof(Person.AgeInYears), nameof(Animal.AgeInMonths))]
+                          private void MapWithCustomName(Person person, Animal animal)
+                          {
+                              animal.AgeInMonths = person.AgeInYears * 12;
+                          }
+
+                          [PropertyMapping(nameof(Animal.AgeInMonths), nameof(Person.AgeInYears))]
+                          private void AnyOtherName(Animal animal, Person person)
+                          {
+                              person.AgeInYears = animal.AgeInMonths / 12;
+                          }
+                      }
+                   }";
+
+      var result = Setup.SourceGeneratorTest()
+         .WithSource(code)
+         .Done();
+      
+      result.Should().NotHaveErrors();
+      result.Should()
+         .HaveClass("Root.ObjectMapper")
+         .WhereMethod("Map", "Root.Person source, Root.Animal target")
+         .Contains("MapWithCustomName(source, target);");
+      
+      result.Should()
+         .HaveClass("Root.ObjectMapper")
+         .WhereMethod("Map", "Root.Animal source, Root.Person target")
+         .Contains("AnyOtherName(source, target);");
+      
+      result.Print();
+   }
+
+   [TestMethod]
+   public void EnsurePropertyMappingCanBeUserDefinedWithAttributeUsingOnlyPropertyValues()
+   {
+      var code = @"namespace Root
+                   {   
+                      using MagicMap;
+
+                      internal class Animal
+                      {
+                          public int AgeInMonths{ get; set; }
+                      }
+
+                      internal class Person
+                      {
+                          public int AgeInYears { get; set; }
+                      }
+                                        
+                      [TypeMapper(typeof(Person), typeof(Animal))]
+                      partial class ObjectMapper
+                      {
+                          [PropertyMapping(nameof(Person.AgeInYears), nameof(Animal.AgeInMonths))]
+                          private int YearsToMonths(int years)
+                          {
+                              return years * 12;
+                          }
+
+                          [PropertyMapping(nameof(Animal.AgeInMonths), nameof(Person.AgeInYears))]
+                          private int MonthsToYears(int months)
+                          {
+                              return months / 12;
+                          }
+                      }
+                   }";
+
+      var result = Setup.SourceGeneratorTest()
+         .WithSource(code)
+         .Done();
+
+      result.Should().NotHaveErrors();
+      result.Should()
+         .HaveClass("Root.ObjectMapper")
+         .WhereMethod("Map", "Root.Person source, Root.Animal target")
+         .Contains("target.AgeInMonths = YearsToMonths(source.AgeInYears);");
+
+      result.Should()
+         .HaveClass("Root.ObjectMapper")
+         .WhereMethod("Map", "Root.Animal source, Root.Person target")
+         .Contains("target.AgeInYears = MonthsToYears(source.AgeInMonths);");
+
       result.Print();
    }
 }

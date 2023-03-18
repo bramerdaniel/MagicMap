@@ -10,6 +10,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Xml.Linq;
+
 using MagicMap.Generators;
 using MagicMap.Utils;
 using Microsoft.CodeAnalysis;
@@ -165,10 +167,10 @@ internal class TypeMapperGenerator : IGenerator
          .WithSummary(x => x.AppendLine("Maps all properties of the <see cref=\"source\"/> to the properties of the <see cref=\"target\"/>"))
          .WithBody(() => GenerateMapBody(pc))
          .Build();
-      
+
       foreach (var declaration in pc.MemberDeclarations)
          mapperGenerator.AppendLine(declaration());
-      
+
       if (!context.SourceEqualsTargetType && !mapperGenerator.ContainsMethod("Map", context.TargetType, context.SourceType))
       {
          var propertyContext = new PropertyMappingContext(context.TargetType, context.SourceType, context.MappingSpecifications);
@@ -236,6 +238,8 @@ internal class TypeMapperGenerator : IGenerator
       }
       else
       {
+         CreateCustomMappings(bodyCode, sourceProperties, targetProperties);
+
          foreach (var targetProperty in targetProperties.Values.Where(MappingPossible))
          {
             var sourcePropertyName = GetSourcePropertyName(propertyContext.PropertyMappings, targetProperty.Name);
@@ -251,6 +255,52 @@ internal class TypeMapperGenerator : IGenerator
       return bodyCode.ToString();
    }
 
+   private void CreateCustomMappings(StringBuilder sourceBuilder, Dictionary<string, IPropertySymbol> sourceProperties,
+      Dictionary<string, IPropertySymbol> targetProperties)
+   {
+      foreach (var (method, attributeData) in context.MapperType.GetMethodsWithAttribute(context.PropertyMappingAttribute))
+      {
+         if (attributeData.ConstructorArguments.Length == 2)
+         {
+            var sourcePropertyName = attributeData.ConstructorArguments[0].Value as string;
+            var targetPropertyName = attributeData.ConstructorArguments[1].Value as string;
+
+            if (sourceProperties.TryGetValue(sourcePropertyName, out var sourceProperty) && targetProperties.TryGetValue(targetPropertyName, out var targetProperty))
+            {
+               if (TryCreateInvocation(method, sourceProperty, targetProperty, out var invocation))
+               {
+                  sourceProperties.Remove(sourcePropertyName);
+                  targetProperties.Remove(targetPropertyName);
+                  sourceBuilder.AppendLine(invocation);
+                  return;
+               }
+            }
+         }
+      }
+   }
+
+   private bool TryCreateInvocation(IMethodSymbol method, IPropertySymbol sourceProperty, IPropertySymbol targetProperty, out string invocation)
+   {
+      if (method.ReturnType.Equals(targetProperty.Type))
+      {
+         // TODO check index
+         if (method.Parameters[0].Type.Equals(sourceProperty.Type))
+         {
+            invocation = $"target.{targetProperty.Name} = {method.Name}(source.{sourceProperty.Name});";
+            return true;
+         }
+
+      }
+
+      if (method.ReturnsVoid)
+      {
+         invocation = $"{method.Name}(source, target);";
+         return true;
+      }
+
+      invocation = null;
+      return false;
+   }
 
    private void GenerateMappingMethod(PropertyMappingContext propertyContext, PartialClassGenerator mapperGenerator)
    {

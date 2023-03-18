@@ -73,27 +73,6 @@ namespace MagicMap
 
       #region Methods
 
-      internal string GetSetupEntryClassName()
-      {
-         if (TryGetConstructorArgument(TypedConstantKind.Primitive, out var targetType))
-            return targetType.Value.ToString();
-
-         if (TryGetNamedArgument("EntryClassName", out targetType) && targetType.Kind == TypedConstantKind.Primitive)
-            return targetType.Value.ToString();
-
-         // TODO return default atttibute value
-         return "Setup";
-      }
-
-      internal string GetSetupEntryNameSpace()
-      {
-         if (TryGetNamedArgument("EntryNamespace", out var targetType) && targetType.Kind == TypedConstantKind.Primitive)
-            return targetType.Value?.ToString();
-
-         // This should be the default namespace of the containing assembly
-         return ClassSymbol.ContainingAssembly.MetadataName;
-      }
-
       private TypedConstant GetTargetMode()
       {
          if (TryGetNamedArgument("TargetMode", out var targetType) && targetType.Kind == TypedConstantKind.Enum)

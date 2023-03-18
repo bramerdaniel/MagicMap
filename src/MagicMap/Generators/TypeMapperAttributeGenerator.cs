@@ -104,6 +104,7 @@ namespace MagicMap
             MapperExtensionsType = typeSymbol,
             SourceType = left,
             TargetType = right,
+            PropertyMappingAttribute = propertyMappingAttribute.AttributeClass,
             MappingSpecifications = CreateMappingDescriptions(classSymbol)
          };
          return true;

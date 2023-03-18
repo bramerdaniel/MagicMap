@@ -84,6 +84,33 @@ public static class NamedTypeSymbolExtensions
          .Where(x => string.Equals(x.Name, name, StringComparison.InvariantCulture));
    }
 
+   public static IEnumerable<(IMethodSymbol, AttributeData)> GetMethodsWithAttribute(this INamedTypeSymbol typeSymbol, INamedTypeSymbol attributeClass)
+   {
+      if (typeSymbol == null)
+         throw new ArgumentNullException(nameof(typeSymbol));
+
+      foreach (var methodSymbol in typeSymbol.GetMembers().OfType<IMethodSymbol>())
+      {
+         if (TryGetAttribute(methodSymbol, attributeClass, out var  attributeData))
+            yield return (methodSymbol, attributeData);
+      }
+   }
+
+   private static bool TryGetAttribute(IMethodSymbol methodSymbol, INamedTypeSymbol attributeClass, out AttributeData attributeData)
+   {
+      foreach (var candidate in methodSymbol.GetAttributes().Where(x => x != null))
+      {
+         if (attributeClass.Equals(candidate.AttributeClass, SymbolEqualityComparer.Default))
+         {
+            attributeData = candidate;
+            return true;
+         }
+      }
+
+      attributeData = null;
+      return false;
+   }
+
    public static IEnumerable<IPropertySymbol> GetProperties(this INamedTypeSymbol typeSymbol)
    {
       if (typeSymbol == null)
