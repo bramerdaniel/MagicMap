@@ -131,7 +131,7 @@ internal class TypeMapperGenerator : IGenerator
       var builder = new StringBuilder();
 
       var defaultMapper = context.MapperType.GetProperty(x => x.Name == "Default");
-      if (defaultMapper.IsStatic)
+      if (defaultMapper == null || defaultMapper.IsStatic)
       {
          builder.AppendLine("/// <summary>");
          builder.AppendLine($"/// The instance of the <see cref=\"{MapperTypeName}\"/> all extension methods use.");
