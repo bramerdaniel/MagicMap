@@ -44,7 +44,7 @@ internal class GenerationResult
          Assert.Fail($"The expected diagnostic {id} was not found. Hint : {hint}");
    }
 
-   public void Print(int skip = 3, int take = int.MaxValue)
+   public void Print(int skip = 4, int take = int.MaxValue)
    {
       Debug.WriteLine(GetGeneratedCode());
 

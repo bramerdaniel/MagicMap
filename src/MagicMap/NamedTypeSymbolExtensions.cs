@@ -16,7 +16,8 @@ public static class NamedTypeSymbolExtensions
 {
    #region Public Methods and Operators
 
-   public static IMethodSymbol FindMethod(this INamedTypeSymbol typeSymbol, string name, ITypeSymbol returnType, params ITypeSymbol[] parameters)
+
+   public static IMethodSymbol FindMethod(this INamedTypeSymbol typeSymbol,ITypeSymbol returnType, string name, params ITypeSymbol[] parameters)
    {
       var candidates = GetMethods(typeSymbol, name)
          .Where(x => x.Parameters.Length == parameters.Length)
@@ -25,6 +26,21 @@ public static class NamedTypeSymbolExtensions
       if (returnType != null)
          candidates = candidates.Where(x => x.ReturnType.Equals(returnType, SymbolEqualityComparer.Default)).ToArray();
 
+      foreach (var candidate in candidates)
+      {
+         if (ParametersTypesMatch(candidate, parameters))
+            return candidate;
+      }
+
+      return null;
+   }
+
+   public static IMethodSymbol FindMethod(this INamedTypeSymbol typeSymbol, string name, params ITypeSymbol[] parameters)
+   {
+      var candidates = GetMethods(typeSymbol, name)
+         .Where(x => x.Parameters.Length == parameters.Length)
+         .ToArray();
+      
       foreach (var candidate in candidates)
       {
          if (ParametersTypesMatch(candidate, parameters))

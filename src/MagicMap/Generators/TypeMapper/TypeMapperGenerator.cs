@@ -10,7 +10,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Xml.Linq;
 
 using MagicMap.Generators;
 using MagicMap.Utils;
@@ -79,23 +78,6 @@ internal class TypeMapperGenerator : IGenerator
       return true;
    }
 
-   private void AppendMapperSignature(PartialClassGenerator mapperGenerator, INamedTypeSymbol fromType,
-      INamedTypeSymbol toType)
-   {
-      mapperGenerator.AppendLine("/// <summary>");
-      mapperGenerator.AppendLine("/// Maps all properties of the <see cref=\"source\"/> to the properties of the <see cref=\"target\"/>");
-      mapperGenerator.AppendLine("/// </summary>");
-      var stringBuilder = new StringBuilder();
-      stringBuilder.Append("public void Map(");
-      stringBuilder.Append(fromType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
-      stringBuilder.Append(" source");
-      stringBuilder.Append(", ");
-      stringBuilder.Append(toType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
-      stringBuilder.Append(" target");
-      stringBuilder.Append(")");
-
-      mapperGenerator.AppendLine(stringBuilder.ToString());
-   }
 
    private string ComputeModifier()
    {
@@ -149,16 +131,16 @@ internal class TypeMapperGenerator : IGenerator
       var builder = new StringBuilder();
       builder.AppendLine("/// <summary>");
       builder.AppendLine($"/// The instance of the <see cref=\"{MapperTypeName}\"/> all extension methods use.");
-      builder.AppendLine($"/// You can customize this by implementing this property in your own partial implementation of the extensions class.");
+      builder.AppendLine("/// You can customize this by implementing this property in your own partial implementation of the extensions class.");
       builder.AppendLine("/// </summary>");
-      builder.AppendLine($"private static {context.MapperType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} Mapper => {context.MapperType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}.Default;");
+      builder.AppendLine($"private static {context.MapperType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} Mapper => {context.MapperType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}.Default;/*NEWLINE*/");
       generationContext.AddCode(builder.ToString());
    }
 
    private PartialClassGenerator GenerateMapperClass()
    {
       var mapperGenerator = new PartialClassGenerator(context.MapperType);
-
+      
       GeneratedSingletonInstance(mapperGenerator);
 
       var leftToRight = new PropertyMappingContext(context, context.SourceType, context.TargetType, InvertMappings(context.MappingSpecifications));
@@ -230,8 +212,6 @@ internal class TypeMapperGenerator : IGenerator
       }
       else
       {
-         // CreateCustomMappings(bodyCode, sourceProperties, targetProperties);
-
          foreach (var targetProperty in propertyContext.TargetProperties.Values)
          {
             if (propertyContext.TryCreateCustomMappings(targetProperty, out var customMapping))
@@ -258,69 +238,6 @@ internal class TypeMapperGenerator : IGenerator
       return bodyCode.ToString();
    }
 
-   private void CreateCustomMappings(StringBuilder sourceBuilder, Dictionary<string, IPropertySymbol> sourceProperties, Dictionary<string, IPropertySymbol> targetProperties)
-   {
-      foreach (var (method, attributeData) in context.MapperType.GetMethodsWithAttribute(context.PropertyMapperAttribute))
-      {
-         if (attributeData.ConstructorArguments.Length == 3)
-         {
-            var sourcePropertyName = attributeData.ConstructorArguments[0].Value as string;
-            var targetPropertyName = attributeData.ConstructorArguments[1].Value as string;
-
-            if (sourceProperties.TryGetValue(sourcePropertyName, out var sourceProperty) && targetProperties.TryGetValue(targetPropertyName, out var targetProperty))
-            {
-               if (TryCreateInvocation(method, sourceProperty, targetProperty, out var invocation))
-               {
-                  sourceProperties.Remove(sourcePropertyName);
-                  targetProperties.Remove(targetPropertyName);
-                  sourceBuilder.AppendLine(invocation);
-               }
-            }
-         }
-      }
-   }
-
-   private bool TryCreateInvocation(IMethodSymbol method, IPropertySymbol sourceProperty, IPropertySymbol targetProperty, out string invocation)
-   {
-      var parameterCount = method.Parameters.Length;
-      if (method.ReturnsVoid && parameterCount == 2)
-      {
-         if (method.IsCallableWith(sourceProperty.ContainingType, targetProperty.ContainingType))
-         {
-            invocation = $"{method.Name}(source, target);";
-            return true;
-         }
-
-         if (method.IsCallableWith(sourceProperty.Type, targetProperty.ContainingType))
-         {
-            invocation = $"{method.Name}(source.{sourceProperty.Name}, target);";
-            return true;
-         }
-
-         invocation = null;
-         return false;
-      }
-
-      if (method.ReturnType.Equals(targetProperty.Type) && parameterCount == 1)
-      {
-         var parameter = method.Parameters[0].Type;
-         if (parameter.Equals(sourceProperty.Type))
-         {
-            invocation = $"target.{targetProperty.Name} = {method.Name}(source.{sourceProperty.Name});";
-            return true;
-         }
-
-         if (parameter.Equals(sourceProperty.ContainingType))
-         {
-            invocation = $"target.{targetProperty.Name} = {method.Name}(source);";
-            return true;
-         }
-      }
-
-      invocation = null;
-      return false;
-   }
-
    private string CreatePropertyMapping(PropertyMappingContext propertyContext, IPropertySymbol sourceProperty, IPropertySymbol targetProperty)
    {
       if (targetProperty.Type.Equals(sourceProperty.Type, SymbolEqualityComparer.Default))
@@ -340,7 +257,7 @@ internal class TypeMapperGenerator : IGenerator
       {
          enumMapping = $"target.{targetProperty.Name} = ConvertEnum(source.{sourceProperty.Name});";
 
-         var existingMethod = context.MapperType.FindMethod("ConvertEnum", targetProperty.Type, sourceProperty.Type);
+         var existingMethod = context.MapperType.FindMethod(targetProperty.Type, "ConvertEnum", sourceProperty.Type);
          if (existingMethod == null)
          {
             // We could not find an user defined implementation of the enum conversion method => we have to generate one
@@ -363,6 +280,10 @@ internal class TypeMapperGenerator : IGenerator
 
    private void GenerateExtensionMethod(ClassGenerationContext extensionsClass, INamedTypeSymbol sourceType, INamedTypeSymbol targetType)
    {
+      var methodSymbol = context.MapperType.FindMethod("Map", sourceType, targetType);
+      if(methodSymbol != null && methodSymbol.IsPrivate())
+         return;
+
       var targetName = targetType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
       var sourceName = sourceType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
       var valueName = sourceType.Name.ToFirstLower();
@@ -372,7 +293,7 @@ internal class TypeMapperGenerator : IGenerator
       builder.AppendLine("{");
 
       builder.AppendLine($"if ({valueName} == null)");
-      builder.AppendLine($"throw new global::System.ArgumentNullException(nameof({valueName}));");
+      builder.AppendLine($"throw new global::System.ArgumentNullException(nameof({valueName}));/*NEWLINE*/");
 
       builder.AppendLine($"var result = Mapper is MagicMap.ITypeFactory<{targetName}, {sourceName}> factory");
       builder.AppendLine($"? factory.Create({valueName})");
@@ -380,7 +301,7 @@ internal class TypeMapperGenerator : IGenerator
       var constructor = targetType.GetDefaultConstructor();
       if (constructor == null || constructor.IsPrivate())
       {
-         builder.AppendLine($": throw new global::System.NotSupportedException(\"The target type {targetType.Name} can not be created. Provide a accessible parameterless constructor or implement the ITypeFactory interface in the responsible mapper.\");");
+         builder.AppendLine($": throw new global::System.NotSupportedException(\"The target type {targetType.Name} can not be created. Provide a accessible constructor without parameters or implement the ITypeFactory interface in the responsible mapper.\");");
       }
       else
       {

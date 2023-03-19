@@ -142,7 +142,6 @@ public class UserOverrideTests
    }
    
    [TestMethod]
-   [Ignore]
    public void EnsurePrivateMapOverrideIsHandledCorrectly()
    {
       var code = @"namespace NS
