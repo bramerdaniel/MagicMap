@@ -161,26 +161,26 @@ internal class TypeMapperGenerator : IGenerator
 
       GeneratedSingletonInstance(mapperGenerator);
 
-      var pc = new PropertyMappingContext(context.SourceType, context.TargetType, InvertMappings(context.MappingSpecifications));
+      var leftToRight = new PropertyMappingContext(context, context.SourceType, context.TargetType, InvertMappings(context.MappingSpecifications));
       mapperGenerator.AddMethod("Map", (context.SourceType, "source"), (context.TargetType, "target"))
          .WithModifier("public")
          .WithSummary(x => x.AppendLine("Maps all properties of the <see cref=\"source\"/> to the properties of the <see cref=\"target\"/>"))
-         .WithBody(() => GenerateMapBody(pc))
+         .WithBody(() => GenerateMapBody(leftToRight))
          .Build();
 
-      foreach (var declaration in pc.MemberDeclarations)
+      foreach (var declaration in leftToRight.MemberDeclarations)
          mapperGenerator.AppendLine(declaration());
 
       if (!context.SourceEqualsTargetType && !mapperGenerator.ContainsMethod("Map", context.TargetType, context.SourceType))
       {
-         var propertyContext = new PropertyMappingContext(context.TargetType, context.SourceType, context.MappingSpecifications);
+         var rightToLeft = new PropertyMappingContext(context, context.TargetType, context.SourceType, context.MappingSpecifications);
          mapperGenerator.AddMethod("Map", (context.TargetType, "source"), (context.SourceType, "target"))
             .WithModifier("public")
             .WithSummary(x => x.AppendLine("Maps all properties of the <see cref=\"source\"/> to the properties of the <see cref=\"target\"/>"))
-            .WithBody(() => GenerateMapBody(propertyContext))
+            .WithBody(() => GenerateMapBody(rightToLeft))
             .Build();
 
-         foreach (var declaration in propertyContext.MemberDeclarations)
+         foreach (var declaration in rightToLeft.MemberDeclarations)
             mapperGenerator.AppendLine(declaration());
       }
 
@@ -221,32 +221,35 @@ internal class TypeMapperGenerator : IGenerator
 
    private string GenerateMapBody(PropertyMappingContext propertyContext)
    {
-      var targetProperties = propertyContext.TargetType.GetMembers()
-         .OfType<IPropertySymbol>()
-         .ToDictionary(p => p.Name, StringComparer.InvariantCultureIgnoreCase);
-
-      var sourceProperties = propertyContext.SourceType.GetMembers()
-         .OfType<IPropertySymbol>()
-         .ToDictionary(p => p.Name, StringComparer.InvariantCultureIgnoreCase);
-
       var bodyCode = new StringBuilder();
 
-      if (targetProperties.Count == 0)
+      if (propertyContext.TargetProperties.Count == 0)
       {
          bodyCode.AppendLine("// target type does not contain any properties.");
          bodyCode.AppendLine("// No mappings were generated");
       }
       else
       {
-         CreateCustomMappings(bodyCode, sourceProperties, targetProperties);
+         // CreateCustomMappings(bodyCode, sourceProperties, targetProperties);
 
-         foreach (var targetProperty in targetProperties.Values.Where(MappingPossible))
+         foreach (var targetProperty in propertyContext.TargetProperties.Values)
          {
-            var sourcePropertyName = GetSourcePropertyName(propertyContext.PropertyMappings, targetProperty.Name);
-            if (TryFindSourceProperty(sourceProperties, sourcePropertyName, out var sourceProperty))
+            if (propertyContext.TryCreateCustomMappings(targetProperty, out var customMapping))
             {
-               var mapping = CreatePropertyMapping(propertyContext, sourceProperty, targetProperty);
-               bodyCode.AppendLine(mapping);
+               bodyCode.AppendLine(customMapping);
+            }
+            else
+            {
+               if (!MappingPossible(targetProperty))
+                  continue;
+
+               var sourcePropertyName = GetSourcePropertyName(propertyContext.PropertyMappings, targetProperty.Name);
+               if (TryFindSourceProperty(propertyContext.SourceProperties, sourcePropertyName, out var sourceProperty))
+               {
+                  var mapping = CreatePropertyMapping(propertyContext, sourceProperty, targetProperty);
+                  bodyCode.AppendLine(mapping);
+               }
+
             }
          }
       }
@@ -255,12 +258,11 @@ internal class TypeMapperGenerator : IGenerator
       return bodyCode.ToString();
    }
 
-   private void CreateCustomMappings(StringBuilder sourceBuilder, Dictionary<string, IPropertySymbol> sourceProperties,
-      Dictionary<string, IPropertySymbol> targetProperties)
+   private void CreateCustomMappings(StringBuilder sourceBuilder, Dictionary<string, IPropertySymbol> sourceProperties, Dictionary<string, IPropertySymbol> targetProperties)
    {
-      foreach (var (method, attributeData) in context.MapperType.GetMethodsWithAttribute(context.PropertyMappingAttribute))
+      foreach (var (method, attributeData) in context.MapperType.GetMethodsWithAttribute(context.PropertyMapperAttribute))
       {
-         if (attributeData.ConstructorArguments.Length == 2)
+         if (attributeData.ConstructorArguments.Length == 3)
          {
             var sourcePropertyName = attributeData.ConstructorArguments[0].Value as string;
             var targetPropertyName = attributeData.ConstructorArguments[1].Value as string;
@@ -314,7 +316,7 @@ internal class TypeMapperGenerator : IGenerator
             return true;
          }
       }
-      
+
       invocation = null;
       return false;
    }
@@ -415,7 +417,7 @@ internal class TypeMapperGenerator : IGenerator
       return true;
    }
 
-   private bool TryFindSourceProperty(Dictionary<string, IPropertySymbol> sourceProperties, string sourceName, out IPropertySymbol source)
+   private bool TryFindSourceProperty(IDictionary<string, IPropertySymbol> sourceProperties, string sourceName, out IPropertySymbol source)
    {
       return sourceProperties.TryGetValue(sourceName, out source);
    }

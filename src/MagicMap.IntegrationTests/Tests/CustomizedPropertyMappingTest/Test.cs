@@ -29,11 +29,19 @@ namespace MagicMap.IntegrationTests.Tests.CustomizedPropertyMappingTest
 
 
         [TestMethod]
-        public void MapPropertyWithSameNameForwardForward()
+        public void MapPropertyWithSameNameForward()
         {
             var person = new Person{ Name = "Robert [Person]"};
             person.ToAnimal().Name.Should().Be("Robert [Animal]");
         }
+
+        [TestMethod]
+        public void MapPropertyWithSameNameBackward()
+        {
+            var animal = new Animal{ Name = "Robert [Animal]" };
+            animal.ToPerson().Name.Should().Be("Robert [Person]");
+        }
+
 
     }
 }

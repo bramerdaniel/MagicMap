@@ -18,6 +18,8 @@ namespace MagicMap.Generators
 
       private readonly PropertyMappingAttributeGenerator propertyMappingAttribute;
 
+      private readonly PropertyMapperAttributeGenerator propertyMapperAttribute;
+
       private readonly TypeFactoryInterfaceGenerator typeFactory;
 
       #region Public Properties
@@ -59,16 +61,19 @@ namespace MagicMap
             throw new InvalidOperationException($"The source generator should have generated the type {TypeMapperAttributeName} before");
 
          var mappingAttribute = PropertyMappingAttributeGenerator.FromCompilation(compilation);
+         var mapperAttribute = PropertyMapperAttributeGenerator.FromCompilation(compilation);
          var typeFactory = TypeFactoryInterfaceGenerator.FromCompilation(compilation);
-         return new TypeMapperAttributeGenerator(attributeType, mappingAttribute, typeFactory) { Compilation = compilation };
+         return new TypeMapperAttributeGenerator(attributeType, mappingAttribute, mapperAttribute, typeFactory) { Compilation = compilation };
       }
 
       protected Compilation Compilation { get; private set; }
 
-      private TypeMapperAttributeGenerator(INamedTypeSymbol attributeSymbol, PropertyMappingAttributeGenerator propertyMappingAttribute, TypeFactoryInterfaceGenerator typeFactory)
+      private TypeMapperAttributeGenerator(INamedTypeSymbol attributeSymbol, PropertyMappingAttributeGenerator propertyMappingAttribute,
+         PropertyMapperAttributeGenerator propertyMapperAttribute, TypeFactoryInterfaceGenerator typeFactory)
       {
          this.attributeSymbol = attributeSymbol ?? throw new ArgumentNullException(nameof(attributeSymbol));
          this.propertyMappingAttribute = propertyMappingAttribute ?? throw new ArgumentNullException(nameof(propertyMappingAttribute));
+         this.propertyMapperAttribute = propertyMapperAttribute ?? throw new ArgumentNullException(nameof(propertyMapperAttribute));
          this.typeFactory = typeFactory ?? throw new ArgumentNullException(nameof(typeFactory));
       }
 
@@ -105,6 +110,7 @@ namespace MagicMap
             SourceType = left,
             TargetType = right,
             PropertyMappingAttribute = propertyMappingAttribute.AttributeClass,
+            PropertyMapperAttribute = propertyMapperAttribute.AttributeClass,
             MappingSpecifications = CreateMappingDescriptions(classSymbol)
          };
          return true;

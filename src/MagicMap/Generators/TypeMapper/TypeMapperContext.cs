@@ -30,6 +30,8 @@ internal struct TypeMapperContext : ITypeMapperContext
 
    public INamedTypeSymbol PropertyMappingAttribute { get; set; }
 
+   public INamedTypeSymbol PropertyMapperAttribute { get; set; }
+
    public bool IsEnabled()
    {
       return MapperType != null;

@@ -24,7 +24,13 @@ namespace MagicMap.IntegrationTests.Tests.CustomizedPropertyMappingTest
         [PropertyMapping(nameof(Person.Name), nameof(Animal.Name))]
         private string PersonToAnimal(string personName)
         {
-            return personName.Replace("[Person]", "[Animal]");
+            return personName?.Replace("[Person]", "[Animal]");
+        }
+
+        [PropertyMapping(nameof(Animal.Name), nameof(Person.Name))]
+        private string AnimalToPerson(Animal animal)
+        {
+            return animal.Name?.Replace("[Animal]", "[Person]");
         }
     }
 }

@@ -128,6 +128,7 @@ namespace MagicMap
       {
          context.AddSource("TypeMapperAttribute.generated.cs", TypeMapperAttributeGenerator.Code);
          context.AddSource("PropertyMappingAttribute.generated.cs", PropertyMappingAttributeGenerator.Code);
+         context.AddSource("PropertyMapperAttribute.generated.cs", PropertyMapperAttributeGenerator.Code);
          context.AddSource("TypeFactory.generated.cs", TypeFactoryInterfaceGenerator.Code);
       }
 

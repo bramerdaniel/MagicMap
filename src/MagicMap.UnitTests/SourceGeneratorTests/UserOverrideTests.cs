@@ -189,13 +189,13 @@ public class UserOverrideTests
                       [TypeMapper(typeof(Person), typeof(Animal))]
                       partial class ObjectMapper
                       {
-                          [PropertyMapping(nameof(Person.AgeInYears), nameof(Animal.AgeInMonths))]
+                          [PropertyMapper(typeof(Animal), nameof(Animal.AgeInMonths), nameof(Person.AgeInYears))]
                           private void MapWithCustomName(Person person, Animal animal)
                           {
                               animal.AgeInMonths = person.AgeInYears * 12;
                           }
 
-                          [PropertyMapping(nameof(Animal.AgeInMonths), nameof(Person.AgeInYears))]
+                          [PropertyMapper(typeof(Person), nameof(Person.AgeInYears), nameof(Animal.AgeInMonths))]
                           private void AnyOtherName(Animal animal, Person person)
                           {
                               person.AgeInYears = animal.AgeInMonths / 12;
@@ -241,13 +241,13 @@ public class UserOverrideTests
                       [TypeMapper(typeof(Person), typeof(Animal))]
                       partial class ObjectMapper
                       {
-                          [PropertyMapping(nameof(Person.AgeInYears), nameof(Animal.AgeInMonths))]
+                          [PropertyMapper(typeof(Animal), nameof(Animal.AgeInMonths), nameof(Person.AgeInYears))]
                           private void AgeFromYears(int years, Animal animal)
                           {
                               animal.AgeInMonths = years * 12;
                           }
 
-                          [PropertyMapping(nameof(Animal.AgeInMonths), nameof(Person.AgeInYears))]
+                          [PropertyMapper(typeof(Person), nameof(Person.AgeInYears), nameof(Animal.AgeInMonths))]
                           private void AgeFromMonths(int months, Person person)
                           {
                               person.AgeInYears = months / 12;
@@ -274,6 +274,52 @@ public class UserOverrideTests
    }
 
    [TestMethod]
+   public void EnsureCustomMappingIsPossibleWithoutSourceProperty()
+   {
+      var code = @"namespace Root
+                   {   
+                      using MagicMap;
+
+                      internal class Animal
+                      {
+                          public int AgeInMonths{ get; set; }
+                      }
+
+                      internal class Person
+                      {
+                          public int AgeInYears { get; set; }
+                      }
+                                        
+                      [TypeMapper(typeof(Person), typeof(Animal))]
+                      partial class ObjectMapper
+                      {
+                          [PropertyMapper(typeof(Animal), nameof(Animal.AgeInMonths))]
+                          private int AgeFromYears(Person person) => person.AgeInYears * 12;
+
+                          [PropertyMapper(typeof(Person), nameof(Person.AgeInYears))]
+                          private int AgeFromMonths(Animal animal) => animal.AgeInMonths / 12;
+                      }
+                   }";
+
+      var result = Setup.SourceGeneratorTest()
+         .WithSource(code)
+         .Done();
+
+      result.Should().NotHaveErrors();
+      result.Should()
+         .HaveClass("Root.ObjectMapper")
+         .WhereMethod("Map", "Root.Person source, Root.Animal target")
+         .Contains("target.AgeInMonths = AgeFromYears(source);");
+
+      result.Should()
+         .HaveClass("Root.ObjectMapper")
+         .WhereMethod("Map", "Root.Animal source, Root.Person target")
+         .Contains("target.AgeInYears = AgeFromMonths(source);");
+
+      result.Print();
+   }
+
+   [TestMethod]
    public void EnsurePropertyMappingCanBeUserDefinedWithAttributeUsingOnlyPropertyValues()
    {
       var code = @"namespace Root
@@ -293,13 +339,13 @@ public class UserOverrideTests
                       [TypeMapper(typeof(Person), typeof(Animal))]
                       partial class ObjectMapper
                       {
-                          [PropertyMapping(nameof(Person.AgeInYears), nameof(Animal.AgeInMonths))]
+                          [PropertyMapper(typeof(Animal), nameof(Animal.AgeInMonths), nameof(Person.AgeInYears))]
                           private int YearsToMonths(int years)
                           {
                               return years * 12;
                           }
 
-                          [PropertyMapping(nameof(Animal.AgeInMonths), nameof(Person.AgeInYears))]
+                          [PropertyMapper(typeof(Person), nameof(Person.AgeInYears), nameof(Animal.AgeInMonths))]
                           private int MonthsToYears(int months)
                           {
                               return months / 12;
@@ -345,13 +391,13 @@ public class UserOverrideTests
                       [TypeMapper(typeof(Person), typeof(Animal))]
                       partial class ObjectMapper
                       {
-                          [PropertyMapping(nameof(Person.AgeInYears), nameof(Animal.AgeInMonths))]
+                          [PropertyMapper(typeof(Animal), nameof(Animal.AgeInMonths), nameof(Person.AgeInYears))]
                           private int YearsToMonths(Person person)
                           {
                               return person.AgeInYears * 12;
                           }
 
-                          [PropertyMapping(nameof(Animal.AgeInMonths), nameof(Person.AgeInYears))]
+                          [PropertyMapper(typeof(Person), nameof(Person.AgeInYears), nameof(Animal.AgeInMonths))]
                           private int MonthsToYears(Animal animal)
                           {
                               return animal.AgeInMonths / 12;
@@ -397,10 +443,10 @@ public class UserOverrideTests
                       [TypeMapper(typeof(Person), typeof(Animal))]
                       partial class ObjectMapper
                       {
-                          [PropertyMapping(nameof(Person.Age), nameof(Animal.Age))]
+                          [PropertyMapper(typeof(Animal), nameof(Person.Age), nameof(Animal.Age))]
                           private int PersonToAnimalAge(int personAge) => personAge * 2;
 
-                          [PropertyMapping(nameof(Animal.Age), nameof(Person.Age))]
+                          [PropertyMapper(typeof(Person),nameof(Animal.Age), nameof(Person.Age))]
                           private int AnimalToPersonAge(int animalAge) =>  animalAge / 2;
                       }
                    }";
@@ -445,16 +491,16 @@ public class UserOverrideTests
                       [TypeMapper(typeof(Person), typeof(Animal))]
                       partial class ObjectMapper
                       {
-                          [PropertyMapping(nameof(Person.Age), nameof(Animal.Age))]
+                          [PropertyMapper(typeof(Animal), nameof(Animal.Age), nameof(Person.Age))]
                           private int PersonToAnimalAge(Person person) => person.Age * 2;
 
-                          [PropertyMapping(nameof(Animal.Age), nameof(Person.Age))]
+                          [PropertyMapper(typeof(Person), nameof(Person.Age), nameof(Animal.Age))]
                           private int AnimalToPersonAge(Animal animal) => animal.Age / 2;
 
-                          [PropertyMapping(nameof(Person.Name), nameof(Animal.Name))]
+                          [PropertyMapper(typeof(Animal), nameof(Animal.Name), nameof(Person.Name))]
                           private string ConvertName(Person person) => person.Name;
 
-                          [PropertyMapping(nameof(Animal.Name), nameof(Person.Name))]
+                          [PropertyMapper(typeof(Person), nameof(Person.Name), nameof(Animal.Name))]
                           private string ConvertName(Animal animal) => animal.Name;
                       }
                    }";

@@ -26,7 +26,9 @@ interface ITypeMapperContext : IGeneratorContext
 
    INamedTypeSymbol TargetType { get; }
 
-   public INamedTypeSymbol PropertyMappingAttribute { get; }
+   INamedTypeSymbol PropertyMappingAttribute { get; }
+
+   INamedTypeSymbol PropertyMapperAttribute { get; }
 
    #endregion
 }

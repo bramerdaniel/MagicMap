@@ -99,4 +99,22 @@ public class PostInitializationOutputTests
 
        result.Print(1, 1);
    }
+
+    [TestMethod]
+    public void EnsureSourcePropertyMapperAttributeIsGenerated()
+    {
+       var code = @"namespace RonnyTheRobber
+                   {   
+                   }";
+
+       var result = Setup.SourceGeneratorTest()
+          .WithSource(code)
+          .Done();
+
+       result.Should().NotHaveErrors().And
+          .HaveClass("MagicMap.PropertyMapperAttribute")
+          .WithInternalModifier();
+
+       result.Print(2, 1);
+    }
 }

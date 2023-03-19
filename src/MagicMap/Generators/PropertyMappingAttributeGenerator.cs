@@ -25,7 +25,7 @@ internal class PropertyMappingAttributeGenerator
 namespace MagicMap 
 {
    [global::System.Runtime.CompilerServices.CompilerGenerated]
-   [global::System.AttributeUsage(global::System.AttributeTargets.Class | global::System.AttributeTargets.Method, AllowMultiple = true, Inherited = false)]
+   [global::System.AttributeUsage(global::System.AttributeTargets.Class, AllowMultiple = true, Inherited = false)]
    /// <summary>Attribute that can be used to map a specific property from the left to the right object by their names</summary>
    internal sealed class PropertyMappingAttribute : global::System.Attribute
    {
