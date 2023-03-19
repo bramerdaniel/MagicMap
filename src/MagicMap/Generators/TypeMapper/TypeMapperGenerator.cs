@@ -129,18 +129,30 @@ internal class TypeMapperGenerator : IGenerator
          return;
 
       var builder = new StringBuilder();
-      builder.AppendLine("/// <summary>");
-      builder.AppendLine($"/// The instance of the <see cref=\"{MapperTypeName}\"/> all extension methods use.");
-      builder.AppendLine("/// You can customize this by implementing this property in your own partial implementation of the extensions class.");
-      builder.AppendLine("/// </summary>");
-      builder.AppendLine($"private static {context.MapperType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} Mapper => {context.MapperType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}.Default;/*NEWLINE*/");
-      generationContext.AddCode(builder.ToString());
+
+      var defaultMapper = context.MapperType.GetProperty(x => x.Name == "Default");
+      if (defaultMapper.IsStatic)
+      {
+         builder.AppendLine("/// <summary>");
+         builder.AppendLine($"/// The instance of the <see cref=\"{MapperTypeName}\"/> all extension methods use.");
+         builder.AppendLine("/// You can customize this by implementing this property in your own partial implementation of the extensions class.");
+         builder.AppendLine("/// </summary>");
+         builder.AppendLine($"private static {context.MapperType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} Mapper => {context.MapperType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}.Default;/*NEWLINE*/");
+         generationContext.AddCode(builder.ToString());
+      }
+      else
+      {
+         builder.AppendLine($"private static {context.MapperType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} Mapper => throw new global::System.NotSupportedException(\"No default mapper available\");/*NEWLINE*/");
+         generationContext.AddCode(builder.ToString());
+      }
+
+
    }
 
    private PartialClassGenerator GenerateMapperClass()
    {
       var mapperGenerator = new PartialClassGenerator(context.MapperType);
-      
+
       GeneratedSingletonInstance(mapperGenerator);
 
       var leftToRight = new PropertyMappingContext(context, context.SourceType, context.TargetType, InvertMappings(context.MappingSpecifications));
@@ -281,7 +293,7 @@ internal class TypeMapperGenerator : IGenerator
    private void GenerateExtensionMethod(ClassGenerationContext extensionsClass, INamedTypeSymbol sourceType, INamedTypeSymbol targetType)
    {
       var methodSymbol = context.MapperType.FindMethod("Map", sourceType, targetType);
-      if(methodSymbol != null && methodSymbol.IsPrivate())
+      if (methodSymbol != null && methodSymbol.IsPrivate())
          return;
 
       var targetName = targetType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);

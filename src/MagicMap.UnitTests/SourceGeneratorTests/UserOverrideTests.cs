@@ -41,7 +41,6 @@ public class UserOverrideTests
    }
       
    [TestMethod]
-   [Ignore]
    public void EnsureNonStaticDefaultOverrideIsHandledCorrectly()
    {
       var code = @"namespace NS
