@@ -292,9 +292,13 @@ internal class TypeMapperGenerator : IGenerator
 
    private void GenerateExtensionMethod(ClassGenerationContext extensionsClass, INamedTypeSymbol sourceType, INamedTypeSymbol targetType)
    {
-      var methodSymbol = context.MapperType.FindMethod("Map", sourceType, targetType);
-      if (methodSymbol != null && methodSymbol.IsPrivate())
+      var mapMethod = context.MapperType.FindMethod("Map", sourceType, targetType);
+      if (mapMethod != null && mapMethod.IsPrivate())
+      {
+         // If the map method is private (this happens only if the user declared it on its own, and made it private)
+         // we can not generate an reasonable extension method
          return;
+      }
 
       var targetName = targetType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
       var sourceName = sourceType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
