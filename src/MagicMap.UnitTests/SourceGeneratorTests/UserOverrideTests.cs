@@ -60,7 +60,39 @@ public class UserOverrideTests
          .Done();
 
       result.Should().NotHaveErrors();
-      // TODO: what should be generated here ?
+      result.Should()
+         .HaveClass("NS.AToBMapperExtensions")
+         .WhereProperty("Mapper")
+         .HasInitializationExpression("new global::NS.AToBMapper()");
+
+      result.Print();
+   }
+
+   [TestMethod]
+   public void EnsureNonStaticDefaultOverrideAndNoAccessibleConstructorIsHandledCorrectly()
+   {
+      var code = @"namespace NS
+                   {   
+                      internal class A { }
+                      internal class B { }
+                      
+                      [MagicMap.TypeMapperAttribute(typeof(A), typeof(B))]
+                      internal partial class AToBMapper 
+                      { 
+                          private AToBMapper() { }
+                          public AToBMapper Default => null;
+                      }
+                   }";
+
+      var result = Setup.SourceGeneratorTest()
+         .WithSource(code)
+         .Done();
+
+      result.Should().NotHaveErrors();
+      result.Should()
+         .HaveClass("NS.AToBMapperExtensions")
+         .WhereProperty("Mapper")
+         .HasInitializationExpression("throw new global::System.NotSupportedException(\"No default mapper could be found or can be created. Make sure there is a static Default property in the mapper class, or provide a accessible parameterless constructor.\")");
 
       result.Print();
    }

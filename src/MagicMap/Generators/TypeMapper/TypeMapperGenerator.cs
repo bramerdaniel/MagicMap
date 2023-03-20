@@ -142,11 +142,19 @@ internal class TypeMapperGenerator : IGenerator
       }
       else
       {
-         builder.AppendLine($"private static {context.MapperType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} Mapper => throw new global::System.NotSupportedException(\"No default mapper available\");/*NEWLINE*/");
+         var defaultConstructor = context.MapperType.GetDefaultConstructor();
+         if (defaultConstructor == null || defaultConstructor.IsPrivate())
+         {
+            var message = "No default mapper could be found or can be created. Make sure there is a static Default property in the mapper class, or provide a accessible parameterless constructor.";
+            builder.AppendLine($"private static {context.MapperType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} Mapper => throw new global::System.NotSupportedException(\"{message}\");/*NEWLINE*/");
+         }
+         else
+         {
+            builder.AppendLine($"private static {context.MapperType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} Mapper {{ get; }} = new {context.MapperType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}();/*NEWLINE*/");
+         }
+
          generationContext.AddCode(builder.ToString());
       }
-
-
    }
 
    private PartialClassGenerator GenerateMapperClass()
