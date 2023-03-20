@@ -18,12 +18,12 @@ internal class PropertyMappingContext
 
    public INamedTypeSymbol TargetType { get; }
 
-   public IDictionary<string, string> PropertyMappings { get; }
+   public IDictionary<string, MappingDescription> PropertyMappings { get; }
 
    public List<Func<string>> MemberDeclarations { get; }
 
    public PropertyMappingContext(ITypeMapperContext context, INamedTypeSymbol sourceType, INamedTypeSymbol targetType,
-      IDictionary<string, string> propertyMappings)
+      IDictionary<string, MappingDescription> propertyMappings)
    {
       SourceType = sourceType;
       TargetType = targetType;
@@ -32,6 +32,7 @@ internal class PropertyMappingContext
 
       TargetProperties = TargetType.GetMembers()
          .OfType<IPropertySymbol>()
+         .Where(x => !IsIgnored(x.Name))
          .ToDictionary(p => p.Name, StringComparer.InvariantCultureIgnoreCase);
 
       SourceProperties = SourceType.GetMembers()
@@ -39,6 +40,13 @@ internal class PropertyMappingContext
          .ToDictionary(p => p.Name, StringComparer.InvariantCultureIgnoreCase);
 
       CustomMappings = context.MapperType.GetMethodsWithAttribute(context.PropertyMapperAttribute).ToArray();
+   }
+
+   private bool IsIgnored(string targetName)
+   {
+      if (PropertyMappings.TryGetValue(targetName, out var mappingDescription))
+         return mappingDescription.Ignored;
+      return false;
    }
 
    public (IMethodSymbol method, AttributeData attributeData)[] CustomMappings { get; }
@@ -56,7 +64,7 @@ internal class PropertyMappingContext
    {
       MemberDeclarations.Add(memberDeclaration);
    }
-   
+
    private bool TryCreateInvocation(IMethodSymbol method, IPropertySymbol targetProperty, string sourcePropertyName, out string invocation)
    {
       var parameterCount = method.Parameters.Length;
@@ -69,7 +77,7 @@ internal class PropertyMappingContext
             invocation = $"{method.Name}(source, target);";
             return true;
          }
-         
+
          if (sourceProperty != null && method.IsCallableWith(sourceProperty.Type, targetProperty.ContainingType))
          {
             invocation = $"{method.Name}(source.{sourceProperty.Name}, target);";

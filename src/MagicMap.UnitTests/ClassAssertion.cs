@@ -203,7 +203,7 @@ internal class ClassAssertion : ReferenceTypeAssertions<INamedTypeSymbol, ClassA
       builder.AppendLine();
       builder.AppendLine("### OUTPUT ###");
 
-      foreach (var resultSyntaxTree in generationResult.OutputSyntaxTrees.Skip(1))
+      foreach (var resultSyntaxTree in generationResult.OutputSyntaxTrees.Skip(4))
       {
          builder.AppendLine(resultSyntaxTree.ToString());
          builder.AppendLine();

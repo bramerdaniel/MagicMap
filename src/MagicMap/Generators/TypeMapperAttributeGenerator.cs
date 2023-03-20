@@ -134,13 +134,20 @@ namespace MagicMap
          return classSymbol.ContainingType.IsType;
       }
 
-      private IDictionary<string, string> CreateMappingDescriptions(INamedTypeSymbol classSymbol)
+      private IDictionary<string, MappingDescription> CreateMappingDescriptions(INamedTypeSymbol classSymbol)
       {
-         var mappings = new Dictionary<string, string>();
+         var mappings = new Dictionary<string, MappingDescription>();
          foreach (var (leftName, rightName) in propertyMappingAttribute.ComputePropertyMappings(classSymbol))
             mappings[leftName] = rightName;
 
          return mappings;
       }
+   }
+
+   internal struct MappingDescription
+   {
+      public string Name { get; set; }
+
+      public bool Ignored { get; set; }
    }
 }

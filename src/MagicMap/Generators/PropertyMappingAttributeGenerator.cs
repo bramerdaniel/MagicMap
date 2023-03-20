@@ -40,6 +40,9 @@ namespace MagicMap
 
       /// <summary>Gets the name of the right property.</summary>
       public string RightName { get; }
+
+      /// <summary>Gets or sets a value indicating that the properties should be ignored for mapping generation.</summary>
+      public bool Ignore{ get; set; }
    }
 }
 ";
@@ -64,7 +67,7 @@ namespace MagicMap
         this.AttributeClass = attributeSymbol ?? throw new ArgumentNullException(nameof(attributeSymbol));
     }
 
-    public IEnumerable<(string leftName, string rightName)> ComputePropertyMappings(INamedTypeSymbol classSymbol)
+    public IEnumerable<(string leftName, MappingDescription)> ComputePropertyMappings(INamedTypeSymbol classSymbol)
     {
         foreach (var propertyMapping in classSymbol.GetAttributes().Where(x => AttributeClass.Equals(x.AttributeClass, SymbolEqualityComparer.Default)))
         {
@@ -72,10 +75,17 @@ namespace MagicMap
             {
                 var leftName = propertyMapping.ConstructorArguments[0].Value as string;
                 var rightName = propertyMapping.ConstructorArguments[1].Value as string;
-                yield return (leftName, rightName);
+            
+                yield return (leftName, new MappingDescription{ Name = rightName, Ignored = ComputeIgnored(propertyMapping) });
             }
-
-
         }
     }
+
+    private bool ComputeIgnored(AttributeData propertyMapping)
+    {
+       var typedConstant = propertyMapping.NamedArguments.FirstOrDefault(x => x.Key == "Ignore").Value;
+       if (typedConstant.Value is bool ignore)
+          return ignore;
+       return false;
+   }
 }

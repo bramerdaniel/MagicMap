@@ -8,6 +8,7 @@ namespace MagicMap.Generators.TypeMapper;
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 using MagicMap.Generators;
@@ -353,16 +354,16 @@ internal class TypeMapperGenerator : IGenerator
       extensionsClass.AddCode(builder.ToString());
    }
 
-   private string GetSourcePropertyName(IDictionary<string, string> nameMappings, string targetName)
+   private string GetSourcePropertyName(IDictionary<string, MappingDescription> nameMappings, string targetName)
    {
-      return nameMappings.TryGetValue(targetName, out var sourceName) ? sourceName : targetName;
+      return nameMappings.TryGetValue(targetName, out var sourceDescription) ? sourceDescription.Name : targetName;
    }
 
-   private IDictionary<string, string> InvertMappings(IDictionary<string, string> mappingSpecifications)
+   private IDictionary<string, MappingDescription> InvertMappings(IDictionary<string, MappingDescription> mappingSpecifications)
    {
-      var inverted = new Dictionary<string, string>();
+      var inverted = new Dictionary<string, MappingDescription>();
       foreach (var specification in mappingSpecifications)
-         inverted[specification.Value] = specification.Key;
+         inverted[specification.Value.Name] = new MappingDescription { Name = specification.Key, Ignored = specification.Value.Ignored };
       return inverted;
    }
 

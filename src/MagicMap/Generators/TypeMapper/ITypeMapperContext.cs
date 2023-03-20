@@ -18,7 +18,7 @@ interface ITypeMapperContext : IGeneratorContext
 
    INamedTypeSymbol MapperType { get; }
 
-   IDictionary<string, string> MappingSpecifications { get; }
+   IDictionary<string, MappingDescription> MappingSpecifications { get; }
 
    bool SourceEqualsTargetType { get; }
 

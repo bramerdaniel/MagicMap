@@ -22,7 +22,7 @@ internal struct TypeMapperContext : ITypeMapperContext
 
    public bool SourceEqualsTargetType => SourceType.Equals(TargetType, SymbolEqualityComparer.Default);
 
-   public IDictionary<string, string> MappingSpecifications { get; set; }
+   public IDictionary<string, MappingDescription> MappingSpecifications { get; set; }
    
    public string TargetName => MapperType?.Name ?? "TypeMapper";
 

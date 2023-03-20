@@ -554,4 +554,58 @@ public class UserOverrideTests
 
       result.Print();
    }
+
+
+   [TestMethod]
+   public void EnsureCustomMappingFromTwoToOnePropertiesIsPossible()
+   {
+      var code = @"namespace Root
+                   {   
+                      using MagicMap;
+
+                      internal class Person
+                      {
+                          public string FirstName{ get; set; }
+                          public string LastName{ get; set; }
+                      }
+
+                      internal class PersonModel
+                      {
+                          public string Name { get; set; }
+                      }
+                                        
+                      [TypeMapper(typeof(Person), typeof(PersonModel))]
+                      partial class ObjectMapper
+                      {
+                          [PropertyMapper(typeof(PersonModel), nameof(PersonModel.Name))]
+                          private string ToFullName(Person person) => person.FirstName + "" "" +  person.LastName;
+
+                          [PropertyMapper(typeof(Person), nameof(Person.FirstName))]
+                          private string GetFirstName(PersonModel personModel) => personModel.Name.Split(' ')[0];
+
+                          [PropertyMapper(typeof(Person), nameof(Person.LastName))]
+                          private string GetLastName(PersonModel personModel) => personModel.Name.Split(' ')[1];
+                      }
+                   }";
+
+      var result = Setup.SourceGeneratorTest()
+         .WithSource(code)
+         .Done();
+
+      result.Should().NotHaveErrors();
+      result.Should()
+         .HaveClass("Root.ObjectMapper")
+         .WhereMethod("Map", "Root.Person source, Root.PersonModel target")
+         .Contains("target.Name = ToFullName(source);");
+
+      result.Should()
+         .HaveClass("Root.ObjectMapper")
+         .WhereMethod("Map", "Root.PersonModel source, Root.Person target")
+         .Contains("target.FirstName = GetFirstName(source);")
+         .Contains("target.LastName = GetLastName(source);");
+
+
+
+      result.Print();
+   }
 }
