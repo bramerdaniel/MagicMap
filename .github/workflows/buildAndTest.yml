@@ -51,7 +51,7 @@ jobs:
         retention-days: 1
 
     - name: setup VSTest.console.exe
-      uses: darenm/Setup-VSTest@v1
+      uses: darenm/Setup-VSTest@v1.2
 
     - name: run net48 unit tests
       run: vstest.console.exe ${{ env.SOLUTION_DIRECTORY }}\Release\net48\MagicMap.UnitTests.dll
@@ -104,7 +104,7 @@ jobs:
       run: msbuild ${{ env.INTEGRATION_TEST_SOLUTION }} -property:Configuration=Release
    
     - name: setup VSTest.console.exe
-      uses: darenm/Setup-VSTest@v1
+      uses: darenm/Setup-VSTest@v1.2
 
     - name: run integration tests
       run: vstest.console.exe src/Release/net6.0/MagicMap.IntegrationTests.dll
