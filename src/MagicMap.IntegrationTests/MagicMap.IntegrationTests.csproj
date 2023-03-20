@@ -28,7 +28,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Folder Include="Tests\CustomizedPropertyMappingTest\" />
 	  <Folder Include="Tests\InvalidOverrides\NonStaticDefaultMapper\" />
 	</ItemGroup>
 

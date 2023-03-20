@@ -37,10 +37,6 @@ namespace MagicMap.IntegrationTests.Tests.ReferenceTypeMappings.RecursiveMapping
             personModel.Father.Son.Should().BeSameAs(personModel);
         }
 
-
         #endregion
-
-
-
     }
 }
