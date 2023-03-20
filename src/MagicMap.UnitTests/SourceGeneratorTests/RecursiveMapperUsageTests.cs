@@ -39,7 +39,7 @@ public class RecursiveMapperUsageTests
       result.Should().NotHaveErrors();
       result.Should().HaveClass("PersonMapper")
          .WhereMethod("Map", "Person source")
-         .Contains("target.Father = source.Father.ToPersonModel();");
+         .Contains("target.Father = source.Father?.ToPersonModel();");
 
       result.Print();
    }
