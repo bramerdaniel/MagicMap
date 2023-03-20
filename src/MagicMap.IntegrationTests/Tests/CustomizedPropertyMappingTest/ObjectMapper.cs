@@ -9,25 +9,25 @@ namespace MagicMap.IntegrationTests.Tests.CustomizedPropertyMappingTest
     [TypeMapper(typeof(Person), typeof(Animal))]
     partial class ObjectMapper
     {
-        [PropertyMapping(nameof(Person.AgeInYears), nameof(Animal.AgeInMonths))]
+        [PropertyMapper(typeof(Animal), nameof(Animal.AgeInMonths), nameof(Person.AgeInYears))]
         private void MapWithCustomName(Person person, Animal animal)
         {
             animal.AgeInMonths = person.AgeInYears * 12;
         }
 
-        [PropertyMapping(nameof(Animal.AgeInMonths), nameof(Person.AgeInYears))]
+        [PropertyMapper(typeof(Person), nameof(Person.AgeInYears), nameof(Animal.AgeInMonths))]
         private void AnyOtherName(Animal animal, Person person)
         {
             person.AgeInYears = animal.AgeInMonths / 12;
         }
-        
-        [PropertyMapping(nameof(Person.Name), nameof(Animal.Name))]
+
+        [PropertyMapper(typeof(Animal), nameof(Animal.Name), nameof(Person.Name))]
         private string PersonToAnimal(string personName)
         {
             return personName?.Replace("[Person]", "[Animal]");
         }
 
-        [PropertyMapping(nameof(Animal.Name), nameof(Person.Name))]
+        [PropertyMapper(typeof(Person), nameof(Person.Name), nameof(Animal.Name))]
         private string AnimalToPerson(Animal animal)
         {
             return animal.Name?.Replace("[Animal]", "[Person]");
