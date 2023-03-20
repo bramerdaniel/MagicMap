@@ -8,7 +8,6 @@ namespace MagicMap.Generators.TypeMapper;
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 
 using MagicMap.Generators;
@@ -278,7 +277,7 @@ internal class TypeMapperGenerator : IGenerator
       if (propertyContext.TargetType.Equals(targetProperty.Type, SymbolEqualityComparer.Default)
           && propertyContext.SourceType.Equals(sourceProperty.Type, SymbolEqualityComparer.Default))
       {
-         mappingCode = $"target.{targetProperty.Name} = source.{sourceProperty.Name}.To{targetProperty.Type.Name}();";
+         mappingCode = $"target.{targetProperty.Name} = source.{sourceProperty.Name}?.To{targetProperty.Type.Name}();";
          return true;
       }
 
