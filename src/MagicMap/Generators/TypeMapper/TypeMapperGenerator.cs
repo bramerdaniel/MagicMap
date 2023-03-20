@@ -266,8 +266,24 @@ internal class TypeMapperGenerator : IGenerator
       if (TryCreateEnumMapping(propertyContext, sourceProperty, targetProperty, out var enumMapping))
          return enumMapping;
 
+      if (TryCreateRecursiveMapping(propertyContext, sourceProperty, targetProperty, out var recursiveMapping))
+         return recursiveMapping;
+
       propertyContext.AddMemberDeclaration(() => CreatePartialMethod(sourceProperty, targetProperty));
       return $"Map{targetProperty.Name}(target, source.{sourceProperty.Name});";
+   }
+
+   private bool TryCreateRecursiveMapping(PropertyMappingContext propertyContext, IPropertySymbol sourceProperty, IPropertySymbol targetProperty, out string mappingCode)
+   {
+      if (propertyContext.TargetType.Equals(targetProperty.Type, SymbolEqualityComparer.Default)
+          && propertyContext.SourceType.Equals(sourceProperty.Type, SymbolEqualityComparer.Default))
+      {
+         mappingCode = $"target.{targetProperty.Name} = source.{sourceProperty.Name}.To{targetProperty.Type.Name}();";
+         return true;
+      }
+
+      mappingCode = null;
+      return false;
    }
 
    private bool TryCreateEnumMapping(PropertyMappingContext propertyContext, IPropertySymbol sourceProperty, IPropertySymbol targetProperty, out string enumMapping)
