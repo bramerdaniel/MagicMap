@@ -10,17 +10,16 @@ using FluentAssertions;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace MagicMap.IntegrationTests.Tests.InvalidOverrides.NonStaticDefaultMapper
+namespace MagicMap.IntegrationTests.Tests.InvalidOverrides.NonStaticDefaultMapperAndNoConstructor
 {
     [TestClass]
     public class NonStaticDefaultMapperTests
     {
         [TestMethod]
-        public void EnsureMappingsIsPossible()
+        public void EnsureMappingsIsNotLongerPossibleAsNoMapperCanBeCreated()
         {
             var person = new Person { Name = "Sam" };
-            person.Invoking(x => x.ToAnimal()).Should().NotThrow<NotSupportedException>();
-            person.ToAnimal().Name.Should().Be("Sam");
+            person.Invoking(x => x.ToAnimal()).Should().Throw<NotSupportedException>();
         }
     }
 }
