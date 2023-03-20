@@ -1,17 +1,18 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="PersonModel.cs" company="consolovers">
+// <copyright file="ICodeBuilder.cs" company="consolovers">
 //   Copyright (c) daniel bramer 2022 - 2023
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace MagicMapReferenceTester;
+namespace MagicMap.Utils;
 
-using System.Diagnostics.CodeAnalysis;
-
-[SuppressMessage("ReSharper", "UnusedMember.Global")]
-public record PersonModel
+internal interface ICodeBuilder
 {
-   public string Name { get; set; }
+    #region Public Methods and Operators
 
-   public long Age { get; set; }
+    ICodeBuilder Append(string code);
+
+    ICodeBuilder AppendLine(string code);
+
+    #endregion
 }

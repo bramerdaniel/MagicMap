@@ -16,7 +16,8 @@ public static class NamedTypeSymbolExtensions
 {
    #region Public Methods and Operators
 
-   public static IMethodSymbol FindMethod(this INamedTypeSymbol typeSymbol, string name, ITypeSymbol returnType, params ITypeSymbol[] parameters)
+
+   public static IMethodSymbol FindMethod(this INamedTypeSymbol typeSymbol,ITypeSymbol returnType, string name, params ITypeSymbol[] parameters)
    {
       var candidates = GetMethods(typeSymbol, name)
          .Where(x => x.Parameters.Length == parameters.Length)
@@ -25,6 +26,21 @@ public static class NamedTypeSymbolExtensions
       if (returnType != null)
          candidates = candidates.Where(x => x.ReturnType.Equals(returnType, SymbolEqualityComparer.Default)).ToArray();
 
+      foreach (var candidate in candidates)
+      {
+         if (ParametersTypesMatch(candidate, parameters))
+            return candidate;
+      }
+
+      return null;
+   }
+
+   public static IMethodSymbol FindMethod(this INamedTypeSymbol typeSymbol, string name, params ITypeSymbol[] parameters)
+   {
+      var candidates = GetMethods(typeSymbol, name)
+         .Where(x => x.Parameters.Length == parameters.Length)
+         .ToArray();
+      
       foreach (var candidate in candidates)
       {
          if (ParametersTypesMatch(candidate, parameters))
@@ -69,6 +85,23 @@ public static class NamedTypeSymbolExtensions
       return typeSymbol.GetMembers().OfType<IMethodSymbol>();
    }
 
+   public static bool IsCallableWith(this IMethodSymbol method, params ITypeSymbol[] parameterTypes)
+   {
+      if (method == null)
+         throw new ArgumentNullException(nameof(method));
+
+      if (method.Parameters.Length != parameterTypes.Length)
+         return false;
+      
+      for (var i = 0; i < method.Parameters.Length; i++)
+      {
+         if (!method.Parameters[i].Type.Equals(parameterTypes[i]))
+            return false;
+      }
+
+      return true;
+   }
+
    public static bool IsPrivate(this IMethodSymbol methodSymbol)
    {
       return methodSymbol.DeclaredAccessibility.HasFlag(Accessibility.Private);
@@ -82,6 +115,33 @@ public static class NamedTypeSymbolExtensions
       return typeSymbol.GetMembers()
          .OfType<IMethodSymbol>()
          .Where(x => string.Equals(x.Name, name, StringComparison.InvariantCulture));
+   }
+
+   public static IEnumerable<(IMethodSymbol, AttributeData)> GetMethodsWithAttribute(this INamedTypeSymbol typeSymbol, INamedTypeSymbol attributeClass)
+   {
+      if (typeSymbol == null)
+         throw new ArgumentNullException(nameof(typeSymbol));
+
+      foreach (var methodSymbol in typeSymbol.GetMembers().OfType<IMethodSymbol>())
+      {
+         if (TryGetAttribute(methodSymbol, attributeClass, out var attributeData))
+            yield return (methodSymbol, attributeData);
+      }
+   }
+
+   private static bool TryGetAttribute(IMethodSymbol methodSymbol, INamedTypeSymbol attributeClass, out AttributeData attributeData)
+   {
+      foreach (var candidate in methodSymbol.GetAttributes().Where(x => x != null))
+      {
+         if (attributeClass.Equals(candidate.AttributeClass, SymbolEqualityComparer.Default))
+         {
+            attributeData = candidate;
+            return true;
+         }
+      }
+
+      attributeData = null;
+      return false;
    }
 
    public static IEnumerable<IPropertySymbol> GetProperties(this INamedTypeSymbol typeSymbol)

@@ -27,4 +27,8 @@
 	  <None Include="C:\Users\bramerd\source\repos\FluentSetups\src\FluentSetups.IntegrationTests\.editorconfig" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Folder Include="Tests\InvalidOverrides\NonStaticDefaultMapper\" />
+	</ItemGroup>
+
 </Project>

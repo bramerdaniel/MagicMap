@@ -11,7 +11,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace MagicMap.IntegrationTests.Tests.MapperTests
 {
     [TestClass]
-    public class MappingOfReadonlyProperties
+    public class MappingOfTargetTypeProperties
     {
         #region Public Methods and Operators
 

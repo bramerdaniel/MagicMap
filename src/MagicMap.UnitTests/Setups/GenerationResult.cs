@@ -44,7 +44,7 @@ internal class GenerationResult
          Assert.Fail($"The expected diagnostic {id} was not found. Hint : {hint}");
    }
 
-   public void Print()
+   public void Print(int skip = 4, int take = int.MaxValue)
    {
       Debug.WriteLine(GetGeneratedCode());
 
@@ -55,7 +55,7 @@ internal class GenerationResult
          builder.AppendLine("### GENERATED CODE ###");
          builder.AppendLine();
 
-         foreach (var resultSyntaxTree in OutputSyntaxTrees.Skip(1))
+         foreach (var resultSyntaxTree in OutputSyntaxTrees.Skip(1 + skip).Take(take))
          {
             builder.AppendLine(resultSyntaxTree.ToString());
             builder.AppendLine();

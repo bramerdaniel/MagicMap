@@ -1,17 +1,12 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="PersonModel.cs" company="consolovers">
+// <copyright file="IMemberBuilder.cs" company="consolovers">
 //   Copyright (c) daniel bramer 2022 - 2023
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace MagicMapReferenceTester;
+namespace MagicMap.Utils;
 
-using System.Diagnostics.CodeAnalysis;
-
-[SuppressMessage("ReSharper", "UnusedMember.Global")]
-public record PersonModel
+internal interface IMemberBuilder
 {
-   public string Name { get; set; }
-
-   public long Age { get; set; }
+   string Build();
 }

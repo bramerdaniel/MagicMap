@@ -18,13 +18,17 @@ interface ITypeMapperContext : IGeneratorContext
 
    INamedTypeSymbol MapperType { get; }
 
-   IDictionary<string, string> MappingSpecifications { get; }
+   IDictionary<string, MappingDescription> MappingSpecifications { get; }
 
    bool SourceEqualsTargetType { get; }
 
    INamedTypeSymbol SourceType { get; }
 
    INamedTypeSymbol TargetType { get; }
+
+   INamedTypeSymbol PropertyMappingAttribute { get; }
+
+   INamedTypeSymbol PropertyMapperAttribute { get; }
 
    #endregion
 }
