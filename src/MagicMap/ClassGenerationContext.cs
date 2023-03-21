@@ -9,7 +9,7 @@ namespace MagicMap;
 using System;
 using System.Collections.Generic;
 using System.Text;
-
+using MagicMap.Extensions;
 using Microsoft.CodeAnalysis;
 
 internal class ClassGenerationContext

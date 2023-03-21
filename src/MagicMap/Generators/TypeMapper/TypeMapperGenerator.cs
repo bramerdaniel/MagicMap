@@ -10,7 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-
+using MagicMap.Extensions;
 using MagicMap.Generators;
 using MagicMap.Utils;
 using Microsoft.CodeAnalysis;

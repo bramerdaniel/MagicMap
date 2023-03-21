@@ -54,8 +54,6 @@ internal class SetupBase
 
    protected virtual List<MetadataReference> ComputeReferences()
    {
-      // AppDomain.CurrentDomain.Load(typeof(FluentSetupAttribute).Assembly.GetName());
-
       var references = new List<MetadataReference>();
       Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
       foreach (var assembly in assemblies)

@@ -10,10 +10,10 @@ using System;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
-
+using MagicMap.Extensions;
 using Microsoft.CodeAnalysis;
 
-internal class PartialClassGenerator : ICodeBuilder
+internal sealed class PartialClassGenerator : ICodeBuilder
 {
    #region Constants and Fields
 

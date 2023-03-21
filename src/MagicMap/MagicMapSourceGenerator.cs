@@ -6,19 +6,19 @@
 
 namespace MagicMap
 {
-   using System;
-   using System.Collections.Immutable;
-   using System.Text;
-   using System.Threading;
+    using System;
+    using System.Collections.Immutable;
+    using System.Text;
+    using System.Threading;
+    using MagicMap.Extensions;
+    using MagicMap.Generators;
 
-   using MagicMap.Generators;
+    using Microsoft.CodeAnalysis;
+    using Microsoft.CodeAnalysis.CSharp;
+    using Microsoft.CodeAnalysis.CSharp.Syntax;
+    using Microsoft.CodeAnalysis.Text;
 
-   using Microsoft.CodeAnalysis;
-   using Microsoft.CodeAnalysis.CSharp;
-   using Microsoft.CodeAnalysis.CSharp.Syntax;
-   using Microsoft.CodeAnalysis.Text;
-
-   [Generator]
+    [Generator]
    public class MagicMapSourceGenerator : IIncrementalGenerator
    {
       #region IIncrementalGenerator Members

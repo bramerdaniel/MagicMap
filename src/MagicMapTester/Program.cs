@@ -33,8 +33,6 @@ namespace MagicMapTester
 
       #region Public Properties
 
-      public static Assembly FluentSetupsAssembly { get; set; }
-
       #endregion
 
       #region Methods

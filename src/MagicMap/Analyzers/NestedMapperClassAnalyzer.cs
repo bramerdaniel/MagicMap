@@ -1,12 +1,11 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="MultiplePartialSetupMembersAnalyzer.cs" company="consolovers">
+// <copyright file="NestedSetupClassAnalyzer.cs" company="consolovers">
 //   Copyright (c) daniel bramer 2022 - 2022
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
 namespace MagicMap.Analyzers
 {
-   using System;
    using System.Collections.Immutable;
    using System.Linq;
 
@@ -14,13 +13,13 @@ namespace MagicMap.Analyzers
    using Microsoft.CodeAnalysis.Diagnostics;
 
    [DiagnosticAnalyzer(LanguageNames.CSharp)]
-   public class MultiplePartialSetupMembersAnalyzer : DiagnosticAnalyzer
+   public class NestedMapperClassAnalyzer : DiagnosticAnalyzer
    {
       #region Public Properties
-
+      
       /// <summary>Returns a set of descriptors for the diagnostics that this analyzer is capable of producing.</summary>
       public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } =
-         ImmutableArray.Create(MagicMapDiagnostics.MultiplePartialParts);
+         ImmutableArray.Create(MagicMapDiagnostics.NotSupportedNestedSetup);
 
       #endregion
 
@@ -29,16 +28,13 @@ namespace MagicMap.Analyzers
       public override void Initialize(AnalysisContext context)
       {
          context.EnableConcurrentExecution();
-
          context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
          context.RegisterCompilationStartAction(compilationContext =>
          {
             // We only care about compilations where attribute type "FluentSetup" is available.
             var fluentSetupAttribute = compilationContext.Compilation.GetTypeByMetadataName(MagicGeneratorManager.TypeMapperAttributeName);
             if (fluentSetupAttribute == null)
-            {
                return;
-            }
 
             // Register an action that accesses the immutable state and reports diagnostics.
             compilationContext.RegisterSymbolAction(symbolContext => AnalyzeSymbol(symbolContext, fluentSetupAttribute), SymbolKind.NamedType);
@@ -49,44 +45,35 @@ namespace MagicMap.Analyzers
 
       #region Methods
 
-      private static bool IsGeneratedPartialPart(INamedTypeSymbol namedTypeSymbol)
+      private static Location FindLocation(AttributeData attributeData, INamedTypeSymbol ownerClass)
       {
-         foreach (var reference in namedTypeSymbol.DeclaringSyntaxReferences)
-         {
-            if (reference.SyntaxTree.FilePath.EndsWith(".generated.cs", StringComparison.InvariantCultureIgnoreCase))
-               return true;
-         }
+         if (attributeData.ApplicationSyntaxReference != null)
+            return Location.Create(attributeData.ApplicationSyntaxReference.SyntaxTree, attributeData.ApplicationSyntaxReference.Span);
 
-         return false;
+         return ownerClass.Locations.FirstOrDefault() ?? Location.None;
       }
 
       private void AnalyzeSymbol(SymbolAnalysisContext context, INamedTypeSymbol fluentSetupAttribute)
       {
          var namedTypeSymbol = (INamedTypeSymbol)context.Symbol;
-
-         if (namedTypeSymbol.DeclaringSyntaxReferences.Length > 1)
+         if (namedTypeSymbol.ContainingType == null)
          {
-            var attributeData = namedTypeSymbol.GetAttributes().FirstOrDefault(IsFluentSetupAttribute);
-            if (attributeData == null || attributeData.AttributeClass == null)
-               return;
-
-            if (IsGeneratedPartialPart(namedTypeSymbol))
-               return;
-
-            var reference = attributeData.ApplicationSyntaxReference;
-            if (reference == null)
-               return;
-
-            var diagnostic = Diagnostic.Create(MagicMapDiagnostics.MultiplePartialParts, Location.Create(reference.SyntaxTree, reference.Span),
-               namedTypeSymbol.Name);
-            context.ReportDiagnostic(diagnostic);
+            // we only care about nested classes here
+            return;
          }
 
-         bool IsFluentSetupAttribute(AttributeData attributeData)
+         var attributeData = namedTypeSymbol.GetAttributes().FirstOrDefault(IsFluentSetupAttribute);
+         if (attributeData?.AttributeClass == null)
+            return;
+
+         var location = FindLocation(attributeData, namedTypeSymbol);
+
+         var diagnostic = Diagnostic.Create(MagicMapDiagnostics.NotSupportedNestedSetup, location);
+         context.ReportDiagnostic(diagnostic);
+
+         bool IsFluentSetupAttribute(AttributeData candidate)
          {
-            if (fluentSetupAttribute.Equals(attributeData.AttributeClass, SymbolEqualityComparer.Default))
-               return true;
-            return false;
+            return fluentSetupAttribute.Equals(candidate.AttributeClass, SymbolEqualityComparer.Default);
          }
       }
 

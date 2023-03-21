@@ -16,7 +16,7 @@ using Microsoft.CodeAnalysis;
 [TestClass]
 [Ignore]
 [SuppressMessage("Blocker Code Smell", "S2699:Tests should include assertions")]
-public class NestedSetupClassAnalyzerTests : FluentSetupAnalyzerTest<NestedSetupClassAnalyzer>
+public class NestedSetupClassAnalyzerTests : FluentSetupAnalyzerTest<NestedMapperClassAnalyzer>
 {
    #region Public Methods and Operators
 

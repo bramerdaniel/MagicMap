@@ -9,7 +9,7 @@ namespace MagicMap.Generators.TypeMapper;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-
+using MagicMap.Extensions;
 using Microsoft.CodeAnalysis;
 
 internal class PropertyMappingContext
