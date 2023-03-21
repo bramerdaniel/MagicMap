@@ -11,7 +11,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-internal abstract class MethodBuilderBase<T> : IMemberBuilder
+internal abstract class MethodBuilderBase<T, TOwner> : IMemberBuilder
+   where TOwner : IDiagnosticReporter
 {
    #region Constants and Fields
 
@@ -23,7 +24,7 @@ internal abstract class MethodBuilderBase<T> : IMemberBuilder
 
    #region Constructors and Destructors
 
-   protected MethodBuilderBase(ICodeBuilder owner)
+   protected MethodBuilderBase(TOwner owner)
    {
       Owner = owner ?? throw new ArgumentNullException(nameof(owner));
    }
@@ -68,7 +69,7 @@ internal abstract class MethodBuilderBase<T> : IMemberBuilder
 
    protected Func<string> Name { get; set; }
 
-   protected ICodeBuilder Owner { get; }
+   protected TOwner Owner { get; }
 
    protected Func<string> ReturnType { get; set; } = () => "void";
 

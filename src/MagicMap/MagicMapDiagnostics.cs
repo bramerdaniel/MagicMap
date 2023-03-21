@@ -29,6 +29,21 @@ namespace MagicMap
          defaultSeverity: DiagnosticSeverity.Warning,
          isEnabledByDefault: true);
 
+
+      internal static readonly DiagnosticDescriptor NothingToMap = new DiagnosticDescriptor(id: "MMW0003",
+         title: "MagicMap source generator",
+         messageFormat: "The generated mapper would not map any properties",
+         category: "MagicMap",
+         defaultSeverity: DiagnosticSeverity.Warning,
+         isEnabledByDefault: true);
+
+      internal static readonly DiagnosticDescriptor DefaultMapperNotStatic = new DiagnosticDescriptor(id: "MMW0004",
+         title: "MagicMap source generator",
+         messageFormat: "The default mapper should be static and accessible from the generated extension methods.",
+         category: "MagicMap",
+         defaultSeverity: DiagnosticSeverity.Warning,
+         isEnabledByDefault: true);
+
       #endregion
    }
 }

@@ -157,13 +157,22 @@ public static class NamedTypeSymbolExtensions
         if (typeSymbol == null)
             throw new ArgumentNullException(nameof(typeSymbol));
 
-        foreach (var method in typeSymbol.GetProperties())
+        foreach (var property in typeSymbol.GetProperties())
         {
-            if (selector(method))
-                return method;
+            if (selector(property))
+                return property;
         }
 
         return null;
+    }
+    public static IPropertySymbol GetProperty(this INamedTypeSymbol typeSymbol, string name)
+    {
+        if (typeSymbol == null)
+            throw new ArgumentNullException(nameof(typeSymbol));
+        if (name == null)
+           throw new ArgumentNullException(nameof(name));
+
+        return typeSymbol.GetProperty(x => x.Name == name);
     }
 
     #endregion

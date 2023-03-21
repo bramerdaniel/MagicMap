@@ -14,13 +14,13 @@ internal static class BuilderExtensions
 {
    #region Public Methods and Operators
 
-   public static MethodBuilder AddMethod(this PartialClassGenerator owner, string name)
+   public static MethodBuilder<PartialClassGenerator> AddMethod(this PartialClassGenerator owner, string name)
    {
       return owner.AddMethod()
          .WithName(name);
    }
 
-   public static MethodBuilder AddMethod(this PartialClassGenerator owner, string name, params (INamedTypeSymbol Type, string Name)[] parameters)
+   public static MethodBuilder<PartialClassGenerator> AddMethod(this PartialClassGenerator owner, string name, params (INamedTypeSymbol Type, string Name)[] parameters)
    {
       var methodBuilder = owner.AddMethod()
          .WithCondition(_ => !owner.ContainsMethod(name, parameters.Select(x => x.Type).ToArray()))
@@ -36,7 +36,7 @@ internal static class BuilderExtensions
       return methodBuilder;
    }
 
-   public static PartialMethodBuilder AddPartialMethod(this PartialClassGenerator owner, string name,
+   public static PartialMethodBuilder<PartialClassGenerator> AddPartialMethod(this PartialClassGenerator owner, string name,
       params (INamedTypeSymbol Type, string Name)[] parameters)
    {
       var partialMethod = owner.AddPartialMethod()

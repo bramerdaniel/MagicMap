@@ -7,13 +7,14 @@
 namespace MagicMap.Utils;
 
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 using MagicMap.Extensions;
 using Microsoft.CodeAnalysis;
 
-internal sealed class PartialClassGenerator : ICodeBuilder
+internal sealed class PartialClassGenerator : ICodeBuilder, IDiagnosticReporter
 {
    #region Constants and Fields
 
@@ -30,7 +31,10 @@ internal sealed class PartialClassGenerator : ICodeBuilder
       UserDefinedPart = userDefinedPart ?? throw new ArgumentNullException(nameof(userDefinedPart));
       ClassName = userDefinedPart.Name;
       IsStatic = userDefinedPart.IsStatic;
+      Diagnostics = new List<Diagnostic>();
    }
+
+   internal IList<Diagnostic> Diagnostics { get; }
 
    #endregion
 
@@ -65,13 +69,13 @@ internal sealed class PartialClassGenerator : ICodeBuilder
 
    #region Public Properties
 
-   public string ClassName { get; }
+   private string ClassName { get; }
 
-   public bool IsStatic { get; set; }
+   private bool IsStatic { get; set; }
 
-   public string Modifier { get; set; }
+   private string Modifier { get; set; }
 
-   public INamespaceSymbol Namespace => UserDefinedPart.ContainingNamespace;
+   private INamespaceSymbol Namespace => UserDefinedPart.ContainingNamespace;
 
    public INamedTypeSymbol UserDefinedPart { get; }
 
@@ -85,14 +89,23 @@ internal sealed class PartialClassGenerator : ICodeBuilder
 
    #region Public Methods and Operators
 
-   public MethodBuilder AddMethod()
+   public MethodBuilder<PartialClassGenerator> AddMethod()
    {
-      return UpdateActiveBuilder(new MethodBuilder(this));
+      return UpdateActiveBuilder(new MethodBuilder<PartialClassGenerator>(this));
    }
 
-   public PartialMethodBuilder AddPartialMethod()
+   public void AddDiagnostic(Diagnostic diagnostic)
    {
-      return UpdateActiveBuilder(new PartialMethodBuilder(this));
+      if (diagnostic == null)
+         throw new ArgumentNullException(nameof(diagnostic));
+
+      Diagnostics.Add(diagnostic);
+   }
+
+
+   public PartialMethodBuilder<PartialClassGenerator> AddPartialMethod()
+   {
+      return UpdateActiveBuilder(new PartialMethodBuilder<PartialClassGenerator>(this));
    }
 
    public bool ContainsMethod(INamedTypeSymbol returnType, string name, params INamedTypeSymbol[] parameterTypes)
@@ -197,4 +210,10 @@ internal sealed class PartialClassGenerator : ICodeBuilder
    }
 
    #endregion
+
+   public void AddDiagnostic(DiagnosticDescriptor diagnosticDescriptor)
+   {
+      var location = UserDefinedPart.Locations.FirstOrDefault() ?? Location.None;
+      Diagnostics.Add(Diagnostic.Create(diagnosticDescriptor, location));
+   }
 }

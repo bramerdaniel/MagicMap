@@ -6,6 +6,7 @@
 
 namespace MagicMap
 {
+   using System;
    using System.Collections.Generic;
    using System.Linq;
 
@@ -13,11 +14,7 @@ namespace MagicMap
 
    internal class GeneratedSource
    {
-      #region Constants and Fields
-
-      private List<Diagnostic> diagnostics;
-
-      #endregion
+      private IList<Diagnostic> diagnostics;
 
       #region Public Properties
 
@@ -25,7 +22,17 @@ namespace MagicMap
       public string Code { get; set; }
 
       /// <summary>Gets the reported diagnostics.</summary>
-      public IEnumerable<Diagnostic> Diagnostics => diagnostics ?? Enumerable.Empty<Diagnostic>();
+      public IList<Diagnostic> Diagnostics
+      {
+         get => diagnostics ??= new List<Diagnostic>();
+         set
+         {
+            diagnostics = value;
+            foreach (var diagnostic in Diagnostics)
+               if (diagnostic.Severity == DiagnosticSeverity.Error)
+                  Disable();
+         }
+      }
 
       /// <summary>Gets a value indicating whether the generated source will be added to the results.</summary>
       public bool Enabled { get; private set; } = true;
@@ -47,7 +54,7 @@ namespace MagicMap
          if (diagnostic.Severity == DiagnosticSeverity.Error)
             Disable();
 
-         diagnostics.Add(diagnostic);
+         Diagnostics.Add(diagnostic);
       }
 
       /// <summary>Disables the source.</summary>

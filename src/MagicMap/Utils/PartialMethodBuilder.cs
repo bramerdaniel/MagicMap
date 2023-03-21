@@ -8,11 +8,12 @@ namespace MagicMap.Utils;
 
 using System.Text;
 
-internal class PartialMethodBuilder : MethodBuilderBase<PartialMethodBuilder>
+internal class PartialMethodBuilder<TOwner> : MethodBuilderBase<PartialMethodBuilder<TOwner>, TOwner>
+   where TOwner : IDiagnosticReporter
 {
    #region Constructors and Destructors
 
-   public PartialMethodBuilder(ICodeBuilder owner)
+   public PartialMethodBuilder(TOwner owner)
       : base(owner)
    {
    }

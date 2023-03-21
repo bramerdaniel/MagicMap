@@ -18,8 +18,7 @@ namespace MagicMap.Analyzers
       #region Public Properties
       
       /// <summary>Returns a set of descriptors for the diagnostics that this analyzer is capable of producing.</summary>
-      public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } =
-         ImmutableArray.Create(MagicMapDiagnostics.NotSupportedNestedSetup);
+      public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } = ImmutableArray.Create(MagicMapDiagnostics.NotSupportedNestedSetup);
 
       #endregion
 
@@ -29,16 +28,7 @@ namespace MagicMap.Analyzers
       {
          context.EnableConcurrentExecution();
          context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
-         context.RegisterCompilationStartAction(compilationContext =>
-         {
-            // We only care about compilations where attribute type "FluentSetup" is available.
-            var fluentSetupAttribute = compilationContext.Compilation.GetTypeByMetadataName(MagicGeneratorManager.TypeMapperAttributeName);
-            if (fluentSetupAttribute == null)
-               return;
-
-            // Register an action that accesses the immutable state and reports diagnostics.
-            compilationContext.RegisterSymbolAction(symbolContext => AnalyzeSymbol(symbolContext, fluentSetupAttribute), SymbolKind.NamedType);
-         });
+         context.RegisterSymbolAction(AnalyzeSymbol, SymbolKind.NamedType);
       }
 
       #endregion
@@ -51,6 +41,35 @@ namespace MagicMap.Analyzers
             return Location.Create(attributeData.ApplicationSyntaxReference.SyntaxTree, attributeData.ApplicationSyntaxReference.Span);
 
          return ownerClass.Locations.FirstOrDefault() ?? Location.None;
+      }
+
+      private void AnalyzeSymbol(SymbolAnalysisContext context)
+      {
+         // We only care about compilations where attribute type "TypeMapper" is available.
+         var typeMapperAttribute = context.Compilation.GetTypeByMetadataName(MagicGeneratorManager.TypeMapperAttributeName);
+         if (typeMapperAttribute == null)
+            return;
+
+         var namedTypeSymbol = (INamedTypeSymbol)context.Symbol;
+         if (namedTypeSymbol.ContainingType == null)
+         {
+            // we only care about nested classes here
+            return;
+         }
+
+         var attributeData = namedTypeSymbol.GetAttributes().FirstOrDefault(IsFluentSetupAttribute);
+         if (attributeData?.AttributeClass == null)
+            return;
+
+         var location = FindLocation(attributeData, namedTypeSymbol);
+
+         var diagnostic = Diagnostic.Create(MagicMapDiagnostics.NotSupportedNestedSetup, location);
+         context.ReportDiagnostic(diagnostic);
+
+         bool IsFluentSetupAttribute(AttributeData candidate)
+         {
+            return typeMapperAttribute.Equals(candidate.AttributeClass, SymbolEqualityComparer.Default);
+         }
       }
 
       private void AnalyzeSymbol(SymbolAnalysisContext context, INamedTypeSymbol fluentSetupAttribute)

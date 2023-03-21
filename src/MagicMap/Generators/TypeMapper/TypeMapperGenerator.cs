@@ -45,7 +45,8 @@ internal class TypeMapperGenerator : IGenerator
       yield return new GeneratedSource
       {
          Name = uniqueNameProvider.GetFileNameForClass(context.MapperType.Name),
-         Code = mapperClass.GenerateCode()
+         Code = mapperClass.GenerateCode(),
+         Diagnostics = mapperClass.Diagnostics
       };
 
       var extensionsClass = GenerateExtensionsClass();
@@ -167,7 +168,7 @@ internal class TypeMapperGenerator : IGenerator
       mapperGenerator.AddMethod("Map", (context.SourceType, "source"), (context.TargetType, "target"))
          .WithModifier("public")
          .WithSummary(x => x.AppendLine("Maps all properties of the <see cref=\"source\"/> to the properties of the <see cref=\"target\"/>"))
-         .WithBody(() => GenerateMapBody(leftToRight))
+         .WithBody(mb => GenerateMapBody(mb, leftToRight))
          .Build();
 
       foreach (var declaration in leftToRight.MemberDeclarations)
@@ -179,7 +180,7 @@ internal class TypeMapperGenerator : IGenerator
          mapperGenerator.AddMethod("Map", (context.TargetType, "source"), (context.SourceType, "target"))
             .WithModifier("public")
             .WithSummary(x => x.AppendLine("Maps all properties of the <see cref=\"source\"/> to the properties of the <see cref=\"target\"/>"))
-            .WithBody(() => GenerateMapBody(rightToLeft))
+            .WithBody(mb => GenerateMapBody(mb, rightToLeft))
             .Build();
 
          foreach (var declaration in rightToLeft.MemberDeclarations)
@@ -221,12 +222,13 @@ internal class TypeMapperGenerator : IGenerator
    }
 
 
-   private string GenerateMapBody(PropertyMappingContext propertyContext)
+   private string GenerateMapBody(MethodBuilder<PartialClassGenerator> methodBuilder, PropertyMappingContext propertyContext)
    {
       var bodyCode = new StringBuilder();
 
       if (propertyContext.TargetProperties.Count == 0)
       {
+         methodBuilder.AddDiagnostic(MagicMapDiagnostics.NothingToMap);
          bodyCode.AppendLine("// target type does not contain any properties.");
          bodyCode.AppendLine("// No mappings were generated");
       }

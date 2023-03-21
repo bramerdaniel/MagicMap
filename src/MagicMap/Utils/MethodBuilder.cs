@@ -9,11 +9,14 @@ namespace MagicMap.Utils;
 using System;
 using System.Text;
 
-internal class MethodBuilder : MethodBuilderBase<MethodBuilder>
+using Microsoft.CodeAnalysis;
+
+internal class MethodBuilder<TOwner> : MethodBuilderBase<MethodBuilder<TOwner>, TOwner>
+   where TOwner : IDiagnosticReporter
 {
    #region Constructors and Destructors
 
-   public MethodBuilder(ICodeBuilder owner)
+   public MethodBuilder(TOwner owner)
       : base(owner)
    {
    }
@@ -22,7 +25,7 @@ internal class MethodBuilder : MethodBuilderBase<MethodBuilder>
 
    #region Properties
 
-   private Func<string> MethodBody { get; set; }
+   private Func<MethodBuilder<TOwner>, string> MethodBody { get; set; }
 
    #endregion
 
@@ -35,17 +38,33 @@ internal class MethodBuilder : MethodBuilderBase<MethodBuilder>
       AppendSignature(sourceBuilder);
       sourceBuilder.AppendLine(")");
       sourceBuilder.AppendLine("{");
-      sourceBuilder.AppendLine(MethodBody());
+      sourceBuilder.AppendLine(MethodBody(this));
       sourceBuilder.AppendLine("}");
 
       return sourceBuilder.ToString();
    }
 
-   public MethodBuilder WithBody(Func<string> body)
+   public MethodBuilder<TOwner> WithBody(Func<string> body)
+   {
+      if (body == null)
+         throw new ArgumentNullException(nameof(body));
+
+      MethodBody = _ => body();
+      return this;
+   }
+   public MethodBuilder<TOwner> WithBody(Func<MethodBuilder<TOwner>, string> body)
    {
       MethodBody = body ?? throw new ArgumentNullException(nameof(body));
       return this;
    }
 
    #endregion
+
+   public void AddDiagnostic(DiagnosticDescriptor diagnosticDescriptor)
+   {
+      if (diagnosticDescriptor == null)
+         throw new ArgumentNullException(nameof(diagnosticDescriptor));
+
+      Owner.AddDiagnostic(diagnosticDescriptor);
+   }
 }
