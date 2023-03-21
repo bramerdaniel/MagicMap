@@ -22,7 +22,7 @@ namespace MagicMap
          defaultSeverity: DiagnosticSeverity.Warning,
          isEnabledByDefault: true);
 
-      internal static readonly DiagnosticDescriptor NotSupportedNestedSetup = new DiagnosticDescriptor(id: "MMW0001",
+      internal static readonly DiagnosticDescriptor NestedMapperNotSupported = new DiagnosticDescriptor(id: "MMW0001",
          title: "MagicMap source generator",
          messageFormat: "Mapper generation for nested classes is not supported",
          category: "MagicMap",

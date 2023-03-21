@@ -168,7 +168,7 @@ internal class TypeMapperGenerator : IGenerator
       mapperGenerator.AddMethod("Map", (context.SourceType, "source"), (context.TargetType, "target"))
          .WithModifier("public")
          .WithSummary(x => x.AppendLine("Maps all properties of the <see cref=\"source\"/> to the properties of the <see cref=\"target\"/>"))
-         .WithBody(mb => GenerateMapBody(mb, leftToRight))
+         .WithBody(() => GenerateMapBody(leftToRight))
          .Build();
 
       foreach (var declaration in leftToRight.MemberDeclarations)
@@ -180,7 +180,7 @@ internal class TypeMapperGenerator : IGenerator
          mapperGenerator.AddMethod("Map", (context.TargetType, "source"), (context.SourceType, "target"))
             .WithModifier("public")
             .WithSummary(x => x.AppendLine("Maps all properties of the <see cref=\"source\"/> to the properties of the <see cref=\"target\"/>"))
-            .WithBody(mb => GenerateMapBody(mb, rightToLeft))
+            .WithBody(() => GenerateMapBody(rightToLeft))
             .Build();
 
          foreach (var declaration in rightToLeft.MemberDeclarations)
@@ -222,13 +222,12 @@ internal class TypeMapperGenerator : IGenerator
    }
 
 
-   private string GenerateMapBody(MethodBuilder<PartialClassGenerator> methodBuilder, PropertyMappingContext propertyContext)
+   private string GenerateMapBody(PropertyMappingContext propertyContext)
    {
       var bodyCode = new StringBuilder();
 
       if (propertyContext.TargetProperties.Count == 0)
       {
-         methodBuilder.AddDiagnostic(MagicMapDiagnostics.NothingToMap);
          bodyCode.AppendLine("// target type does not contain any properties.");
          bodyCode.AppendLine("// No mappings were generated");
       }

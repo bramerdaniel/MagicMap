@@ -12,7 +12,6 @@ using System.Linq;
 using System.Text;
 
 internal abstract class MethodBuilderBase<T, TOwner> : IMemberBuilder
-   where TOwner : IDiagnosticReporter
 {
    #region Constants and Fields
 

@@ -55,7 +55,18 @@ public abstract class TypeMapperAnalyzer : DiagnosticAnalyzer
 
    protected Location FindLocation(IPropertySymbol propertySymbol)
    {
-      var findLocation = propertySymbol.Locations.FirstOrDefault();
-      return findLocation ?? Location.None;
+      return propertySymbol.Locations.FirstOrDefault() ?? Location.None;
+   }
+
+   protected Location FindLocation(INamedTypeSymbol typeSymbol)
+   {
+      return typeSymbol.Locations.FirstOrDefault() ?? Location.None;
+   }
+
+   protected Location FindLocation(AttributeData attributeData)
+   {
+      return attributeData.ApplicationSyntaxReference != null
+         ? Location.Create(attributeData.ApplicationSyntaxReference.SyntaxTree, attributeData.ApplicationSyntaxReference.Span)
+         : Location.None;
    }
 }

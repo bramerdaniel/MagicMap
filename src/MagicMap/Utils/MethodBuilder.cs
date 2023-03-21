@@ -12,7 +12,6 @@ using System.Text;
 using Microsoft.CodeAnalysis;
 
 internal class MethodBuilder<TOwner> : MethodBuilderBase<MethodBuilder<TOwner>, TOwner>
-   where TOwner : IDiagnosticReporter
 {
    #region Constructors and Destructors
 
@@ -59,12 +58,4 @@ internal class MethodBuilder<TOwner> : MethodBuilderBase<MethodBuilder<TOwner>, 
    }
 
    #endregion
-
-   public void AddDiagnostic(DiagnosticDescriptor diagnosticDescriptor)
-   {
-      if (diagnosticDescriptor == null)
-         throw new ArgumentNullException(nameof(diagnosticDescriptor));
-
-      Owner.AddDiagnostic(diagnosticDescriptor);
-   }
 }

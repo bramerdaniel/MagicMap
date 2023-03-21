@@ -7,7 +7,6 @@
 namespace MagicMap.Analyzers;
 
 using System.Collections.Immutable;
-using System.Linq;
 
 using MagicMap.Extensions;
 
@@ -29,7 +28,12 @@ public class InvalidOverrideAnalyzer : TypeMapperAnalyzer
    protected override void AnalyzeSymbol(IMapperContext context)
    {
       var defaultMapperProperty = context.TypeMapperClass.GetProperty("Default");
-      if (!defaultMapperProperty.IsStatic)
-         context.ReportDiagnostic(MagicMapDiagnostics.DefaultMapperNotStatic, FindLocation(defaultMapperProperty));
+      if (defaultMapperProperty == null)
+         return;
+
+      if (defaultMapperProperty.IsStatic)
+         return;
+
+      context.ReportDiagnostic(MagicMapDiagnostics.DefaultMapperNotStatic, FindLocation(defaultMapperProperty));
    }
 }

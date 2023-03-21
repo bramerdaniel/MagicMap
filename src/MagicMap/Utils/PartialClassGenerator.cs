@@ -14,7 +14,7 @@ using System.Text;
 using MagicMap.Extensions;
 using Microsoft.CodeAnalysis;
 
-internal sealed class PartialClassGenerator : ICodeBuilder, IDiagnosticReporter
+internal sealed class PartialClassGenerator : ICodeBuilder
 {
    #region Constants and Fields
 
@@ -211,9 +211,5 @@ internal sealed class PartialClassGenerator : ICodeBuilder, IDiagnosticReporter
 
    #endregion
 
-   public void AddDiagnostic(DiagnosticDescriptor diagnosticDescriptor)
-   {
-      var location = UserDefinedPart.Locations.FirstOrDefault() ?? Location.None;
-      Diagnostics.Add(Diagnostic.Create(diagnosticDescriptor, location));
-   }
+
 }

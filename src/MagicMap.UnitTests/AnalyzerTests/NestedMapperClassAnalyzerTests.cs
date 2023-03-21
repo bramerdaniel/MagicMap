@@ -36,7 +36,7 @@ public class NestedMapperClassAnalyzerTests : FluentSetupAnalyzerTest<NestedMapp
                       }
                    ";
 
-      var descriptor = MagicMapDiagnostics.NotSupportedNestedSetup;
+      var descriptor = MagicMapDiagnostics.NestedMapperNotSupported;
       ExpectDiagnostic(descriptor, d => d.WithLocation(0).WithSeverity(DiagnosticSeverity.Warning));
       await RunAsync(code);
    }
