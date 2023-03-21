@@ -127,7 +127,7 @@ jobs:
       run: dir packages
       
     - name: setup NuGet.exe
-      uses: NuGet/setup-nuget@v1.0.6
+      uses: NuGet/setup-nuget@v1.1.1
       with:
         nuget-version: latest
         #nuget-api-key: ${{secrets.NUGET_API_KEY}} 
