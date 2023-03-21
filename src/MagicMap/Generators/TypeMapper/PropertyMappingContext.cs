@@ -17,6 +17,7 @@ internal class PropertyMappingContext
    public INamedTypeSymbol SourceType { get; }
 
    public INamedTypeSymbol TargetType { get; }
+   public INamedTypeSymbol MapperType { get; }
 
    public IDictionary<string, MappingDescription> PropertyMappings { get; }
 
@@ -27,6 +28,7 @@ internal class PropertyMappingContext
    {
       SourceType = sourceType;
       TargetType = targetType;
+      MapperType = context.MapperType;
       PropertyMappings = propertyMappings;
       MemberDeclarations = new List<Func<string>>();
 

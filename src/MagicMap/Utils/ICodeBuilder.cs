@@ -11,8 +11,7 @@ internal interface ICodeBuilder
     #region Public Methods and Operators
 
     ICodeBuilder Append(string code);
-
-    ICodeBuilder AppendLine(string code);
+   
 
     #endregion
 }

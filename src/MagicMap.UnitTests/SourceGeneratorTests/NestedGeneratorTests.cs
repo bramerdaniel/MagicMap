@@ -11,7 +11,6 @@ using MagicMap.UnitTests.Setups;
 [TestClass]
 public class NestedGeneratorTests
 {
-
    [TestMethod]
    public void EnsureCustomMappingIsPossibleWithoutSourceProperty()
    {
@@ -53,12 +52,12 @@ public class NestedGeneratorTests
       result.Should()
          .HaveClass("Root.ObjectMapper")
          .WhereMethod("Map", "Root.Person source, Root.PersonModel target")
-         .Contains("target.Address = Nested.Default.MapFrom(source.Address);");
+         .Contains("target.Address = AddressMapper.Default.MapFrom(source.Address);");
 
       result.Should()
          .HaveClass("Root.ObjectMapper")
          .WhereMethod("Map", "Root.PersonModel source, Root.Person target")
-         .Contains("target.Address = Nested.Default.MapFrom(source.Address);");
+         .Contains("target.Address = AddressMapper.Default.MapFrom(source.Address);");
 
       result.Print();
    }
