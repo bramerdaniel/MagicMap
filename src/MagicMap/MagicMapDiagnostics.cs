@@ -14,14 +14,7 @@ namespace MagicMap
    public static class MagicMapDiagnostics
    {
       #region Constants and Fields
-
-      internal static readonly DiagnosticDescriptor MultiplePartialParts = new DiagnosticDescriptor(id: "FSI0001",
-         title: "FluentSetups source generator",
-         messageFormat: "Fluent setup generation for class '{0}' is skipped du tue multiple partial members",
-         category: "FluentSetups",
-         defaultSeverity: DiagnosticSeverity.Info,
-         isEnabledByDefault: true);
-
+      
       internal static readonly DiagnosticDescriptor NotSupported = new DiagnosticDescriptor(id: "MMW0002",
          title: "MagicMap source generator",
          messageFormat: "This is not supported yet",
