@@ -14,7 +14,7 @@ namespace MagicMap
    public static class MagicMapDiagnostics
    {
       #region Constants and Fields
-      
+
       internal static readonly DiagnosticDescriptor NotSupported = new DiagnosticDescriptor(id: "MMW0002",
          title: "MagicMap source generator",
          messageFormat: "This is not supported yet",
@@ -23,7 +23,7 @@ namespace MagicMap
          isEnabledByDefault: true);
 
       internal static readonly DiagnosticDescriptor NestedMapperNotSupported = new DiagnosticDescriptor(id: "MMW0001",
-         title: "MagicMap source generator",
+         title: "Nested mapper classes are not supported",
          messageFormat: "Mapper generation for nested classes is not supported",
          category: "MagicMap",
          defaultSeverity: DiagnosticSeverity.Warning,
@@ -31,14 +31,14 @@ namespace MagicMap
 
 
       internal static readonly DiagnosticDescriptor NothingToMap = new DiagnosticDescriptor(id: "MMW0003",
-         title: "MagicMap source generator",
+         title: "Nothing to generate",
          messageFormat: "The generated mapper would not map any properties",
          category: "MagicMap",
          defaultSeverity: DiagnosticSeverity.Warning,
          isEnabledByDefault: true);
 
       internal static readonly DiagnosticDescriptor DefaultMapperNotStatic = new DiagnosticDescriptor(id: "MMW0004",
-         title: "MagicMap source generator",
+         title: "Default mapper must be static",
          messageFormat: "The default mapper should be static and accessible from the generated extension methods.",
          category: "MagicMap",
          defaultSeverity: DiagnosticSeverity.Warning,

@@ -10,6 +10,8 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 using System.Linq;
 
+using MagicMap.Extensions;
+
 public abstract class TypeMapperAnalyzer : DiagnosticAnalyzer
 {
    public override void Initialize(AnalysisContext context)
@@ -26,21 +28,17 @@ public abstract class TypeMapperAnalyzer : DiagnosticAnalyzer
          return;
 
       var mapperClassSymbol = (INamedTypeSymbol)context.Symbol;
-
-      // We only care about compilations where attribute type "TypeMapper" is available.
-      var attributeData = mapperClassSymbol.GetAttributes().FirstOrDefault(IsFluentSetupAttribute);
+      
+      var attributeData = mapperClassSymbol.GetAttribute(typeMapperAttribute);
       if (attributeData?.AttributeClass == null)
          return;
 
-      var classContext = new MapperClassContext(mapperClassSymbol, typeMapperAttribute, context);
-      AnalyzeSymbol(classContext);
-      foreach (var diagnostic in classContext.Dignostics)
-         context.ReportDiagnostic(diagnostic);
+      var classContext = new MapperClassContext(mapperClassSymbol, typeMapperAttribute, attributeData,  context);
 
-      bool IsFluentSetupAttribute(AttributeData candidate)
-      {
-         return typeMapperAttribute.Equals(candidate.AttributeClass, SymbolEqualityComparer.Default);
-      }
+      AnalyzeSymbol(classContext);
+      
+      foreach (var diagnostic in classContext.Diagnostics)
+         context.ReportDiagnostic(diagnostic);
    }
 
    protected abstract void AnalyzeSymbol(IMapperContext context);

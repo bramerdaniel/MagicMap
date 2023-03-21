@@ -14,7 +14,7 @@ using Microsoft.CodeAnalysis;
 
 [TestClass]
 [SuppressMessage("Blocker Code Smell", "S2699:Tests should include assertions")]
-public class InvalidOverrideAnalyzerTests : FluentSetupAnalyzerTest<InvalidOverrideAnalyzer>
+public class InvalidOverrideAnalyzerTests : MagicMapAnalyzerTest<InvalidOverrideAnalyzer>
 {
    #region Public Methods and Operators
 

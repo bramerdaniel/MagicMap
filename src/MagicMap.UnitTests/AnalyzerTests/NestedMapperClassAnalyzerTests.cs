@@ -15,7 +15,7 @@ using Microsoft.CodeAnalysis;
 
 [TestClass]
 [SuppressMessage("Blocker Code Smell", "S2699:Tests should include assertions")]
-public class NestedMapperClassAnalyzerTests : FluentSetupAnalyzerTest<NestedMapperClassAnalyzer>
+public class NestedMapperClassAnalyzerTests : MagicMapAnalyzerTest<NestedMapperClassAnalyzer>
 {
    #region Public Methods and Operators
 
@@ -50,7 +50,7 @@ public class NestedMapperClassAnalyzerTests : FluentSetupAnalyzerTest<NestedMapp
    [TestMethod]
    public async Task EnsureNoResultsForNotFluentSetupClasses()
    {
-      string code = @"using FluentSetups;
+      string code = @"using MagicMap;
 
                       public class OuterType
                       {

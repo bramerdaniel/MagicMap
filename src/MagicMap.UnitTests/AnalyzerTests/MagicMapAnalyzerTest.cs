@@ -14,7 +14,7 @@ using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Testing;
 using Microsoft.CodeAnalysis.Testing.Verifiers;
 
-public class FluentSetupAnalyzerTest<T>
+public class MagicMapAnalyzerTest<T>
    where T : DiagnosticAnalyzer, new()
 {
    #region Properties

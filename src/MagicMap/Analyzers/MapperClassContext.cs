@@ -7,7 +7,6 @@
 namespace MagicMap.Analyzers;
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 
 using Microsoft.CodeAnalysis;
@@ -21,26 +20,21 @@ public struct MapperClassContext : IMapperContext
 
    public INamedTypeSymbol TypeMapperAttribute { get; }
 
-   public IList<Diagnostic> Dignostics { get; } = new List<Diagnostic>();
+   public AttributeData AttributeData { get; }
 
-   public MapperClassContext(INamedTypeSymbol typeMapperClass, INamedTypeSymbol typeMapperAttribute, SymbolAnalysisContext context)
+   public IList<Diagnostic> Diagnostics { get; } = new List<Diagnostic>();
+
+   public MapperClassContext(INamedTypeSymbol typeMapperClass, INamedTypeSymbol typeMapperAttribute, AttributeData attributeData,
+      SymbolAnalysisContext context)
    {
       TypeMapperClass = typeMapperClass ?? throw new ArgumentNullException(nameof(typeMapperClass));
       TypeMapperAttribute = typeMapperAttribute ?? throw new ArgumentNullException(nameof(typeMapperAttribute));
+      AttributeData = attributeData ?? throw new ArgumentNullException(nameof(attributeData));
       this.context = context;
    }
 
    public void ReportDiagnostic(DiagnosticDescriptor diagnosticDescriptor, Location location)
    {
-      Dignostics.Add(Diagnostic.Create(diagnosticDescriptor, location));
+      Diagnostics.Add(Diagnostic.Create(diagnosticDescriptor, location));
    }
-}
-
-public interface IMapperContext
-{
-   INamedTypeSymbol TypeMapperClass { get; }
-
-   INamedTypeSymbol TypeMapperAttribute { get; }
-
-   void ReportDiagnostic(DiagnosticDescriptor diagnosticDescriptor, Location location);
 }

@@ -15,8 +15,7 @@ namespace MagicMap.Analyzers
    public class NestedMapperClassAnalyzer : TypeMapperAnalyzer
    {
       #region Public Properties
-
-      /// <summary>Returns a set of descriptors for the diagnostics that this analyzer is capable of producing.</summary>
+      
       public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } =
          ImmutableArray.Create(MagicMapDiagnostics.NestedMapperNotSupported);
 
@@ -26,13 +25,8 @@ namespace MagicMap.Analyzers
 
       protected override void AnalyzeSymbol(IMapperContext context)
       {
-         if (context.TypeMapperClass.ContainingType == null)
-         {
-            // we only care about nested classes here
-            return;
-         }
-
-         context.ReportDiagnostic(MagicMapDiagnostics.NestedMapperNotSupported, FindLocation(context.TypeMapperAttribute));
+         if (context.TypeMapperClass.ContainingType != null)
+            context.ReportDiagnostic(MagicMapDiagnostics.NestedMapperNotSupported, FindLocation(context.AttributeData));
       }
 
       #endregion

@@ -65,6 +65,16 @@ public static class NamedTypeSymbolExtensions
         return null;
     }
 
+    public static AttributeData GetAttribute(this INamedTypeSymbol typeSymbol, INamedTypeSymbol attributeClass)
+    {
+        if (typeSymbol == null)
+            throw new ArgumentNullException(nameof(typeSymbol));
+        if (attributeClass == null)
+           throw new ArgumentNullException(nameof(attributeClass));
+
+        return typeSymbol.GetAttributes().FirstOrDefault(x => attributeClass.Equals(x.AttributeClass));
+    }
+
     /// <summary>Gets the default constructor of a type.</summary>
     /// <param name="typeSymbol">The type symbol.</param>
     /// <returns></returns>
