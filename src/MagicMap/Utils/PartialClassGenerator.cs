@@ -26,6 +26,13 @@ internal sealed class PartialClassGenerator : ICodeBuilder
 
    #region Constructors and Destructors
 
+   public PartialClassGenerator(string className)
+   {
+      ClassName = className;
+      IsStatic = false;
+      Diagnostics = new List<Diagnostic>();
+   }
+
    public PartialClassGenerator(INamedTypeSymbol userDefinedPart)
    {
       UserDefinedPart = userDefinedPart ?? throw new ArgumentNullException(nameof(userDefinedPart));
@@ -75,7 +82,7 @@ internal sealed class PartialClassGenerator : ICodeBuilder
 
    private string Modifier { get; set; }
 
-   private INamespaceSymbol Namespace => UserDefinedPart.ContainingNamespace;
+   private INamespaceSymbol Namespace => UserDefinedPart?.ContainingNamespace;
 
    public INamedTypeSymbol UserDefinedPart { get; }
 
@@ -121,6 +128,9 @@ internal sealed class PartialClassGenerator : ICodeBuilder
 
    public bool ContainsMethod(string name, params INamedTypeSymbol[] parameterTypes)
    {
+      if (UserDefinedPart == null)
+         return false;
+
       return UserDefinedPart.GetMethods(name)
          .Any(candidate => ParametersMatch(candidate.Parameters, parameterTypes));
    }
@@ -129,6 +139,9 @@ internal sealed class PartialClassGenerator : ICodeBuilder
    {
       if (name == null)
          throw new ArgumentNullException(nameof(name));
+
+      if (UserDefinedPart == null)
+         return false;
 
       return UserDefinedPart.GetProperty(p => p.Name == name) != null;
    }
@@ -143,7 +156,7 @@ internal sealed class PartialClassGenerator : ICodeBuilder
 
       SourceBuilder.AppendLine("}");
 
-      if (!Namespace.IsGlobalNamespace)
+      if (Namespace is { IsGlobalNamespace: false })
          SourceBuilder.AppendLine("}");
 
       return SourceBuilder.ToString();
@@ -159,7 +172,7 @@ internal sealed class PartialClassGenerator : ICodeBuilder
    private StringBuilder InitializeSourceBuilder()
    {
       var builder = new StringBuilder();
-      if (!Namespace.IsGlobalNamespace)
+      if (Namespace is { IsGlobalNamespace: false })
       {
          builder.AppendLine($"namespace {Namespace.ToDisplayString()}");
          builder.AppendLine("{");

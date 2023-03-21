@@ -39,7 +39,9 @@ internal class PropertyMappingContext
          .OfType<IPropertySymbol>()
          .ToDictionary(p => p.Name, StringComparer.InvariantCultureIgnoreCase);
 
-      CustomMappings = context.MapperType.GetMethodsWithAttribute(context.PropertyMapperAttribute).ToArray();
+      CustomMappings = context.MapperType != null 
+         ? context.MapperType.GetMethodsWithAttribute(context.PropertyMapperAttribute).ToArray() 
+         : Array.Empty<(IMethodSymbol method, AttributeData attributeData)>();
    }
 
    private bool IsIgnored(string targetName)

@@ -11,6 +11,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
+using Microsoft.CodeAnalysis;
+
 internal abstract class MethodBuilderBase<T, TOwner> : IMemberBuilder
 {
    #region Constants and Fields
@@ -64,7 +66,7 @@ internal abstract class MethodBuilderBase<T, TOwner> : IMemberBuilder
 
    protected IList<Predicate<T>> Conditions { get; } = new List<Predicate<T>>();
 
-   protected Func<string> Modifier { get; set; }
+   protected Func<string> Modifier { get; set; } = () => string.Empty;
 
    protected Func<string> Name { get; set; }
 
@@ -126,6 +128,11 @@ internal abstract class MethodBuilderBase<T, TOwner> : IMemberBuilder
    {
       ReturnType = returnType ?? throw new ArgumentNullException(nameof(returnType));
       return (T)(object)this;
+   }
+
+   public T WithReturnType(ITypeSymbol returnType)
+   {
+      return WithReturnType(() => returnType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
    }
 
    public T WithSummary(string summary)

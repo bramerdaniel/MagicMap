@@ -103,9 +103,8 @@ namespace MagicMap
 
          var extensionsClassName = GetExtensionsClassName(classSymbol);
          var typeSymbol = Compilation.GetTypeByMetadataName(extensionsClassName);
-         typeMapperContext = new TypeMapperContext
+         typeMapperContext = new TypeMapperContext(classSymbol)
          {
-            MapperType = classSymbol,
             MapperExtensionsType = typeSymbol,
             SourceType = left,
             TargetType = right,

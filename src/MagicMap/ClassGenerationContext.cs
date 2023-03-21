@@ -48,7 +48,7 @@ internal class ClassGenerationContext
       GenerateLazyMembers();
       SourceBuilder.AppendLine("}");
 
-      if (!Namespace.IsGlobalNamespace)
+      if (Namespace is { IsGlobalNamespace: false })
          SourceBuilder.AppendLine("}");
 
       return sourceBuilder.ToString();
@@ -57,7 +57,7 @@ internal class ClassGenerationContext
    private StringBuilder InitializeSourceBuilder()
    {
       var builder = new StringBuilder();
-      if (!Namespace.IsGlobalNamespace)
+      if (Namespace is { IsGlobalNamespace: false })
       {
          builder.AppendLine($"namespace {Namespace.ToDisplayString()}");
          builder.AppendLine("{");
