@@ -6,7 +6,8 @@
 
 namespace MagicMap.Extensions
 {
-    using System.Linq;
+   using System;
+   using System.Linq;
     using Microsoft.CodeAnalysis;
 
     public static class AttributeDataExtensions
@@ -37,6 +38,18 @@ namespace MagicMap.Extensions
 
             typedConstant = default;
             return false;
+        }
+
+        public static T GetNamedArgument<T>(this AttributeData attribute, string argumentName, Func<T> defaultValue)
+        {
+            if (attribute is { NamedArguments.Length: > 0 })
+            {
+                var matchedArgument = attribute.NamedArguments.FirstOrDefault(x => x.Key == argumentName);
+                if (matchedArgument is { Key: { }, Value.Value: T typedValue })
+                   return typedValue;
+            }
+
+            return defaultValue();
         }
 
         internal static TypedConstant GetTargetType(this AttributeData attribute)

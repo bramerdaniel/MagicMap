@@ -22,6 +22,8 @@ interface ITypeMapperContext : IGeneratorContext
 
    string MapperName { get; }
 
+   bool ForceMappings { get; }
+
    INamedTypeSymbol MapperType { get; }
 
    IDictionary<string, MappingDescription> MappingSpecifications { get; }
