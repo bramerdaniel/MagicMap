@@ -49,14 +49,14 @@ internal class ClassAssertion : ReferenceTypeAssertions<INamedTypeSymbol, ClassA
    {
       IMethodSymbol methodSymbol;
       var methodSymbols = Subject.GetMembers(methodName).OfType<IMethodSymbol>().ToArray();
-      if (methodSymbols.Length == 1)
+      if (methodSymbols.Length == 1 && signature == null)
       {
          methodSymbol = methodSymbols[0];
       }
       else
       {
          methodSymbol = MatchMethodBySignature(methodSymbols, signature);
-         Assert.IsNotNull(methodSymbol, $"A method {methodName} with the specified signature could not be found.{GetGeneratedCode()}");
+         Assert.IsNotNull(methodSymbol, $"A method {methodName} with the specified signature ({signature}) could not be found.{GetGeneratedCode()}");
       }
 
       Assert.IsNotNull(methodSymbol, $"The method {methodName} could not be found.{GetGeneratedCode()}");

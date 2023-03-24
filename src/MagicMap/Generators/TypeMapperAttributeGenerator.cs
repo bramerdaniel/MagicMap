@@ -70,6 +70,9 @@ namespace MagicMap
       /// <summary>Gets or sets the <see cref=""GenerationMode""/>.</summary>
       public GeneratorMode Mode { get; set; } = GeneratorMode.TwoWay;
 
+      /// <summary>Gets or sets a flag, indicating if the source generator should generate partial methods
+      /// for properties he can not map, to enforce that they are handled by the user.</summary>
+      public bool ForceMappings { get; set; } = false;
    }
 
    /// <summary>Enum for configuring the source generator mode</summary>
@@ -131,6 +134,7 @@ namespace MagicMap
             SourceType = left,
             TargetType = right,
             Mode = ParseMode(typeMapperAttribute),
+            ForceMappings = typeMapperAttribute.GetNamedArgument("ForceMappings", () => false),
             PropertyMappingAttribute = propertyMappingAttribute.AttributeClass,
             PropertyMapperAttribute = propertyMapperAttribute.AttributeClass,
             MappingSpecifications = CreateMappingDescriptions(classSymbol)
