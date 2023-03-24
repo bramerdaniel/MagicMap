@@ -7,19 +7,26 @@
 namespace MagicMap.Generators;
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-
-using MagicMap.Generators.TypeMapper;
 
 using Microsoft.CodeAnalysis;
 
 internal class TypeFactoryInterfaceGenerator
 {
+   #region Constants and Fields
+
    private readonly INamedTypeSymbol interfaceSymbol;
 
-   private readonly PropertyMappingAttributeGenerator propertyMappingAttribute;
-   
+   #endregion
+
+   #region Constructors and Destructors
+
+   private TypeFactoryInterfaceGenerator(INamedTypeSymbol interfaceType)
+   {
+      interfaceSymbol = interfaceType ?? throw new ArgumentNullException(nameof(interfaceType));
+   }
+
+   #endregion
+
    #region Public Properties
 
    public static string Code { get; } = @"//------------------------------------------------
@@ -29,8 +36,9 @@ internal class TypeFactoryInterfaceGenerator
 //------------------------------------------------
 namespace MagicMap 
 {
+   /// <summary>Interface that can be implemented by a type mapper, to allow/customize the creation of mapping types.</summary>
    [global::System.Runtime.CompilerServices.CompilerGenerated]
-   internal interface ITypeFactory<TTarget, TSource>  where TTarget : class
+   internal interface ITypeFactory<TTarget, TSource>
    {
       /// <summary>Created an instance of the type TTarget, that is used for a mapping.</summary>
       TTarget Create(TSource source);
@@ -40,22 +48,22 @@ namespace MagicMap
 
    #endregion
 
-   internal static string TypeMapperAttributeName => "MagicMap.ITypeFactory`2";
+   #region Properties
+
+   internal static string Name => "MagicMap.ITypeFactory`2";
+
+   #endregion
+
+   #region Methods
 
    internal static TypeFactoryInterfaceGenerator FromCompilation(Compilation compilation)
    {
-      var attributeType = compilation.GetTypeByMetadataName(TypeMapperAttributeName);
+      var attributeType = compilation.GetTypeByMetadataName(Name);
       if (attributeType == null)
-         throw new InvalidOperationException($"The source generator should have generated the type {TypeMapperAttributeName} before");
+         throw new InvalidOperationException($"The source generator should have generated the type {Name} before");
 
-      return new TypeFactoryInterfaceGenerator(attributeType) { Compilation = compilation };
+      return new TypeFactoryInterfaceGenerator(attributeType);
    }
 
-   protected Compilation Compilation { get; private set; }
-
-   private TypeFactoryInterfaceGenerator(INamedTypeSymbol interfaceType)
-   {
-      this.interfaceSymbol = interfaceType ?? throw new ArgumentNullException(nameof(interfaceType));
-   }
-
+   #endregion
 }
