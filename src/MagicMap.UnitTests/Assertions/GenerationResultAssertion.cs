@@ -69,9 +69,18 @@ namespace MagicMap.UnitTests.Assertions
          return new AndConstraint<GenerationResultAssertion>(this);
       }
 
-      public AndConstraint<GenerationResultAssertion> HaveError(string diagnosticId)
+      public AndConstraint<GenerationResultAssertion> HaveError(params string[] diagnosticId)
       {
-         return HaveDiagnostic(diagnosticId, DiagnosticSeverity.Error);
+         var diagnostic = EnsureOnly(diagnosticId).ToArray();
+         if (diagnostic.Length > 0)
+         {
+            var remaining = string.Join(Environment.NewLine, diagnostic.Select(x => $"{x.Id} : {x.GetMessage()}"));
+            throw new AssertFailedException($"Found unexpected diagnostics {Environment.NewLine}{remaining}");
+         }
+
+         diagnostic.Should().BeEmpty();
+
+         return new AndConstraint<GenerationResultAssertion>(this);
       }
 
       public ClassAssertion HaveInterface(string interfaceName)
@@ -193,6 +202,26 @@ namespace MagicMap.UnitTests.Assertions
          }
 
          return diagnostic;
+      }
+
+      private IEnumerable<Diagnostic> EnsureOnly(params string[] diagnosticIds)
+      {
+         var diagnostics = Subject.OutputCompilation.GetDiagnostics()
+            .Concat(Subject.GeneratedDiagnostics)
+            .GroupBy(x => x.Id)
+            .ToDictionary(x => x.Key, x => x.ToList());
+
+         foreach (var expectedId in diagnosticIds)
+         {
+            if (!diagnostics.ContainsKey(expectedId))
+               throw new AssertFailedException($"The expected diagnostic id {expectedId} was not found.");
+
+            diagnostics.Remove(expectedId);
+         }
+
+         foreach (var group in diagnostics.Values)
+            foreach (var diagnostic in group)
+               yield return diagnostic;
       }
 
       #endregion
