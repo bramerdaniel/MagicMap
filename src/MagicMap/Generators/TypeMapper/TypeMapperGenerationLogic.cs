@@ -17,12 +17,11 @@ using Microsoft.CodeAnalysis;
 
 internal class TypeMapperGenerationLogic
 {
-   public ITypeMapperContext Context { get; }
+   private ITypeMapperContext Context { get; }
 
    public TypeMapperGenerationLogic(ITypeMapperContext context)
    {
       Context = context ?? throw new ArgumentNullException(nameof(context));
-
    }
 
    #region Public Methods and Operators
@@ -101,12 +100,19 @@ internal class TypeMapperGenerationLogic
       return "public";
    }
 
-   private static string CreatePartialMethod(IPropertySymbol sourceProperty, IPropertySymbol targetProperty)
+   private string CreatePartialMethod(IPropertySymbol sourceProperty, IPropertySymbol targetProperty)
    {
       var builder = new StringBuilder();
-      builder.AppendLine($"/// <summary>Can be implemented to support the mapping of the {targetProperty.Name} property</summary>");
-      builder.AppendLine(
-         $"partial void Map{targetProperty.Name}({targetProperty.ContainingType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} target, {sourceProperty.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} value);");
+      if (Context.ForceMappings)
+      {
+         builder.AppendLine($"/// <summary>Can must be implemented to support the mapping of the {targetProperty.Name} property</summary>");
+         builder.AppendLine($"private partial {targetProperty.ContainingType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} Map{targetProperty.Name}({sourceProperty.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} value);/*NEWLINE*/");
+      }
+      else
+      {
+         builder.AppendLine($"/// <summary>Can be implemented to support the mapping of the {targetProperty.Name} property</summary>");
+         builder.AppendLine($"partial void Map{targetProperty.Name}({targetProperty.ContainingType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} target, {sourceProperty.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} value);/*NEWLINE*/");
+      }
       return builder.ToString();
    }
 
@@ -124,6 +130,12 @@ internal class TypeMapperGenerationLogic
 
       if (TryCreateEnumMapping(propertyContext, sourceProperty, targetProperty, out var enumMapping))
          return enumMapping;
+
+      if (Context.ForceMappings)
+      {
+         propertyContext.AddMemberDeclaration(() => CreatePartialMethod(sourceProperty, targetProperty));
+         return $"target.{targetProperty.Name} = Map{targetProperty.Name}(source.{sourceProperty.Name});";
+      }
 
       propertyContext.AddMemberDeclaration(() => CreatePartialMethod(sourceProperty, targetProperty));
       return $"Map{targetProperty.Name}(target, source.{sourceProperty.Name});";
@@ -169,20 +181,26 @@ internal class TypeMapperGenerationLogic
          }
          else
          {
-            if (!MappingPossible(targetProperty))
-               continue;
-
-            var sourcePropertyName = GetSourcePropertyName(propertyContext.PropertyMappings, targetProperty.Name);
-            if (TryFindSourceProperty(propertyContext.SourceProperties, sourcePropertyName, out var sourceProperty))
-            {
-               var mapping = CreatePropertyMapping(mapperClassGenerator, propertyContext, sourceProperty, targetProperty);
-               bodyCode.AppendLine(mapping);
-            }
+            MapProperty(mapperClassGenerator, propertyContext, targetProperty, bodyCode);
          }
       }
 
       bodyCode.AppendLine("MapOverride(source, target);");
       return bodyCode.ToString();
+   }
+
+   private void MapProperty(IClassBuilder mapperClassGenerator, PropertyMappingContext propertyContext,
+      IPropertySymbol targetProperty, StringBuilder bodyCode)
+   {
+      if (!MappingPossible(targetProperty))
+         return;
+
+      var sourcePropertyName = GetSourcePropertyName(propertyContext.PropertyMappings, targetProperty.Name);
+      if (TryFindSourceProperty(propertyContext.SourceProperties, sourcePropertyName, out var sourceProperty))
+      {
+         var mapping = CreatePropertyMapping(mapperClassGenerator, propertyContext, sourceProperty, targetProperty);
+         bodyCode.AppendLine(mapping);
+      }
    }
 
    private static string GenerateMapFromBody(INamedTypeSymbol sourceType, INamedTypeSymbol targetType)

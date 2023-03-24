@@ -1,15 +1,12 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="GenerationResultAssertion.cs" company="consolovers">
-//   Copyright (c) daniel bramer 2022 - 2022
+//   Copyright (c) daniel bramer 2022 - 2023
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
 namespace MagicMap.UnitTests.Assertions
 {
-   using System;
-   using System.Collections.Generic;
    using System.Collections.Immutable;
-   using System.Linq;
    using System.Text;
 
    using FluentAssertions;
@@ -18,7 +15,6 @@ namespace MagicMap.UnitTests.Assertions
    using MagicMap.UnitTests.Setups;
 
    using Microsoft.CodeAnalysis;
-   using Microsoft.VisualStudio.TestTools.UnitTesting;
 
    internal class GenerationResultAssertion : ReferenceTypeAssertions<GenerationResult, GenerationResultAssertion>
    {
@@ -47,6 +43,37 @@ namespace MagicMap.UnitTests.Assertions
          return new ClassAssertion(Subject, classType);
       }
 
+      public AndConstraint<GenerationResultAssertion> HaveDiagnostic(string diagnosticId, DiagnosticSeverity severity)
+      {
+         var diagnostic = FindDiagnostic(diagnosticId);
+
+         Assert.IsNotNull(diagnostic, $"Diagnostic {diagnostic} could not be found.{CreateAllFound(Subject.GeneratedDiagnostics)}");
+
+         if (diagnostic.Severity != severity)
+            Assert.Fail($"Diagnostic {diagnostic} did not have the expected severity {severity}.");
+
+         return new AndConstraint<GenerationResultAssertion>(this);
+      }
+
+      public AndConstraint<GenerationResultAssertion> HaveDiagnostic(string diagnosticId)
+      {
+         var diagnostic = Subject.GeneratedDiagnostics.FirstOrDefault(d => d.Id == diagnosticId);
+         if (diagnostic == null)
+         {
+            diagnostic = Subject.OutputCompilation.GetDiagnostics()
+               .FirstOrDefault(d => d.Id == diagnosticId);
+         }
+
+         Assert.IsNotNull(diagnostic, $"Diagnostic {diagnostic} could not be found.{CreateAllFound(Subject.GeneratedDiagnostics)}");
+
+         return new AndConstraint<GenerationResultAssertion>(this);
+      }
+
+      public AndConstraint<GenerationResultAssertion> HaveError(string diagnosticId)
+      {
+         return HaveDiagnostic(diagnosticId, DiagnosticSeverity.Error);
+      }
+
       public ClassAssertion HaveInterface(string interfaceName)
       {
          var classType = Subject.OutputCompilation.GetTypeByMetadataName(interfaceName);
@@ -59,22 +86,10 @@ namespace MagicMap.UnitTests.Assertions
       {
          var classType = Subject.OutputCompilation.GetTypeByMetadataName(className);
          if (classType != null)
-            throw new AssertFailedException($"The class {className} was found but it should not exist. {Environment.NewLine}{Subject.OutputSyntaxTrees.Last()}");
+            throw new AssertFailedException(
+               $"The class {className} was found but it should not exist. {Environment.NewLine}{Subject.OutputSyntaxTrees.Last()}");
 
          return new AndConstraint<GenerationResultAssertion>(this);
-      }
-
-      public AndConstraint<GenerationResultAssertion> HaveDiagnostic(string diagnosticId)
-      {
-         var diagnostic = Subject.GeneratedDiagnostics.FirstOrDefault(d => d.Id == diagnosticId);
-         Assert.IsNotNull(diagnostic, $"Diagnostic {diagnostic} could not be found.{CreateAllFound(Subject.GeneratedDiagnostics)}");
-
-         return new AndConstraint<GenerationResultAssertion>(this);
-      }
-
-      private static string CreateAllFound(ImmutableArray<Diagnostic> generatedDiagnostics)
-      {
-         return $"{Environment.NewLine}{string.Join(Environment.NewLine, generatedDiagnostics)}";
       }
 
       public AndConstraint<GenerationResultAssertion> NotHaveErrors()
@@ -97,6 +112,11 @@ namespace MagicMap.UnitTests.Assertions
 
       #region Methods
 
+      private static string CreateAllFound(ImmutableArray<Diagnostic> generatedDiagnostics)
+      {
+         return $"{Environment.NewLine}{string.Join(Environment.NewLine, generatedDiagnostics)}";
+      }
+
       private static string CreateMessage(Diagnostic errorDiagnostic)
       {
          var builder = new StringBuilder();
@@ -104,7 +124,7 @@ namespace MagicMap.UnitTests.Assertions
          builder.AppendLine($"{errorDiagnostic.Id}: {errorDiagnostic.GetMessage()}");
          builder.AppendLine($"ERROR AT : {GetError(errorDiagnostic)}");
          builder.AppendLine("SOURCE");
-         
+
          var codeWithMarkedLine = CreateSource(errorDiagnostic);
          builder.AppendLine(codeWithMarkedLine);
 
@@ -140,14 +160,13 @@ namespace MagicMap.UnitTests.Assertions
          var sourceTree = diagnostic.Location.SourceTree?.ToString();
          if (sourceTree == null)
             return string.Empty;
-         
+
          var span = diagnostic.Location.SourceSpan;
          var builder = new StringBuilder();
          var expansion = 5;
          builder.AppendLine($"{sourceTree.Substring(span.Start - expansion, span.Length + expansion * 2)}");
          builder.Append($"           {string.Empty.PadRight(expansion)}{"".PadRight(span.Length, '^')}");
          return builder.ToString();
-
       }
 
       private static void ThrowOnErrors(IEnumerable<Diagnostic> diagnostics)
@@ -162,6 +181,18 @@ namespace MagicMap.UnitTests.Assertions
          var errorDiagnostic = diagnostics.FirstOrDefault(x => x.Severity >= DiagnosticSeverity.Warning);
          if (errorDiagnostic != null)
             throw new AssertFailedException(CreateMessage(errorDiagnostic));
+      }
+
+      private Diagnostic FindDiagnostic(string diagnosticId)
+      {
+         var diagnostic = Subject.GeneratedDiagnostics.FirstOrDefault(d => d.Id == diagnosticId);
+         if (diagnostic == null)
+         {
+            diagnostic = Subject.OutputCompilation.GetDiagnostics()
+               .FirstOrDefault(d => d.Id == diagnosticId);
+         }
+
+         return diagnostic;
       }
 
       #endregion

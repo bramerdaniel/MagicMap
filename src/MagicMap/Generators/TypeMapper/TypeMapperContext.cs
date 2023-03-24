@@ -61,6 +61,8 @@ internal class TypeMapperContext : ITypeMapperContext
 
    public GeneratorMode Mode { get; set; }
 
+   public bool ForceMappings { get; set; }
+
    public bool IsEnabled()
    {
       return MapperType != null;
