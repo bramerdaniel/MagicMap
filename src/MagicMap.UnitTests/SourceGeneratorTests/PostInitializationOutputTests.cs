@@ -30,6 +30,10 @@ public class PostInitializationOutputTests
          .HaveClass("MagicMap.TypeMapperAttribute")
          .WithInternalModifier();
 
+      result.Should().NotHaveErrors().And
+         .HaveClass("MagicMap.GeneratorMode")
+         .WithInternalModifier();
+
       result.Print(0 , 1);
    }
 

@@ -17,6 +17,7 @@ internal class PropertyMappingContext
    public INamedTypeSymbol SourceType { get; }
 
    public INamedTypeSymbol TargetType { get; }
+   public INamedTypeSymbol MapperType { get; }
 
    public IDictionary<string, MappingDescription> PropertyMappings { get; }
 
@@ -27,6 +28,7 @@ internal class PropertyMappingContext
    {
       SourceType = sourceType;
       TargetType = targetType;
+      MapperType = context.MapperType;
       PropertyMappings = propertyMappings;
       MemberDeclarations = new List<Func<string>>();
 
@@ -39,7 +41,9 @@ internal class PropertyMappingContext
          .OfType<IPropertySymbol>()
          .ToDictionary(p => p.Name, StringComparer.InvariantCultureIgnoreCase);
 
-      CustomMappings = context.MapperType.GetMethodsWithAttribute(context.PropertyMapperAttribute).ToArray();
+      CustomMappings = context.MapperType != null 
+         ? context.MapperType.GetMethodsWithAttribute(context.PropertyMapperAttribute).ToArray() 
+         : Array.Empty<(IMethodSymbol method, AttributeData attributeData)>();
    }
 
    private bool IsIgnored(string targetName)
