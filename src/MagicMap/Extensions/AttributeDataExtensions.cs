@@ -23,7 +23,7 @@ namespace MagicMap.Extensions
             return false;
         }
 
-        private static bool TryGetNamedArgument(this AttributeData attribute, string argumentName, out TypedConstant typedConstant)
+        public static bool TryGetNamedArgument(this AttributeData attribute, string argumentName, out TypedConstant typedConstant)
         {
             if (attribute != null && attribute.NamedArguments.Length > 0)
             {

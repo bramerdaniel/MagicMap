@@ -99,10 +99,15 @@ internal class TypeMapperGenerator : IGenerator
    {
       var mapperExtensions = CreateGenerationContext(mapperContext);
       GenerateMapperProperty(mapperExtensions);
-      GenerateExtensionMethod(mapperExtensions, mapperContext.TargetType, mapperContext.SourceType);
 
-      if (!mapperContext.SourceEqualsTargetType)
+      if (context.Mode is GeneratorMode.TwoWay or GeneratorMode.LeftToRight)
          GenerateExtensionMethod(mapperExtensions, mapperContext.SourceType, mapperContext.TargetType);
+
+      if (context.Mode is GeneratorMode.TwoWay or GeneratorMode.RightToLeft)
+      {
+         if (!mapperContext.SourceEqualsTargetType)
+            GenerateExtensionMethod(mapperExtensions, mapperContext.TargetType, mapperContext.SourceType);
+      }
 
       return mapperExtensions;
    }

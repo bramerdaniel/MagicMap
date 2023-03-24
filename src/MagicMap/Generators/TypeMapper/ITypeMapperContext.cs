@@ -14,27 +14,29 @@ interface ITypeMapperContext : IGeneratorContext
 {
    #region Public Properties
 
-   INamedTypeSymbol MapperExtensionsType { get; }
+   string FullSourceName { get; }
 
-   INamedTypeSymbol MapperType { get; }
+   string FullTargetName { get; }
+
+   INamedTypeSymbol MapperExtensionsType { get; }
 
    string MapperName { get; }
 
+   INamedTypeSymbol MapperType { get; }
+
    IDictionary<string, MappingDescription> MappingSpecifications { get; }
+
+   GeneratorMode Mode { get; set; }
+
+   INamedTypeSymbol PropertyMapperAttribute { get; }
+
+   INamedTypeSymbol PropertyMappingAttribute { get; }
 
    bool SourceEqualsTargetType { get; }
 
    INamedTypeSymbol SourceType { get; }
-   
-   string FullSourceName{ get; }
-
-   string FullTargetName{ get; }
 
    INamedTypeSymbol TargetType { get; }
-
-   INamedTypeSymbol PropertyMappingAttribute { get; }
-
-   INamedTypeSymbol PropertyMapperAttribute { get; }
 
    #endregion
 }
@@ -47,7 +49,6 @@ internal static class TypeMapperContextExtensions
    {
       return context.MapperType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
    }
-
 
    #endregion
 }

@@ -59,6 +59,8 @@ internal class TypeMapperContext : ITypeMapperContext
 
    public INamedTypeSymbol PropertyMapperAttribute { get; set; }
 
+   public GeneratorMode Mode { get; set; }
+
    public bool IsEnabled()
    {
       return MapperType != null;

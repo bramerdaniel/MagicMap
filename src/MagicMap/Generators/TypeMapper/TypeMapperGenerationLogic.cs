@@ -30,6 +30,40 @@ internal class TypeMapperGenerationLogic
    public void Generate(IClassBuilder mapperGenerator)
    {
       GeneratedSingletonInstance(mapperGenerator, Context);
+      GenerateLeftToRight(mapperGenerator);
+      GenerateRightToLeft(mapperGenerator);
+      GenerateOverrides(mapperGenerator, Context);
+   }
+
+   private void GenerateRightToLeft(IClassBuilder mapperGenerator)
+   {
+      if (Context.Mode == GeneratorMode.LeftToRight)
+         return;
+
+      if (Context.SourceEqualsTargetType || mapperGenerator.ContainsMethod("Map", Context.TargetType, Context.SourceType))
+         return;
+
+      var rightToLeft = new PropertyMappingContext(Context, Context.TargetType, Context.SourceType, Context.MappingSpecifications);
+      mapperGenerator.AddMethod("Map", (Context.TargetType, "source"), (Context.SourceType, "target"))
+         .WithModifier("public")
+         .WithSummary(x => x.AppendLine("Maps all properties of the <see cref=\"source\"/> to the properties of the <see cref=\"target\"/>"))
+         .WithBody(_ => GenerateMapBody(mapperGenerator, rightToLeft))
+         .Build();
+
+      foreach (var declaration in rightToLeft.MemberDeclarations)
+         mapperGenerator.AppendLine(declaration());
+
+      mapperGenerator.AddMethod("MapFrom", (Context.TargetType, "source"))
+         .WithReturnType(Context.SourceType)
+         .WithModifier(ComputeModifier(Context))
+         .WithBody(() => GenerateMapFromBody(Context.TargetType, Context.SourceType))
+         .Build();
+   }
+
+   private void GenerateLeftToRight(IClassBuilder mapperGenerator)
+   {
+      if (Context.Mode == GeneratorMode.RightToLeft)
+         return;
 
       var leftToRight = new PropertyMappingContext(Context, Context.SourceType, Context.TargetType, InvertMappings(Context.MappingSpecifications));
       mapperGenerator.AddMethod("Map", (Context.SourceType, "source"), (Context.TargetType, "target"))
@@ -46,29 +80,7 @@ internal class TypeMapperGenerationLogic
          .WithModifier(ComputeModifier(Context))
          .WithBody(() => GenerateMapFromBody(Context.SourceType, Context.TargetType))
          .Build();
-
-      if (!Context.SourceEqualsTargetType && !mapperGenerator.ContainsMethod("Map", Context.TargetType, Context.SourceType))
-      {
-         var rightToLeft = new PropertyMappingContext(Context, Context.TargetType, Context.SourceType, Context.MappingSpecifications);
-         mapperGenerator.AddMethod("Map", (Context.TargetType, "source"), (Context.SourceType, "target"))
-            .WithModifier("public")
-            .WithSummary(x => x.AppendLine("Maps all properties of the <see cref=\"source\"/> to the properties of the <see cref=\"target\"/>"))
-            .WithBody(_ => GenerateMapBody(mapperGenerator, rightToLeft))
-            .Build();
-
-         foreach (var declaration in rightToLeft.MemberDeclarations)
-            mapperGenerator.AppendLine(declaration());
-
-         mapperGenerator.AddMethod("MapFrom", (Context.TargetType, "source"))
-            .WithReturnType(Context.SourceType)
-            .WithModifier(ComputeModifier(Context))
-            .WithBody(() => GenerateMapFromBody(Context.TargetType, Context.SourceType))
-            .Build();
-      }
-
-      GenerateOverrides(mapperGenerator, Context);
    }
-
 
    #endregion
 
@@ -197,14 +209,20 @@ internal class TypeMapperGenerationLogic
       return builder.ToString();
    }
 
-   private static void GenerateOverrides(IClassBuilder mapperGenerator, ITypeMapperContext context)
+   private void GenerateOverrides(IClassBuilder mapperGenerator, ITypeMapperContext context)
    {
-      mapperGenerator.AddPartialMethod("MapOverride", (context.SourceType, "source"), (context.TargetType, "target"))
-         .WithSummary("Implement this method, to map the properties the mapper could not handle for any reason.");
+      if (context.Mode is GeneratorMode.TwoWay or GeneratorMode.LeftToRight)
+      {
+         mapperGenerator.AddPartialMethod("MapOverride", (context.SourceType, "source"), (context.TargetType, "target"))
+            .WithSummary("Implement this method, to map the properties the mapper could not handle for any reason.");
+      }
 
-      mapperGenerator.AddPartialMethod("MapOverride", (context.TargetType, "source"), (context.SourceType, "target"))
-         .WithCondition(_ => !context.SourceEqualsTargetType)
-         .WithSummary("Implement this method, to map the properties the mapper could not handle for any reason.");
+      if (context.Mode is GeneratorMode.TwoWay or GeneratorMode.RightToLeft)
+      {
+         mapperGenerator.AddPartialMethod("MapOverride", (context.TargetType, "source"), (context.SourceType, "target"))
+            .WithCondition(_ => !context.SourceEqualsTargetType)
+            .WithSummary("Implement this method, to map the properties the mapper could not handle for any reason.");
+      }
    }
 
    private static string GetSourcePropertyName(IDictionary<string, MappingDescription> nameMappings, string targetName)
@@ -237,6 +255,11 @@ internal class TypeMapperGenerationLogic
          return false;
 
       if (target.DeclaredAccessibility == Accessibility.Private)
+         return false;
+
+      // TODO this is at the moment the solution for properties of type List<T>
+      // because this leads to a stack overflow...did not check why til now
+      if (target.Type is INamedTypeSymbol { IsGenericType: true })
          return false;
 
       return true;

@@ -1,5 +1,5 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="TypeMapperAttributeCode.cs" company="consolovers">
+// <copyright file="TypeMapperAttributeGenerator.cs" company="consolovers">
 //   Copyright (c) daniel bramer 2022 - 2023
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
@@ -9,18 +9,38 @@ namespace MagicMap.Generators
    using System;
    using System.Collections.Generic;
    using System.Linq;
+
+   using MagicMap.Extensions;
    using MagicMap.Generators.TypeMapper;
+
    using Microsoft.CodeAnalysis;
 
    internal class TypeMapperAttributeGenerator
    {
-      private readonly INamedTypeSymbol attributeSymbol;
+      #region Constants and Fields
 
-      private readonly PropertyMappingAttributeGenerator propertyMappingAttribute;
+      private readonly INamedTypeSymbol attributeSymbol;
 
       private readonly PropertyMapperAttributeGenerator propertyMapperAttribute;
 
+      private readonly PropertyMappingAttributeGenerator propertyMappingAttribute;
+
       private readonly TypeFactoryInterfaceGenerator typeFactory;
+
+      #endregion
+
+      #region Constructors and Destructors
+
+      private TypeMapperAttributeGenerator(INamedTypeSymbol attributeSymbol, PropertyMappingAttributeGenerator propertyMappingAttribute,
+         PropertyMapperAttributeGenerator propertyMapperAttribute, TypeFactoryInterfaceGenerator typeFactory)
+      {
+         this.attributeSymbol = attributeSymbol ?? throw new ArgumentNullException(nameof(attributeSymbol));
+         this.propertyMappingAttribute = propertyMappingAttribute ?? throw new ArgumentNullException(nameof(propertyMappingAttribute));
+         this.propertyMapperAttribute = propertyMapperAttribute ?? throw new ArgumentNullException(nameof(propertyMapperAttribute));
+         this.typeFactory = typeFactory ?? throw new ArgumentNullException(nameof(typeFactory));
+      }
+
+      #endregion
 
       #region Public Properties
 
@@ -46,36 +66,38 @@ namespace MagicMap
 
       /// <summary>Gets the right type.</summary>
       public global::System.Type Right { get; }
+
+      /// <summary>Gets or sets the <see cref=""GenerationMode""/>.</summary>
+      public GeneratorMode Mode { get; set; } = GeneratorMode.TwoWay;
+
+   }
+
+   /// <summary>Enum for configuring the source generator mode</summary>
+   internal enum GeneratorMode
+   {
+      /// <summary>Mappers are generated for both ways, from left to right and back</summary>
+      TwoWay,
+
+      /// <summary>Only a mapper from left to right typ is generated</summary>
+      LeftToRight,
+
+      /// <summary>Only a mapper from right to left typ is generated</summary>
+      RightToLeft
    }
 }
 ";
 
       #endregion
 
+      #region Properties
+
       internal static string TypeMapperAttributeName => "MagicMap.TypeMapperAttribute";
-
-      internal static TypeMapperAttributeGenerator FromCompilation(Compilation compilation)
-      {
-         var attributeType = compilation.GetTypeByMetadataName(TypeMapperAttributeName);
-         if (attributeType == null)
-            throw new InvalidOperationException($"The source generator should have generated the type {TypeMapperAttributeName} before");
-
-         var mappingAttribute = PropertyMappingAttributeGenerator.FromCompilation(compilation);
-         var mapperAttribute = PropertyMapperAttributeGenerator.FromCompilation(compilation);
-         var typeFactory = TypeFactoryInterfaceGenerator.FromCompilation(compilation);
-         return new TypeMapperAttributeGenerator(attributeType, mappingAttribute, mapperAttribute, typeFactory) { Compilation = compilation };
-      }
 
       protected Compilation Compilation { get; private set; }
 
-      private TypeMapperAttributeGenerator(INamedTypeSymbol attributeSymbol, PropertyMappingAttributeGenerator propertyMappingAttribute,
-         PropertyMapperAttributeGenerator propertyMapperAttribute, TypeFactoryInterfaceGenerator typeFactory)
-      {
-         this.attributeSymbol = attributeSymbol ?? throw new ArgumentNullException(nameof(attributeSymbol));
-         this.propertyMappingAttribute = propertyMappingAttribute ?? throw new ArgumentNullException(nameof(propertyMappingAttribute));
-         this.propertyMapperAttribute = propertyMapperAttribute ?? throw new ArgumentNullException(nameof(propertyMapperAttribute));
-         this.typeFactory = typeFactory ?? throw new ArgumentNullException(nameof(typeFactory));
-      }
+      #endregion
+
+      #region Public Methods and Operators
 
       public bool TryExtractData(INamedTypeSymbol classSymbol, out ITypeMapperContext typeMapperContext)
       {
@@ -108,11 +130,28 @@ namespace MagicMap
             MapperExtensionsType = typeSymbol,
             SourceType = left,
             TargetType = right,
+            Mode = ParseMode(typeMapperAttribute),
             PropertyMappingAttribute = propertyMappingAttribute.AttributeClass,
             PropertyMapperAttribute = propertyMapperAttribute.AttributeClass,
             MappingSpecifications = CreateMappingDescriptions(classSymbol)
          };
          return true;
+      }
+
+      #endregion
+
+      #region Methods
+
+      internal static TypeMapperAttributeGenerator FromCompilation(Compilation compilation)
+      {
+         var attributeType = compilation.GetTypeByMetadataName(TypeMapperAttributeName);
+         if (attributeType == null)
+            throw new InvalidOperationException($"The source generator should have generated the type {TypeMapperAttributeName} before");
+
+         var mappingAttribute = PropertyMappingAttributeGenerator.FromCompilation(compilation);
+         var mapperAttribute = PropertyMapperAttributeGenerator.FromCompilation(compilation);
+         var typeFactory = TypeFactoryInterfaceGenerator.FromCompilation(compilation);
+         return new TypeMapperAttributeGenerator(attributeType, mappingAttribute, mapperAttribute, typeFactory) { Compilation = compilation };
       }
 
       private static string GetExtensionsClassName(INamedTypeSymbol classSymbol)
@@ -141,12 +180,19 @@ namespace MagicMap
 
          return mappings;
       }
-   }
 
-   internal struct MappingDescription
-   {
-      public string Name { get; set; }
+      private GeneratorMode ParseMode(AttributeData attributeData)
+      {
+         if (attributeData.TryGetNamedArgument("Mode", out var typeConstant))
+         {
+            var value = typeConstant.Value?.ToString();
+            if (value != null)
+               return (GeneratorMode)Enum.Parse(typeof(GeneratorMode), value);
+         }
 
-      public bool Ignored { get; set; }
+         return GeneratorMode.TwoWay;
+      }
+
+      #endregion
    }
 }
