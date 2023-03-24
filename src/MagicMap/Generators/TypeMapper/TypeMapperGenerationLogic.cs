@@ -100,6 +100,14 @@ internal class TypeMapperGenerationLogic
       return "public";
    }
 
+   private string CreatePartialMethod(IPropertySymbol targetProperty, INamedTypeSymbol sourceType)
+   {
+      var builder = new StringBuilder();
+      builder.AppendLine($"/// <summary>Must be implemented (because ForceMappings was set to true) to support the mapping of the {targetProperty.Name} property</summary>");
+      builder.AppendLine($"private partial {targetProperty.ContainingType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} Map{targetProperty.Name}({sourceType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} value);/*NEWLINE*/");
+      return builder.ToString();
+   }
+
    private string CreatePartialMethod(IPropertySymbol sourceProperty, IPropertySymbol targetProperty)
    {
       var builder = new StringBuilder();
@@ -200,6 +208,15 @@ internal class TypeMapperGenerationLogic
       {
          var mapping = CreatePropertyMapping(mapperClassGenerator, propertyContext, sourceProperty, targetProperty);
          bodyCode.AppendLine(mapping);
+      }
+      else if(Context.ForceMappings)
+      {
+         propertyContext.AddMemberDeclaration(() => CreatePartialMethod(targetProperty, propertyContext.SourceType));
+         bodyCode.AppendLine($"target.{targetProperty.Name} = Map{targetProperty.Name}(source);");
+      }
+      else
+      {
+         // We ignore the property because we could not find a source
       }
    }
 
