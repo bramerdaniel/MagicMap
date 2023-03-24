@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="FluentSetupDiagnostics.cs" company="consolovers">
-//   Copyright (c) daniel bramer 2022 - 2022
+// <copyright file="MagicMapDiagnostics.cs" company="consolovers">
+//   Copyright (c) daniel bramer 2022 - 2023
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
@@ -15,24 +15,32 @@ namespace MagicMap
    {
       #region Constants and Fields
 
-      internal static readonly DiagnosticDescriptor NotSupported = new DiagnosticDescriptor(id: "MMW0001",
+      internal static readonly DiagnosticDescriptor NotSupported = new DiagnosticDescriptor(id: "MMW0002",
          title: "MagicMap source generator",
          messageFormat: "This is not supported yet",
          category: "MagicMap",
          defaultSeverity: DiagnosticSeverity.Warning,
          isEnabledByDefault: true);
 
-      internal static readonly DiagnosticDescriptor MultiplePartialParts = new DiagnosticDescriptor(id: "FSI0001",
-         title: "FluentSetups source generator",
-         messageFormat: "Fluent setup generation for class '{0}' is skipped du tue multiple partial members",
-         category: "FluentSetups",
-         defaultSeverity: DiagnosticSeverity.Info,
+      internal static readonly DiagnosticDescriptor NestedMapperNotSupported = new DiagnosticDescriptor(id: "MMW0001",
+         title: "Nested mapper classes are not supported",
+         messageFormat: "Mapper generation for nested classes is not supported",
+         category: "MagicMap",
+         defaultSeverity: DiagnosticSeverity.Warning,
          isEnabledByDefault: true);
 
-      internal static readonly DiagnosticDescriptor NotSupportedNestedSetup = new DiagnosticDescriptor(id: "FSW0001",
-         title: "FluentSetups source generator",
-         messageFormat: "Fluent setup generation for nested classes is not supported",
-         category: "FluentSetups",
+
+      internal static readonly DiagnosticDescriptor NothingToMap = new DiagnosticDescriptor(id: "MMW0003",
+         title: "Nothing to generate",
+         messageFormat: "The generated mapper would not map any properties",
+         category: "MagicMap",
+         defaultSeverity: DiagnosticSeverity.Warning,
+         isEnabledByDefault: true);
+
+      internal static readonly DiagnosticDescriptor DefaultMapperNotStatic = new DiagnosticDescriptor(id: "MMW0004",
+         title: "Default mapper must be static",
+         messageFormat: "The default mapper should be static and accessible from the generated extension methods.",
+         category: "MagicMap",
          defaultSeverity: DiagnosticSeverity.Warning,
          isEnabledByDefault: true);
 

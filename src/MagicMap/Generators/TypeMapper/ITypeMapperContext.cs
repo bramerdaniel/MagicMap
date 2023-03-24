@@ -13,22 +13,30 @@ using Microsoft.CodeAnalysis;
 interface ITypeMapperContext : IGeneratorContext
 {
    #region Public Properties
-   
+
+   string FullSourceName { get; }
+
+   string FullTargetName { get; }
+
    INamedTypeSymbol MapperExtensionsType { get; }
+
+   string MapperName { get; }
 
    INamedTypeSymbol MapperType { get; }
 
    IDictionary<string, MappingDescription> MappingSpecifications { get; }
+
+   GeneratorMode Mode { get; set; }
+
+   INamedTypeSymbol PropertyMapperAttribute { get; }
+
+   INamedTypeSymbol PropertyMappingAttribute { get; }
 
    bool SourceEqualsTargetType { get; }
 
    INamedTypeSymbol SourceType { get; }
 
    INamedTypeSymbol TargetType { get; }
-
-   INamedTypeSymbol PropertyMappingAttribute { get; }
-
-   INamedTypeSymbol PropertyMapperAttribute { get; }
 
    #endregion
 }
@@ -40,11 +48,6 @@ internal static class TypeMapperContextExtensions
    public static string FullMapperName(this ITypeMapperContext context)
    {
       return context.MapperType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-   }
-
-   public static string MapperName(this ITypeMapperContext context)
-   {
-      return context.MapperType.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
    }
 
    #endregion

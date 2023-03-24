@@ -53,8 +53,8 @@ jobs:
     - name: setup VSTest.console.exe
       uses: darenm/Setup-VSTest@v1.2
 
-    - name: run net48 unit tests
-      run: vstest.console.exe ${{ env.SOLUTION_DIRECTORY }}\Release\net48\MagicMap.UnitTests.dll
+#    - name: run net48 unit tests
+#      run: vstest.console.exe ${{ env.SOLUTION_DIRECTORY }}\Release\net48\MagicMap.UnitTests.dll
     
     - name: run net6.0 unit tests
       run: vstest.console.exe ${{ env.SOLUTION_DIRECTORY }}\Release\net6.0\MagicMap.UnitTests.dll

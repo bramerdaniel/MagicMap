@@ -14,27 +14,29 @@ using MagicMap.Analyzers;
 using Microsoft.CodeAnalysis;
 
 [TestClass]
-[Ignore]
 [SuppressMessage("Blocker Code Smell", "S2699:Tests should include assertions")]
-public class NestedSetupClassAnalyzerTests : FluentSetupAnalyzerTest<NestedSetupClassAnalyzer>
+public class NestedMapperClassAnalyzerTests : MagicMapAnalyzerTest<NestedMapperClassAnalyzer>
 {
    #region Public Methods and Operators
 
    [TestMethod]
    public async Task EnsureCorrectResultForStaticMapperClass()
    {
-      string code = @"using FluentSetups;
+      string code = @"using MagicMap;
+
+                      class A { }
+                      class B { }
 
                       public class OuterType
                       {
-                         [{|#0:FluentSetup|}]
+                         [{|#0:TypeMapper(typeof(A), typeof(B))|}]
                          public partial class PersonSetup
                          {
                          }
                       }
                    ";
 
-      var descriptor = MagicMapDiagnostics.NotSupportedNestedSetup;
+      var descriptor = MagicMapDiagnostics.NestedMapperNotSupported;
       ExpectDiagnostic(descriptor, d => d.WithLocation(0).WithSeverity(DiagnosticSeverity.Warning));
       await RunAsync(code);
    }
@@ -48,7 +50,7 @@ public class NestedSetupClassAnalyzerTests : FluentSetupAnalyzerTest<NestedSetup
    [TestMethod]
    public async Task EnsureNoResultsForNotFluentSetupClasses()
    {
-      string code = @"using FluentSetups;
+      string code = @"using MagicMap;
 
                       public class OuterType
                       {

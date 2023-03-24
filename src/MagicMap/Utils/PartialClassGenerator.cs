@@ -7,17 +7,27 @@
 namespace MagicMap.Utils;
 
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 
+using MagicMap.Extensions;
+using MagicMap.Generators.TypeMapper;
+
 using Microsoft.CodeAnalysis;
 
-internal class PartialClassGenerator : ICodeBuilder
+[DebuggerDisplay("{ClassName}")]
+internal sealed class PartialClassGenerator : IClassBuilder
 {
    #region Constants and Fields
 
+   private readonly Dictionary<string, IClassBuilder> nestedClasses = new();
+
    private IMemberBuilder activeBuilder;
+
+   private INamespaceSymbol containingNamespace;
 
    private StringBuilder sourceBuilder;
 
@@ -25,18 +35,25 @@ internal class PartialClassGenerator : ICodeBuilder
 
    #region Constructors and Destructors
 
+   public PartialClassGenerator(string className)
+   {
+      ClassName = className ?? throw new ArgumentNullException(nameof(className));
+      Diagnostics = new List<Diagnostic>();
+   }
+
    public PartialClassGenerator(INamedTypeSymbol userDefinedPart)
    {
       UserDefinedPart = userDefinedPart ?? throw new ArgumentNullException(nameof(userDefinedPart));
       ClassName = userDefinedPart.Name;
       IsStatic = userDefinedPart.IsStatic;
+      Diagnostics = new List<Diagnostic>();
    }
 
    #endregion
 
-   #region ICodeBuilder Members
+   #region IClassBuilder Members
 
-   public ICodeBuilder Append(string code)
+   public IClassBuilder Append(string code)
    {
       CloseActiveBuilder();
 
@@ -46,7 +63,7 @@ internal class PartialClassGenerator : ICodeBuilder
       return this;
    }
 
-   public ICodeBuilder AppendLine(string code)
+   public IClassBuilder AppendLine(string code)
    {
       CloseActiveBuilder();
 
@@ -56,28 +73,78 @@ internal class PartialClassGenerator : ICodeBuilder
       return this;
    }
 
-   private void CloseActiveBuilder()
+   public string ClassName { get; }
+
+   public INamedTypeSymbol UserDefinedPart { get; }
+
+   public MethodBuilder<IClassBuilder> AddMethod()
    {
-      UpdateActiveBuilder((IMemberBuilder)null);
+      return UpdateActiveBuilder(new MethodBuilder<IClassBuilder>(this));
+   }
+
+   public IClassBuilder AddNestedClass(string name)
+   {
+      if (!nestedClasses.TryGetValue(name, out var nestedClass))
+      {
+         nestedClass = new PartialClassGenerator(name);
+         nestedClasses[name] = nestedClass;
+      }
+
+      return nestedClass;
+   }
+
+   public PartialMethodBuilder<IClassBuilder> AddPartialMethod()
+   {
+      return UpdateActiveBuilder(new PartialMethodBuilder<IClassBuilder>(this));
+   }
+
+   public bool ContainsMethod(string name, params INamedTypeSymbol[] parameterTypes)
+   {
+      if (UserDefinedPart == null)
+         return false;
+
+      return UserDefinedPart.GetMethods(name)
+         .Any(candidate => ParametersMatch(candidate.Parameters, parameterTypes));
+   }
+
+   public bool ContainsProperty(string name)
+   {
+      if (name == null)
+         throw new ArgumentNullException(nameof(name));
+
+      if (UserDefinedPart == null)
+         return false;
+
+      return UserDefinedPart.GetProperty(p => p.Name == name) != null;
+   }
+
+   public string GenerateCode()
+   {
+      CloseActiveBuilder();
+      GenerateNestedClasses();
+      SourceBuilder.AppendLine("}");
+
+      if (Namespace is { IsGlobalNamespace: false })
+         SourceBuilder.AppendLine("}");
+
+      return SourceBuilder.ToString();
    }
 
    #endregion
 
-   #region Public Properties
-
-   public string ClassName { get; }
-
-   public bool IsStatic { get; set; }
-
-   public string Modifier { get; set; }
-
-   public INamespaceSymbol Namespace => UserDefinedPart.ContainingNamespace;
-
-   public INamedTypeSymbol UserDefinedPart { get; }
-
-   #endregion
-
    #region Properties
+
+   internal IList<Diagnostic> Diagnostics { get; }
+
+   internal bool IsStatic { get; set; }
+
+   internal string Modifier { get; set; }
+
+   internal INamespaceSymbol Namespace
+   {
+      get => containingNamespace ??= UserDefinedPart?.ContainingNamespace;
+      set => containingNamespace = value;
+   }
 
    private StringBuilder SourceBuilder => sourceBuilder ??= InitializeSourceBuilder();
 
@@ -85,14 +152,12 @@ internal class PartialClassGenerator : ICodeBuilder
 
    #region Public Methods and Operators
 
-   public MethodBuilder AddMethod()
+   public void AddDiagnostic(Diagnostic diagnostic)
    {
-      return UpdateActiveBuilder(new MethodBuilder(this));
-   }
+      if (diagnostic == null)
+         throw new ArgumentNullException(nameof(diagnostic));
 
-   public PartialMethodBuilder AddPartialMethod()
-   {
-      return UpdateActiveBuilder(new PartialMethodBuilder(this));
+      Diagnostics.Add(diagnostic);
    }
 
    public bool ContainsMethod(INamedTypeSymbol returnType, string name, params INamedTypeSymbol[] parameterTypes)
@@ -106,34 +171,13 @@ internal class PartialClassGenerator : ICodeBuilder
       return false;
    }
 
-   public bool ContainsMethod(string name, params INamedTypeSymbol[] parameterTypes)
-   {
-      return UserDefinedPart.GetMethods(name)
-         .Any(candidate => ParametersMatch(candidate.Parameters, parameterTypes));
-   }
-
-   public bool ContainsProperty(string name)
-   {
-      if (name == null)
-         throw new ArgumentNullException(nameof(name));
-
-      return UserDefinedPart.GetProperty(p => p.Name == name) != null;
-   }
-
    #endregion
 
    #region Methods
 
-   internal string GenerateCode()
+   private void CloseActiveBuilder()
    {
-      CloseActiveBuilder();
-
-      SourceBuilder.AppendLine("}");
-
-      if (!Namespace.IsGlobalNamespace)
-         SourceBuilder.AppendLine("}");
-
-      return SourceBuilder.ToString();
+      UpdateActiveBuilder((IMemberBuilder)null);
    }
 
    private string ComputeClassName()
@@ -143,10 +187,18 @@ internal class PartialClassGenerator : ICodeBuilder
       return ClassName;
    }
 
+   private void GenerateNestedClasses()
+   {
+      foreach (var nestedClass in nestedClasses.Values)
+      {
+         SourceBuilder.AppendLine(nestedClass.GenerateCode());
+      }
+   }
+
    private StringBuilder InitializeSourceBuilder()
    {
       var builder = new StringBuilder();
-      if (!Namespace.IsGlobalNamespace)
+      if (Namespace is { IsGlobalNamespace: false })
       {
          builder.AppendLine($"namespace {Namespace.ToDisplayString()}");
          builder.AppendLine("{");

@@ -1,17 +1,14 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="ICodeBuilder.cs" company="consolovers">
+// <copyright file="IDiagnosticReporter.cs" company="consolovers">
 //   Copyright (c) daniel bramer 2022 - 2023
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
+using Microsoft.CodeAnalysis;
+
 namespace MagicMap.Utils;
 
-internal interface ICodeBuilder
+internal interface IDiagnosticReporter
 {
-    #region Public Methods and Operators
-
-    ICodeBuilder Append(string code);
-   
-
-    #endregion
+   void AddDiagnostic(DiagnosticDescriptor diagnosticDescriptor);
 }

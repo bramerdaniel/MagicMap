@@ -1,17 +1,18 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="ICodeBuilder.cs" company="consolovers">
+// <copyright file="MappingDescription.cs" company="consolovers">
 //   Copyright (c) daniel bramer 2022 - 2023
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace MagicMap.Utils;
+namespace MagicMap.Generators;
 
-internal interface ICodeBuilder
+internal struct MappingDescription
 {
-    #region Public Methods and Operators
+   #region Public Properties
 
-    ICodeBuilder Append(string code);
-   
+   public bool Ignored { get; set; }
 
-    #endregion
+   public string Name { get; set; }
+
+   #endregion
 }
