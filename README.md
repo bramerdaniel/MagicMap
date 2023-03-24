@@ -27,3 +27,10 @@ The required code to write
 [TypeMapper(typeof(Person), typeof(PersonModel))]
 internal partial class PersonMapper {  }
 ```
+
+Usage
+
+```C#
+var source = new Person { Name = "Peter", Age = 34 };
+var model = source.ToPersonModel();
+```
