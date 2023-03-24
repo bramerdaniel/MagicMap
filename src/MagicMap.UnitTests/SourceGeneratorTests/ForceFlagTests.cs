@@ -39,10 +39,14 @@ public class ForceFlagTests
       result.Should().HaveError("CS8795");
 
       result.Should().HaveClass("PersonMapper")
-         .WhereMethod("MapAge", "int").IsPartialDefinition();
+         .WhereMethod("MapAge", "int")
+         .IsPartialDefinition()
+         .WithReturnType("string");
 
       result.Should().HaveClass("PersonMapper")
-         .WhereMethod("MapAge", "string").IsPartialDefinition();
+         .WhereMethod("MapAge", "string")
+         .IsPartialDefinition()
+         .WithReturnType("int");
 
       result.Print();
    }
@@ -74,10 +78,14 @@ public class ForceFlagTests
       result.Should().HaveError("CS8795");
 
       result.Should().HaveClass("PersonMapper")
-         .WhereMethod("MapName", "Person value").IsPartialDefinition();
+         .WhereMethod("MapName", "Person value")
+         .WithReturnType("string")
+         .IsPartialDefinition();
 
       result.Should().HaveClass("PersonMapper")
-         .WhereMethod("MapAge", "PersonModel value").IsPartialDefinition();
+         .WhereMethod("MapAge", "PersonModel value")
+         .WithReturnType("int")
+         .IsPartialDefinition();
 
 
       result.Print();

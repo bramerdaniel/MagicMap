@@ -134,6 +134,12 @@ internal class MethodAssertion : ReferenceTypeAssertions<IMethodSymbol, MethodAs
       return this;
    }
 
+   public MethodAssertion WithReturnType(string expectedReturnType)
+   {
+      Subject.ReturnType.ToDisplayString().Should().Be(expectedReturnType);
+      return this;
+   }
+
    public async Task<string> GetCodeAsync()
    {
       var syntaxReference = Subject.DeclaringSyntaxReferences.First();

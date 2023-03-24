@@ -104,7 +104,7 @@ internal class TypeMapperGenerationLogic
    {
       var builder = new StringBuilder();
       builder.AppendLine($"/// <summary>Must be implemented (because ForceMappings was set to true) to support the mapping of the {targetProperty.Name} property</summary>");
-      builder.AppendLine($"private partial {targetProperty.ContainingType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} Map{targetProperty.Name}({sourceType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} value);/*NEWLINE*/");
+      builder.AppendLine($"private partial {targetProperty.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} Map{targetProperty.Name}({sourceType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} value);/*NEWLINE*/");
       return builder.ToString();
    }
 
@@ -114,7 +114,7 @@ internal class TypeMapperGenerationLogic
       if (Context.ForceMappings)
       {
          builder.AppendLine($"/// <summary>Can must be implemented to support the mapping of the {targetProperty.Name} property</summary>");
-         builder.AppendLine($"private partial {targetProperty.ContainingType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} Map{targetProperty.Name}({sourceProperty.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} value);/*NEWLINE*/");
+         builder.AppendLine($"private partial {targetProperty.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} Map{targetProperty.Name}({sourceProperty.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} value);/*NEWLINE*/");
       }
       else
       {
