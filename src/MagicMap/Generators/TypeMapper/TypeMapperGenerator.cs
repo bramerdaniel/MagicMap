@@ -201,8 +201,11 @@ internal class TypeMapperGenerator : IGenerator
       builder.AppendLine($"{ComputeModifier(context)} static {targetName} To{targetType.Name}(this {sourceName} {valueName})");
       builder.AppendLine("{");
 
-      builder.AppendLine($"if ({valueName} == null)");
-      builder.AppendLine($"throw new global::System.ArgumentNullException(nameof({valueName}));/*NEWLINE*/");
+      if (!sourceType.IsValueType)
+      {
+         builder.AppendLine($"if ({valueName} == null)");
+         builder.AppendLine($"throw new global::System.ArgumentNullException(nameof({valueName}));/*NEWLINE*/");
+      }
 
       builder.AppendLine($"var result = Mapper is MagicMap.ITypeFactory<{targetName}, {sourceName}> factory");
       builder.AppendLine($"? factory.Create({valueName})");
