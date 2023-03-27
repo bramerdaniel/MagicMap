@@ -18,7 +18,6 @@ using Microsoft.CodeAnalysis.CSharp;
 
 internal class TypeMapperGenerationLogic
 {
-
    private ITypeMapperContext Context { get; }
 
    public CSharpParseOptions ParseOptions { get; }
@@ -324,7 +323,14 @@ internal class TypeMapperGenerationLogic
       enumMapping = null;
       if (EnumConverterGenerator.IsEnum(sourceProperty.Type) && EnumConverterGenerator.IsEnum(targetProperty.Type))
       {
-         enumMapping = $"target.{targetProperty.Name} = ConvertEnum(source.{sourceProperty.Name});";
+         if (propertyContext.TargetType.IsValueType)
+         {
+            enumMapping = $"target = target with {{ {targetProperty.Name} = ConvertEnum(source.{sourceProperty.Name})}};";
+         }
+         else
+         {
+            enumMapping = $"target.{targetProperty.Name} = ConvertEnum(source.{sourceProperty.Name});";
+         }
 
          var existingMethod = propertyContext.MapperType.FindMethod(targetProperty.Type, "ConvertEnum", sourceProperty.Type);
          if (existingMethod == null)
@@ -370,6 +376,13 @@ internal class TypeMapperGenerationLogic
    private static bool TryCreateRecursiveMapping(PropertyMappingContext propertyContext, IPropertySymbol sourceProperty,
       IPropertySymbol targetProperty, out string mappingCode)
    {
+
+      if (propertyContext.TargetType.IsValueType)
+      {
+         mappingCode = null;
+         return false;
+      }
+
       if (propertyContext.TargetType.Equals(targetProperty.Type, SymbolEqualityComparer.Default)
           && propertyContext.SourceType.Equals(sourceProperty.Type, SymbolEqualityComparer.Default))
       {

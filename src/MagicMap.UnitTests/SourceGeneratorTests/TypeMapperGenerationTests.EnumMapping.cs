@@ -158,4 +158,49 @@ public partial class TypeMapperGenerationTests
 
       result.Print();
    }
+
+   [TestMethod]
+   public void EnsureEnumMappingToStructWorksCorrectly()
+   {
+      var code = @"namespace NS
+                   {   
+                      internal class Person
+                      {
+                         public EnumValues Value { get; set; } 
+                      }
+
+                      internal struct PersonStruct
+                      {
+                         public EnumTypes Value { get; set; }
+                      }
+                      
+                      [MagicMap.TypeMapperAttribute(typeof(Person), typeof(PersonStruct))]
+                      internal partial class Mapper { }
+
+                      public enum EnumValues
+                      {
+                         First,
+                         Second,
+                         Third
+                      }
+
+                      public enum EnumTypes
+                      {
+                         First,
+                         Second,
+                         Third
+                      }
+                   }";
+
+      var result = Setup.SourceGeneratorTest()
+         .WithSource(code)
+         .Done();
+
+      result.Should().NotHaveErrors().And
+         .HaveClass("NS.Mapper")
+         .WhereMethod("Map", "NS.Person source, NS.PersonStruct target")
+         .Contains("target = target with {Value = ConvertEnum(source.Value)}");
+
+      result.Print();
+   }
 }
