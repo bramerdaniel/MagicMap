@@ -10,6 +10,7 @@ namespace MagicMap
    using MagicMap.Generators.TypeMapper;
 
    using Microsoft.CodeAnalysis;
+   using Microsoft.CodeAnalysis.CSharp;
 
    internal class MagicGeneratorManager
    {
@@ -23,6 +24,8 @@ namespace MagicMap
 
       public Compilation Compilation { get; private set; }
 
+      public CSharpParseOptions ParseOptions { get; private set; }
+
       #endregion
 
       #region Properties
@@ -33,16 +36,16 @@ namespace MagicMap
 
       #region Public Methods and Operators
 
-      public static MagicGeneratorManager FromCompilation(Compilation compilation)
+      public static MagicGeneratorManager FromCompilation(Compilation compilation, CSharpParseOptions parseOptions)
       {
-         return new MagicGeneratorManager { Compilation = compilation };
+         return new MagicGeneratorManager { Compilation = compilation, ParseOptions = parseOptions };
       }
 
       public bool TryFindGenerator(IGeneratorContext generatorContext, out IGenerator generator)
       {
          if (generatorContext is ITypeMapperContext typeMapperContext)
          {
-            generator = new TypeMapperGenerator(typeMapperContext, uniqueNameProvider);
+            generator = new TypeMapperGenerator(typeMapperContext, uniqueNameProvider, ParseOptions);
             return true;
          }
 
@@ -51,6 +54,5 @@ namespace MagicMap
       }
 
       #endregion
-
    }
 }

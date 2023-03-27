@@ -13,13 +13,14 @@ using MagicMap.Generators;
 using MagicMap.Generators.TypeMapper;
 
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 
 internal static class BuilderExtensions
 {
    #region Public Methods and Operators
 
 
-   public static IClassBuilder AddTypeMapperBuilder(this IClassBuilder owner,string className, INamedTypeSymbol sourceType, INamedTypeSymbol targetType)
+   public static IClassBuilder AddTypeMapperBuilder(this IClassBuilder owner,string className, INamedTypeSymbol sourceType, INamedTypeSymbol targetType, CSharpParseOptions parseOptions)
    {
       var classBuilder = owner.AddNestedClass(className);
       var mapperContext = new TypeMapperContext(className)
@@ -30,7 +31,7 @@ internal static class BuilderExtensions
          MappingSpecifications = new Dictionary<string, MappingDescription>()
       };
 
-      var generationLogic = new TypeMapperGenerationLogic(mapperContext);
+      var generationLogic = new TypeMapperGenerationLogic(mapperContext, parseOptions);
       generationLogic.Generate(classBuilder);
       return classBuilder;
    }

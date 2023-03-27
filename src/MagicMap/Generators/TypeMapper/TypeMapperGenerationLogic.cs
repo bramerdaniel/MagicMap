@@ -14,14 +14,18 @@ using MagicMap.Extensions;
 using MagicMap.Utils;
 
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 
 internal class TypeMapperGenerationLogic
 {
    private ITypeMapperContext Context { get; }
 
-   public TypeMapperGenerationLogic(ITypeMapperContext context)
+   public CSharpParseOptions ParseOptions { get; }
+
+   public TypeMapperGenerationLogic(ITypeMapperContext context, CSharpParseOptions parseOptions)
    {
       Context = context ?? throw new ArgumentNullException(nameof(context));
+      ParseOptions = parseOptions ?? throw new ArgumentNullException(nameof(parseOptions));
    }
 
    #region Public Methods and Operators
@@ -172,8 +176,8 @@ internal class TypeMapperGenerationLogic
 
    private string GenerateMapBody(IClassBuilder mapperClassGenerator, PropertyMappingContext propertyContext)
    {
-      var bodyCode = new StringBuilder();
 
+      var bodyCode = new StringBuilder();
       if (propertyContext.TargetProperties.Count == 0)
       {
          bodyCode.AppendLine("// target type does not contain any properties.");
@@ -195,6 +199,7 @@ internal class TypeMapperGenerationLogic
 
       bodyCode.AppendLine("MapOverride(source, target);");
       return bodyCode.ToString();
+
    }
 
    private void MapProperty(IClassBuilder mapperClassGenerator, PropertyMappingContext propertyContext,
@@ -209,7 +214,7 @@ internal class TypeMapperGenerationLogic
          var mapping = CreatePropertyMapping(mapperClassGenerator, propertyContext, sourceProperty, targetProperty);
          bodyCode.AppendLine(mapping);
       }
-      else if(Context.ForceMappings)
+      else if (Context.ForceMappings)
       {
          propertyContext.AddMemberDeclaration(() => CreatePartialMethod(targetProperty, propertyContext.SourceType));
          bodyCode.AppendLine($"target.{targetProperty.Name} = Map{targetProperty.Name}(source);");
@@ -334,7 +339,7 @@ internal class TypeMapperGenerationLogic
       if (targetProperty.Type is INamedTypeSymbol targetType && sourceProperty.Type is INamedTypeSymbol sourceType)
       {
          if (sourceProperty.ContainingType.Equals(Context.SourceType, SymbolEqualityComparer.Default))
-            mapperClassGenerator.AddTypeMapperBuilder(nestedMapperName, sourceType, targetType);
+            mapperClassGenerator.AddTypeMapperBuilder(nestedMapperName, sourceType, targetType, ParseOptions);
       }
 
       mappingCode = $"target.{targetProperty.Name} = {nestedMapperName}.Default.MapFrom(source.{sourceProperty.Name});";

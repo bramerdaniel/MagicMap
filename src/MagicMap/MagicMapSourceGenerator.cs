@@ -31,15 +31,34 @@ namespace MagicMap
          // Here we generate the required attributes
          context.RegisterPostInitializationOutput(GeneratePostInitializationOutput);
 
+         var optionsAndCompilation = context.ParseOptionsProvider
+            .Combine(context.CompilationProvider);
+
          var provider = context.SyntaxProvider
             .CreateSyntaxProvider(IsClassDeclarationWithAttributes, CreateSemanticGenerationContext)
             .Where(c => c.IsEnabled())
             .Collect()
-            .Combine(context.CompilationProvider);
+            .Combine(optionsAndCompilation);
 
          context.RegisterSourceOutput(provider, GenerateSourceFromContext);
       }
 
+      private void GenerateSourceFromContext(SourceProductionContext productionContext, (ImmutableArray<IGeneratorContext> GeneratorContexts, (ParseOptions Options, Compilation Compilation) Shared) data)
+      {
+         if(data.Shared.Options.Language != "C#")
+            return;
+
+         var parseOptions = (CSharpParseOptions)data.Shared.Options;
+
+         var generatorManager = MagicGeneratorManager.FromCompilation(data.Shared.Compilation, parseOptions);
+
+         foreach (var generatorContext in data.GeneratorContexts)
+         {
+            if (generatorManager.TryFindGenerator(generatorContext, out var generator))
+               ExecuteGenerator(productionContext, generator, generatorContext);
+         }
+      }
+      
       #endregion
 
       #region Methods
@@ -61,7 +80,7 @@ namespace MagicMap
          var classDeclarationNode = context.GetNamedType(cancellationToken);
          if (classDeclarationNode == null)
             return GeneratorContext.Empty;
-
+         
          var typeMapperGenerator = TypeMapperAttributeGenerator.FromCompilation(context.SemanticModel.Compilation);
          if (typeMapperGenerator.TryExtractData(classDeclarationNode, out var typeMapperData))
             return typeMapperData;
@@ -132,16 +151,6 @@ namespace MagicMap
          context.AddSource("TypeFactory.generated.cs", TypeFactoryInterfaceGenerator.Code);
       }
 
-      private void GenerateSourceFromContext(SourceProductionContext productionContext, (ImmutableArray<IGeneratorContext> GeneratorContext, Compilation Compilation) data)
-      {
-         var generatorManager = MagicGeneratorManager.FromCompilation(data.Compilation);
-
-         foreach (var generatorContext in data.GeneratorContext)
-         {
-            if (generatorManager.TryFindGenerator(generatorContext, out var generator))
-               ExecuteGenerator(productionContext, generator, generatorContext);
-         }
-      }
 
       #endregion
    }

@@ -13,6 +13,7 @@ using MagicMap.Extensions;
 using MagicMap.Generators;
 using MagicMap.Utils;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 
 /// <summary>Generator for type mapping</summary>
 /// <seealso cref="MagicMap.Generators.IGenerator" />
@@ -24,14 +25,17 @@ internal class TypeMapperGenerator : IGenerator
 
    private readonly IUniqueNameProvider uniqueNameProvider;
 
+   private readonly CSharpParseOptions parseOptions;
+
    #endregion
 
    #region Constructors and Destructors
 
-   public TypeMapperGenerator(ITypeMapperContext context, IUniqueNameProvider uniqueNameProvider)
+   public TypeMapperGenerator(ITypeMapperContext context, IUniqueNameProvider uniqueNameProvider, CSharpParseOptions parseOptions)
    {
       this.context = context ?? throw new ArgumentNullException(nameof(context));
       this.uniqueNameProvider = uniqueNameProvider ?? throw new ArgumentNullException(nameof(uniqueNameProvider));
+      this.parseOptions = parseOptions ?? throw new ArgumentNullException(nameof(parseOptions));
    }
 
    #endregion
@@ -165,10 +169,10 @@ internal class TypeMapperGenerator : IGenerator
       }
    }
 
-   private static PartialClassGenerator GenerateMapperClass(ITypeMapperContext context)
+   private PartialClassGenerator GenerateMapperClass(ITypeMapperContext context)
    {
       var mapperGenerator = CreateMapperGenerator(context);
-      var generationLogic = new TypeMapperGenerationLogic(context);
+      var generationLogic = new TypeMapperGenerationLogic(context, parseOptions);
       generationLogic.Generate(mapperGenerator);
       return mapperGenerator;
    }

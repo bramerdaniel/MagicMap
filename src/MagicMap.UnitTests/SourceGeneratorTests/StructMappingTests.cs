@@ -77,5 +77,36 @@ public class StructMappingTests
       result.Print();
    }
 
+   [TestMethod]
+   public void EnsureMappingToAStructUsesStructInitializer()
+   {
+      var code = @"using MagicMap;
+
+                   [TypeMapper(typeof(PersonClass), typeof(PersonStruct))]
+                   internal partial class PersonMapper { }
+                       
+                   internal class PersonClass 
+                   {
+                       public string Name { get; set; }
+                   }
+
+                   internal struct PersonStruct 
+                   {
+                       public string Name { get; set; }
+                   }            
+";
+
+      var result = Setup.SourceGeneratorTest()
+         .WithSource(code)
+         .Done();
+
+      result.Should().NotHaveErrors();
+      result.Should().HaveClass("PersonMapper")
+         .WhereMethod("Map", "PersonClass source, PersonStruct target")
+         .Contains("   Name = source.Name");
+      
+      result.Print();
+   }
+
    #endregion
 }
