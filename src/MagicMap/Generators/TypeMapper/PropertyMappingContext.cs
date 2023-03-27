@@ -41,8 +41,8 @@ internal class PropertyMappingContext
          .OfType<IPropertySymbol>()
          .ToDictionary(p => p.Name, StringComparer.InvariantCultureIgnoreCase);
 
-      CustomMappings = context.MapperType != null 
-         ? context.MapperType.GetMethodsWithAttribute(context.PropertyMapperAttribute).ToArray() 
+      CustomMappings = context.MapperType != null
+         ? context.MapperType.GetMethodsWithAttribute(context.PropertyMapperAttribute).ToArray()
          : Array.Empty<(IMethodSymbol method, AttributeData attributeData)>();
    }
 
@@ -92,16 +92,16 @@ internal class PropertyMappingContext
          return false;
       }
 
-      if (method.ReturnType.Equals(targetProperty.Type) && parameterCount == 1)
+      if (method.ReturnType.Equals(targetProperty.Type, SymbolEqualityComparer.Default) && parameterCount == 1)
       {
          var parameter = method.Parameters[0].Type;
-         if (parameter.Equals(SourceType))
+         if (parameter.Equals(SourceType, SymbolEqualityComparer.Default))
          {
             invocation = $"target.{targetProperty.Name} = {method.Name}(source);";
             return true;
          }
 
-         if (sourceProperty != null && parameter.Equals(sourceProperty.Type))
+         if (sourceProperty != null && parameter.Equals(sourceProperty.Type, SymbolEqualityComparer.Default))
          {
             invocation = $"target.{targetProperty.Name} = {method.Name}(source.{sourceProperty.Name});";
             return true;

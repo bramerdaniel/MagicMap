@@ -11,7 +11,7 @@ using System.Diagnostics.CodeAnalysis;
 [SuppressMessage("ReSharper", "UnusedMember.Global")]
 public record PersonModel
 {
-   public string Name { get; set; }
+   public string Name { get; set; } = null!;
 
    public long Age { get; set; }
 }

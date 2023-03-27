@@ -72,7 +72,7 @@ public static class NamedTypeSymbolExtensions
         if (attributeClass == null)
            throw new ArgumentNullException(nameof(attributeClass));
 
-        return typeSymbol.GetAttributes().FirstOrDefault(x => attributeClass.Equals(x.AttributeClass));
+        return typeSymbol.GetAttributes().FirstOrDefault(x => attributeClass.Equals(x.AttributeClass, SymbolEqualityComparer.Default));
     }
 
     /// <summary>Gets the default constructor of a type.</summary>
@@ -105,7 +105,7 @@ public static class NamedTypeSymbolExtensions
 
         for (var i = 0; i < method.Parameters.Length; i++)
         {
-            if (!method.Parameters[i].Type.Equals(parameterTypes[i]))
+            if (!method.Parameters[i].Type.Equals(parameterTypes[i], SymbolEqualityComparer.Default))
                 return false;
         }
 

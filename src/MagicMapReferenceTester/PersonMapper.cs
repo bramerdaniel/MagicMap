@@ -18,9 +18,9 @@ internal partial class PersonMapper
    }
 
    [PropertyMapper(typeof(Person), nameof(Person.Name), nameof(PersonModel.Name))]
-   private string ToPersonName(PersonModel person)
+   private string ToPersonName(PersonModel? person)
    {
-      return person?.Name?.Replace("[Person]", "[Animal]");
+      return person?.Name!;
    }
 
    [PropertyMapper(typeof(PersonModel), nameof(Person.Age), nameof(PersonModel.Age))]

@@ -333,7 +333,7 @@ internal class TypeMapperGenerationLogic
 
       if (targetProperty.Type is INamedTypeSymbol targetType && sourceProperty.Type is INamedTypeSymbol sourceType)
       {
-         if (sourceProperty.ContainingType == Context.SourceType)
+         if (sourceProperty.ContainingType.Equals(Context.SourceType, SymbolEqualityComparer.Default))
             mapperClassGenerator.AddTypeMapperBuilder(nestedMapperName, sourceType, targetType);
       }
 
