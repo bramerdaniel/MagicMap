@@ -7,19 +7,20 @@
 namespace MagicMap.Generators;
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-
-using MagicMap.Generators.TypeMapper;
 
 using Microsoft.CodeAnalysis;
 
 internal class TypeFactoryInterfaceGenerator
 {
-   private readonly INamedTypeSymbol interfaceSymbol;
+   #region Constructors and Destructors
 
-   private readonly PropertyMappingAttributeGenerator propertyMappingAttribute;
-   
+   private TypeFactoryInterfaceGenerator(INamedTypeSymbol interfaceType)
+   {
+      InterfaceType = interfaceType;
+   }
+
+   #endregion
+
    #region Public Properties
 
    public static string Code { get; } = @"//------------------------------------------------
@@ -38,9 +39,19 @@ namespace MagicMap
 }
 ";
 
+   public INamedTypeSymbol InterfaceType { get; }
+
    #endregion
 
+   #region Properties
+
    internal static string TypeMapperAttributeName => "MagicMap.ITypeFactory`2";
+
+   protected Compilation Compilation { get; private set; }
+
+   #endregion
+
+   #region Methods
 
    internal static TypeFactoryInterfaceGenerator FromCompilation(Compilation compilation)
    {
@@ -51,11 +62,5 @@ namespace MagicMap
       return new TypeFactoryInterfaceGenerator(attributeType) { Compilation = compilation };
    }
 
-   protected Compilation Compilation { get; private set; }
-
-   private TypeFactoryInterfaceGenerator(INamedTypeSymbol interfaceType)
-   {
-      this.interfaceSymbol = interfaceType ?? throw new ArgumentNullException(nameof(interfaceType));
-   }
-
+   #endregion
 }

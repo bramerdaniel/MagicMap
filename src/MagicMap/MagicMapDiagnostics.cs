@@ -39,7 +39,7 @@ namespace MagicMap
 
       internal static readonly DiagnosticDescriptor DefaultMapperNotStatic = new DiagnosticDescriptor(id: "MMW0004",
          title: "Default mapper must be static",
-         messageFormat: "The default mapper should be static and accessible from the generated extension methods.",
+         messageFormat: "The default mapper should be static and accessible from the generated extension methods",
          category: "MagicMap",
          defaultSeverity: DiagnosticSeverity.Warning,
          isEnabledByDefault: true);
