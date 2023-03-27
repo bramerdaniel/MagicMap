@@ -29,6 +29,7 @@
 
 	<ItemGroup>
 	  <Folder Include="Tests\InvalidOverrides\NonStaticDefaultMapper\" />
+	  <Folder Include="Tests\StructMappingTests\" />
 	</ItemGroup>
 
 </Project>

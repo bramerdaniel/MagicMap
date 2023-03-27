@@ -31,7 +31,7 @@ internal class TypeFactoryInterfaceGenerator
 namespace MagicMap 
 {
    [global::System.Runtime.CompilerServices.CompilerGenerated]
-   internal interface ITypeFactory<TTarget, TSource>  where TTarget : class
+   internal interface ITypeFactory<TTarget, TSource>
    {
       /// <summary>Created an instance of the type TTarget, that is used for a mapping.</summary>
       TTarget Create(TSource source);
