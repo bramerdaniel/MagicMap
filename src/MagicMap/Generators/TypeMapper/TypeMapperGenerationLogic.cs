@@ -18,6 +18,7 @@ using Microsoft.CodeAnalysis.CSharp;
 
 internal class TypeMapperGenerationLogic
 {
+
    private ITypeMapperContext Context { get; }
 
    public CSharpParseOptions ParseOptions { get; }
@@ -46,15 +47,11 @@ internal class TypeMapperGenerationLogic
       if (Context.SourceEqualsTargetType || mapperGenerator.ContainsMethod("Map", Context.TargetType, Context.SourceType))
          return;
 
-      var rightToLeft = new PropertyMappingContext(Context, Context.TargetType, Context.SourceType, Context.MappingSpecifications);
-      mapperGenerator.AddMethod("Map", (Context.TargetType, "source"), (Context.SourceType, "target"))
-         .WithModifier("public")
-         .WithSummary(x => x.AppendLine("Maps all properties of the <see cref=\"source\"/> to the properties of the <see cref=\"target\"/>"))
-         .WithBody(_ => GenerateMapBody(mapperGenerator, rightToLeft))
-         .Build();
+      if (Context.SourceType.IsValueType && ParseOptions.LanguageVersion < LanguageVersion.CSharp10)
+         return;
 
-      foreach (var declaration in rightToLeft.MemberDeclarations)
-         mapperGenerator.AppendLine(declaration());
+      var rightToLeft = new PropertyMappingContext(Context, Context.TargetType, Context.SourceType, Context.MappingSpecifications);
+      GenerateMapMethod(mapperGenerator, rightToLeft);
 
       mapperGenerator.AddMethod("MapFrom", (Context.TargetType, "source"))
          .WithReturnType(Context.SourceType)
@@ -63,20 +60,28 @@ internal class TypeMapperGenerationLogic
          .Build();
    }
 
+   private void GenerateMapMethod(IClassBuilder mapperGenerator, PropertyMappingContext propertyContext)
+   {
+      mapperGenerator.AddMethod("Map", (propertyContext.SourceType, "source"), (propertyContext.TargetType, "target"))
+         .WithModifier("public")
+         .WithSummary(x => x.AppendLine("Maps all properties of the <see cref=\"source\"/> to the properties of the <see cref=\"target\"/>"))
+         .WithBody(_ => GenerateMapBody(mapperGenerator, propertyContext))
+         .Build();
+
+      foreach (var declaration in propertyContext.MemberDeclarations)
+         mapperGenerator.AppendLine(declaration());
+   }
+
    private void GenerateLeftToRight(IClassBuilder mapperGenerator)
    {
       if (Context.Mode == GeneratorMode.RightToLeft)
          return;
 
-      var leftToRight = new PropertyMappingContext(Context, Context.SourceType, Context.TargetType, InvertMappings(Context.MappingSpecifications));
-      mapperGenerator.AddMethod("Map", (Context.SourceType, "source"), (Context.TargetType, "target"))
-         .WithModifier("public")
-         .WithSummary(x => x.AppendLine("Maps all properties of the <see cref=\"source\"/> to the properties of the <see cref=\"target\"/>"))
-         .WithBody(_ => GenerateMapBody(mapperGenerator, leftToRight))
-         .Build();
+      if (Context.TargetType.IsValueType && ParseOptions.LanguageVersion < LanguageVersion.CSharp10)
+         return;
 
-      foreach (var declaration in leftToRight.MemberDeclarations)
-         mapperGenerator.AppendLine(declaration());
+      var propertyContext = new PropertyMappingContext(Context, Context.SourceType, Context.TargetType, InvertMappings(Context.MappingSpecifications));
+      GenerateMapMethod(mapperGenerator, propertyContext);
 
       mapperGenerator.AddMethod("MapFrom", (Context.SourceType, "source"))
          .WithReturnType(Context.TargetType)
@@ -132,7 +137,17 @@ internal class TypeMapperGenerationLogic
       IPropertySymbol sourceProperty, IPropertySymbol targetProperty)
    {
       if (targetProperty.Type.Equals(sourceProperty.Type, SymbolEqualityComparer.Default))
-         return $"target.{targetProperty.Name} = source.{sourceProperty.Name};";
+      {
+         if (targetProperty.ContainingType.IsValueType)
+         {
+            if (ParseOptions.LanguageVersion >= LanguageVersion.CSharp9)
+               return $"target = target with {{ {targetProperty.Name} = source.{sourceProperty.Name} }};";
+         }
+         else
+         {
+            return $"target.{targetProperty.Name} = source.{sourceProperty.Name};";
+         }
+      }
 
       if (TryCreateRecursiveMapping(propertyContext, sourceProperty, targetProperty, out var recursiveMapping))
          return recursiveMapping;
@@ -176,7 +191,6 @@ internal class TypeMapperGenerationLogic
 
    private string GenerateMapBody(IClassBuilder mapperClassGenerator, PropertyMappingContext propertyContext)
    {
-
       var bodyCode = new StringBuilder();
       if (propertyContext.TargetProperties.Count == 0)
       {
@@ -199,7 +213,6 @@ internal class TypeMapperGenerationLogic
 
       bodyCode.AppendLine("MapOverride(source, target);");
       return bodyCode.ToString();
-
    }
 
    private void MapProperty(IClassBuilder mapperClassGenerator, PropertyMappingContext propertyContext,

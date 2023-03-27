@@ -26,7 +26,7 @@ internal class TypeMapperGenerator : IGenerator
    private readonly IUniqueNameProvider uniqueNameProvider;
 
    private readonly CSharpParseOptions parseOptions;
-
+   
    #endregion
 
    #region Constructors and Destructors
@@ -36,6 +36,7 @@ internal class TypeMapperGenerator : IGenerator
       this.context = context ?? throw new ArgumentNullException(nameof(context));
       this.uniqueNameProvider = uniqueNameProvider ?? throw new ArgumentNullException(nameof(uniqueNameProvider));
       this.parseOptions = parseOptions ?? throw new ArgumentNullException(nameof(parseOptions));
+   
    }
 
    #endregion
@@ -196,6 +197,9 @@ internal class TypeMapperGenerator : IGenerator
          // we can not generate an reasonable extension method
          return;
       }
+
+      if (targetType.IsValueType && parseOptions.LanguageVersion < LanguageVersion.CSharp10)
+         return;
 
       var targetName = targetType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
       var sourceName = sourceType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);

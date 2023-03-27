@@ -43,9 +43,9 @@ internal class SetupBase
 
    #region Methods
 
-   protected CSharpSyntaxTree AddSource(string code)
+   protected CSharpSyntaxTree AddSource(string code, LanguageVersion languageVersion)
    {
-      var syntaxTree = CSharpSyntaxTree.ParseText(code);
+      var syntaxTree = CSharpSyntaxTree.ParseText(code, new CSharpParseOptions(languageVersion));
       ThrowOnErrors(syntaxTree.GetDiagnostics());
       syntaxTrees.Add(syntaxTree);
 
@@ -65,8 +65,9 @@ internal class SetupBase
 
    protected virtual CSharpCompilation CreateCompilation()
    {
+      var options = new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary);
       return CSharpCompilation.Create(RootNamespace, SyntaxTrees, ComputeReferences(),
-         new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+         options);
    }
 
    private void ThrowOnErrors(IEnumerable<Diagnostic> diagnostics)

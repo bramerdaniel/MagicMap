@@ -1,17 +1,21 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="SourceGeneratorTestSetup.cs" company="consolovers">
-//   Copyright (c) daniel bramer 2022 - 2022
+//   Copyright (c) daniel bramer 2022 - 2023
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
 namespace MagicMap.UnitTests.Setups;
 
-using MagicMap;
-
 using Microsoft.CodeAnalysis.CSharp;
 
 internal class SourceGeneratorTestSetup : SetupBase
 {
+   #region Constants and Fields
+
+   private LanguageVersion languageVersion = LanguageVersion.LatestMajor;
+
+   #endregion
+
    #region Public Methods and Operators
 
    public GenerationResult Done()
@@ -19,15 +23,21 @@ internal class SourceGeneratorTestSetup : SetupBase
       var compilation = CreateCompilation();
 
       var generator = new MagicMapSourceGenerator();
-      var driver = CSharpGeneratorDriver.Create(generator);
+      var driver = CSharpGeneratorDriver.Create(generator)
+         .WithUpdatedParseOptions(new CSharpParseOptions(languageVersion));
+
       driver.RunGeneratorsAndUpdateCompilation(compilation, out var outputCompilation, out var generatedDiagnostics);
 
       return new GenerationResult
       {
-         InputCompilation = compilation,
-         OutputCompilation = outputCompilation,
-         GeneratedDiagnostics = generatedDiagnostics,
+         InputCompilation = compilation, OutputCompilation = outputCompilation, GeneratedDiagnostics = generatedDiagnostics,
       };
+   }
+
+   public SourceGeneratorTestSetup WithLanguageLevel(LanguageVersion version)
+   {
+      languageVersion = version;
+      return this;
    }
 
    public SourceGeneratorTestSetup WithRootNamespace(string value)
@@ -38,7 +48,7 @@ internal class SourceGeneratorTestSetup : SetupBase
 
    public SourceGeneratorTestSetup WithSource(string code)
    {
-      AddSource(code);
+      AddSource(code, languageVersion);
       return this;
    }
 

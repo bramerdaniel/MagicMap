@@ -103,7 +103,7 @@ public class StructMappingTests
       result.Should().NotHaveErrors();
       result.Should().HaveClass("PersonMapper")
          .WhereMethod("Map", "PersonClass source, PersonStruct target")
-         .Contains("   Name = source.Name");
+         .Contains("target = target with {Name = source.Name}");
       
       result.Print();
    }

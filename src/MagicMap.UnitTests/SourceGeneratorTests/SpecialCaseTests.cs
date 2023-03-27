@@ -8,6 +8,8 @@ namespace MagicMap.UnitTests.SourceGeneratorTests;
 
 using MagicMap.UnitTests.Setups;
 
+using Microsoft.CodeAnalysis.CSharp;
+
 /// <summary>
 /// 
 /// </summary>
@@ -42,6 +44,71 @@ public class SpecialCaseTests
       result.Should().HaveClass("PersonMapper")
          .WhereMethod("Map", "Person source")
          .NotContains("target.Children");
+
+      result.Print();
+   }
+
+
+   [TestMethod]
+   public void NoStructSupportForLanguageLevelSmallerThanNine()
+   {
+      var code = @"using MagicMap;
+                   using System.Collections.Generic;
+
+                   [TypeMapper(typeof(Person), typeof(PersonStruct))]
+                   internal partial class PersonMapper { }
+                       
+                   internal class Person 
+                   {
+                       public int Age { get; set; }
+                   }
+
+                   internal struct PersonStruct
+                   {
+                       public int Age { get; set; }
+                   }            
+";
+
+      var result = Setup.SourceGeneratorTest()
+         .WithLanguageLevel(LanguageVersion.CSharp9)
+         .WithSource(code)
+         .Done();
+
+      result.Should().NotHaveErrors();
+      result.Should().HaveClass("PersonMapper")
+         .WithoutMethod("Map", "Person source", "PersonStruct target");
+
+      result.Print();
+   }
+
+   [TestMethod]
+   public void NoStructSupportForLanguageLevelSmallerThanNineFromRightToLeft()
+   {
+      var code = @"using MagicMap;
+                   using System.Collections.Generic;
+
+                   [TypeMapper(typeof(PersonStruct), typeof(Person))]
+                   internal partial class PersonMapper { }
+                       
+                   internal class Person 
+                   {
+                       public int Age { get; set; }
+                   }
+
+                   internal struct PersonStruct
+                   {
+                       public int Age { get; set; }
+                   }            
+";
+
+      var result = Setup.SourceGeneratorTest()
+         .WithLanguageLevel(LanguageVersion.CSharp9)
+         .WithSource(code)
+         .Done();
+
+      result.Should().NotHaveErrors();
+      result.Should().HaveClass("PersonMapper")
+         .WithoutMethod("Map", "Person source", "PersonStruct target");
 
       result.Print();
    }
