@@ -8,6 +8,7 @@ namespace MagicMap.Generators.TypeMapper;
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 
 using MagicMap.Extensions;
@@ -59,11 +60,12 @@ internal class TypeMapperGenerationLogic
          .Build();
    }
 
+   [SuppressMessage("ReSharper", "StringLiteralTypo")]
    private void GenerateMapMethod(IClassBuilder mapperGenerator, PropertyMappingContext propertyContext)
    {
       mapperGenerator.AddMethod("Map", (propertyContext.SourceType, "source"), (propertyContext.TargetType, "target"))
          .WithModifier("public")
-         .WithSummary(x => x.AppendLine("Maps all properties of the <see cref=\"source\"/> to the properties of the <see cref=\"target\"/>"))
+         .WithSummary(x => x.AppendLine("Maps all properties of the <paramref cref=\"source\"/> to the properties of the <paramref cref=\"target\"/>"))
          .WithBody(_ => GenerateMapBody(mapperGenerator, propertyContext))
          .Build();
 
@@ -248,8 +250,7 @@ internal class TypeMapperGenerationLogic
       var constructor = targetType.GetDefaultConstructor();
       if (constructor == null || constructor.IsPrivate())
       {
-         builder.AppendLine(
-            $": throw new global::System.NotSupportedException(\"The target type {targetType.Name} can not be created. Provide a accessible constructor without parameters or implement the ITypeFactory interface in the responsible mapper.\");");
+         builder.AppendLine($": throw new global::System.NotSupportedException(\"The target type {targetType.Name} can not be created. Provide a accessible constructor without parameters or implement the ITypeFactory interface in the responsible mapper.\");");
       }
       else
       {
@@ -257,6 +258,7 @@ internal class TypeMapperGenerationLogic
       }
 
       builder.AppendLine("Default.Map(source, target);");
+
       builder.AppendLine("return target;");
       return builder.ToString();
    }
