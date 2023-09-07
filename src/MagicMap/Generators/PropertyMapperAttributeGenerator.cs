@@ -32,6 +32,7 @@ internal class PropertyMapperAttributeGenerator
 namespace MagicMap 
 {
    [global::System.Runtime.CompilerServices.CompilerGenerated]
+   [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute]
    [global::System.AttributeUsage(global::System.AttributeTargets.Method, AllowMultiple = false, Inherited = false)]
    /// <summary>Attribute that can be used mark a method as mapping method for a specific source property</summary>
    internal sealed class PropertyMapperAttribute : global::System.Attribute

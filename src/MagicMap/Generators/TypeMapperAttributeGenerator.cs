@@ -52,6 +52,7 @@ namespace MagicMap.Generators
 namespace MagicMap 
 {
    [global::System.Runtime.CompilerServices.CompilerGenerated]
+   [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute]
    [global::System.AttributeUsage(global::System.AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
    internal sealed class TypeMapperAttribute : global::System.Attribute
    {
