@@ -205,6 +205,7 @@ internal sealed class PartialClassGenerator : IClassBuilder
       }
 
       builder.AppendLine("[global::System.Runtime.CompilerServices.CompilerGenerated]");
+      builder.AppendLine("[global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute]");
       if (Modifier != null)
          builder.Append($"{Modifier} ");
 
